@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+	<name>omnicompat</name>
+	<displayName><![CDATA[OmniCompat]]></displayName>
+	<version><![CDATA[1.0.0]]></version>
+	<description><![CDATA[Omnibus Directive Pricing Compatibility Module for PrestaShop]]></description>
+	<author><![CDATA[TheEnumbin]]></author>
+	<tab><![CDATA[pricing_promotion]]></tab>
+	<is_configurable>1</is_configurable>
+	<need_instance>1</need_instance>
+</module>
