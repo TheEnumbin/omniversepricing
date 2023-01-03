@@ -48,7 +48,6 @@ class Omnicompat extends Module
 
         $this->displayName = $this->l('OmniCompat');
         $this->description = $this->l('Omnibus Directive Pricing Compatibility Module for PrestaShop');
-
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
     }
 
@@ -70,7 +69,6 @@ class Omnicompat extends Module
 
         return parent::install() &&
             $this->registerHook('header') &&
-            $this->registerHook('displayAdminProductsExtra') &&
             $this->registerHook('displayBackOfficeHeader') &&
             $this->registerHook('displayProductPriceBlock');
     }
@@ -340,7 +338,6 @@ class Omnicompat extends Module
     {
         $this->context->controller->addCSS($this->_path.'/views/css/front.css');
     }
-
     
     public function hookDisplayProductPriceBlock($params)
     {
@@ -349,11 +346,16 @@ class Omnicompat extends Module
 
         if($omnicompat_price){
             $omnicompat_pos = Configuration::get('OMNICOMPAT_POSITION', 'after_price');
-            if($params['type'] == $omnicompat_pos ){   
+            if($params['type'] == $omnicompat_pos ){  
+                $this->omnicompat_show_notice($omnicompat_price); 
+            }
+        }else{
+
+            if($params['type'] == $omnicompat_pos ){  
                 $omni_if_current = Configuration::get('OMNICOMPAT_SHOW_IF_CURRENT', true);
     
                 if($omni_if_current){
-                    $this->omnicompat_show_notice($product->price);
+                    $this->omnicompat_show_notice($product->price); 
                 }
             }
         }
@@ -365,10 +367,15 @@ class Omnicompat extends Module
         $omnicompat_price = $this->omnicompat_init($product);
 
         if($omnicompat_price){ 
-            $omni_if_current = Configuration::get('OMNICOMPAT_SHOW_IF_CURRENT', true);
+            $this->omnicompat_show_notice($omnicompat_price);
+        }else{
 
-            if($omni_if_current){
-                $this->omnicompat_show_notice($product->price);
+            if($params['type'] == $omnicompat_pos ){  
+                $omni_if_current = Configuration::get('OMNICOMPAT_SHOW_IF_CURRENT', true);
+    
+                if($omni_if_current){
+                    $this->omnicompat_show_notice($product->price); 
+                }
             }
         }
     }
@@ -379,10 +386,15 @@ class Omnicompat extends Module
         $omnicompat_price = $this->omnicompat_init($product);
 
         if($omnicompat_price){ 
-            $omni_if_current = Configuration::get('OMNICOMPAT_SHOW_IF_CURRENT', true);
+            $this->omnicompat_show_notice($omnicompat_price);
+        }else{
 
-            if($omni_if_current){
-                $this->omnicompat_show_notice($product->price);
+            if($params['type'] == $omnicompat_pos ){  
+                $omni_if_current = Configuration::get('OMNICOMPAT_SHOW_IF_CURRENT', true);
+    
+                if($omni_if_current){
+                    $this->omnicompat_show_notice($product->price); 
+                }
             }
         }
     }
@@ -400,7 +412,7 @@ class Omnicompat extends Module
                 if(empty($existing)){
                     $this->omnicompat_insert_data($product->id, $price_amount);   
                 }
-                $omnicompate_formatted_price = $this->context->getCurrentLocale()->formatPrice($this->omnicompat_get_price($product->id), $this->context->currency->iso_code);     
+                $omnicompate_formatted_price = $this->context->getCurrentLocale()->formatPrice($this->omnicompat_get_price($product->id, $price_amount), $this->context->currency->iso_code);     
     
                 return $omnicompate_formatted_price;
             }
@@ -437,14 +449,14 @@ class Omnicompat extends Module
 
     }
 
-    private function omnicompat_get_price($id){
+    private function omnicompat_get_price($id, $price_amount){
         $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
         $date = date('Y-m-d H:i:s');
         $date_range = date('Y-m-d H:i:s', strtotime('-31 days'));
         $result = Db::getInstance()->getValue('SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omnicompat_products` oc 
         WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
-        AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '"');
+        AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"');
 
         return $result;
     }
