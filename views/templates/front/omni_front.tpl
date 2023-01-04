@@ -1,5 +1,5 @@
 {*
-* 2007-2022 PrestaShop
+* 2007-2023 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -18,16 +18,8 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author    PrestaShop SA <contact@prestashop.com>
-*  @copyright 2007-2022 PrestaShop SA
+*  @copyright 2007-2023 PrestaShop SA
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
-<span class="omnicompat-notice">{$omnicompat_text} {$omnicompat_price}</span>
-<style>
-.omnicompat-notice{
-    background: {$omnicompat_back_color};
-    color: {$omnicompat_font_color};
-    padding: {$omnicompat_font_size};
-    font-size: {$omnicompat_padding};
-}
-</style>
+<span class="omniversepricing-notice">{$omniversepricing_text} {$omniversepricing_price}</span>

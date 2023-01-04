@@ -23,32 +23,29 @@
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
-
 if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-class Omnicompat extends Module
+class Omniversepricing extends Module
 {
     protected $config_form = false;
 
     public function __construct()
     {
-        $this->name = 'omnicompat';
+        $this->name = 'omniversepricing';
         $this->version = '1.0.0';
+        $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
 
-        /**
-         * Set $this->bootstrap to true if your module is compliant with bootstrap (PrestaShop 1.6)
-         */
         $this->bootstrap = true;
 
         parent::__construct();
 
-        $this->displayName = $this->l('OmniCompat');
-        $this->description = $this->l('Omnibus Directive Pricing Compatibility Module for PrestaShop');
-        $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
+        $this->displayName = $this->l('OmniversePricing');
+        $this->description = $this->l('This is the module you need to make your PrestaShop Pricing Compatibile for Omnibus Directive');
+        $this->ps_versions_compliancy = ['min' => '1.7', 'max' => _PS_VERSION_];
     }
 
     /**
@@ -58,12 +55,12 @@ class Omnicompat extends Module
     public function install()
     {
         $date = date('Y-m-d H:i:s');
-        Configuration::updateValue('OMNICOMPAT_TEXT', 'Lowest price within 30 days before promotion.');
-        Configuration::updateValue('OMNICOMPAT_SHOW_IF_CURRENT', true);
-        Configuration::updateValue('OMNICOMPAT_POSITION', 'after_price');
-        Configuration::updateValue('OMNICOMPAT_BACK_COLOR', '#b3a700');
-        Configuration::updateValue('OMNICOMPAT_FONT_COLOR', '#ffffff');
-        Configuration::updateValue('OMNICOMPAT_DELETE_DATE', $date);
+        Configuration::updateValue('OMNIVERSEPRICING_TEXT', 'Lowest price within 30 days before promotion.');
+        Configuration::updateValue('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
+        Configuration::updateValue('OMNIVERSEPRICING_POSITION', 'after_price');
+        Configuration::updateValue('OMNIVERSEPRICING_BACK_COLOR', '#b3a700');
+        Configuration::updateValue('OMNIVERSEPRICING_FONT_COLOR', '#ffffff');
+        Configuration::updateValue('OMNIVERSEPRICING_DELETE_DATE', $date);
 
         include _PS_MODULE_DIR_ . $this->name . '/sql/install.php';
 
@@ -73,13 +70,18 @@ class Omnicompat extends Module
             $this->registerHook('displayProductPriceBlock');
     }
 
+    /**
+     * This methos is called when uninstalling the module.
+     */
     public function uninstall()
     {
-        Configuration::deleteByName('OMNICOMPAT_TEXT');
-        Configuration::deleteByName('OMNICOMPAT_SHOW_IF_CURRENT');
-        Configuration::deleteByName('OMNICOMPAT_POSITION');
-        Configuration::deleteByName('OMNICOMPAT_BACK_COLOR');
-        Configuration::deleteByName('OMNICOMPAT_FONT_COLOR');
+        include _PS_MODULE_DIR_ . $this->name . '/sql/uninstall.php';
+
+        Configuration::deleteByName('OMNIVERSEPRICING_TEXT');
+        Configuration::deleteByName('OMNIVERSEPRICING_SHOW_IF_CURRENT');
+        Configuration::deleteByName('OMNIVERSEPRICING_POSITION');
+        Configuration::deleteByName('OMNIVERSEPRICING_BACK_COLOR');
+        Configuration::deleteByName('OMNIVERSEPRICING_FONT_COLOR');
 
         return parent::uninstall();
     }
@@ -89,17 +91,11 @@ class Omnicompat extends Module
      */
     public function getContent()
     {
-        /**
-         * If values have been submitted in the form, process.
-         */
-        if (((bool)Tools::isSubmit('submitOmnicompatModule')) == true) {
+        if (((bool) Tools::isSubmit('submitOmniversepricingModule')) == true) {
             $this->postProcess();
         }
 
-        $this->context->smarty->assign('module_dir', $this->_path);
-        $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
-
-        return $output.$this->renderForm();
+        return $this->renderForm();
     }
 
     /**
@@ -108,25 +104,22 @@ class Omnicompat extends Module
     protected function renderForm()
     {
         $helper = new HelperForm();
-
         $helper->show_toolbar = false;
         $helper->table = $this->table;
         $helper->module = $this;
         $helper->default_form_language = $this->context->language->id;
         $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG', 0);
-
         $helper->identifier = $this->identifier;
-        $helper->submit_action = 'submitOmnicompatModule';
-        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
-            .'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
+        $helper->submit_action = 'submitOmniversepricingModule';
+        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false) . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
         $helper->token = Tools::getAdminTokenLite('AdminModules');
-        $helper->tpl_vars = array(
+        $helper->tpl_vars = [
             'fields_value' => $this->getConfigFormValues(), /* Add values for your inputs */
             'languages' => $this->context->controller->getLanguages(),
             'id_language' => $this->context->language->id,
-        );
+        ];
 
-        return $helper->generateForm(array($this->getConfigForm()));
+        return $helper->generateForm([$this->getConfigForm()]);
     }
 
     /**
@@ -145,14 +138,14 @@ class Omnicompat extends Module
                         'col' => 3,
                         'type' => 'text',
                         'desc' => $this->l('Text to show where you show the lowest price in last 30 days.'),
-                        'name' => 'OMNICOMPAT_TEXT',
+                        'name' => 'OMNIVERSEPRICING_TEXT',
                         'label' => $this->l('Omni Directive Text'),
                         'tab' => 'content_tab',
                     ],
                     [
                         'type' => 'switch',
                         'label' => $this->l('Show notice if current price is the lowest.'),
-                        'name' => 'OMNICOMPAT_SHOW_IF_CURRENT',
+                        'name' => 'OMNIVERSEPRICING_SHOW_IF_CURRENT',
                         'values' => [
                             [
                                 'id' => 'yes',
@@ -170,13 +163,9 @@ class Omnicompat extends Module
                     [
                         'type' => 'select',
                         'label' => $this->l('Select Notice Position'),
-                        'name' => 'OMNICOMPAT_POSITION',
+                        'name' => 'OMNIVERSEPRICING_POSITION',
                         'options' => [
                             'query' => [
-                                [
-                                    'id' => 'price',
-                                    'name' => $this->l('Before Price'),
-                                ],
                                 [
                                     'id' => 'after_price',
                                     'name' => $this->l('After Price'),
@@ -202,20 +191,20 @@ class Omnicompat extends Module
                     [
                         'type' => 'color',
                         'label' => $this->l('Background Color'),
-                        'name' => 'OMNICOMPAT_BACK_COLOR',
+                        'name' => 'OMNIVERSEPRICING_BACK_COLOR',
                         'tab' => 'design_tab',
                     ],
                     [
                         'type' => 'color',
                         'label' => $this->l('Text Color'),
-                        'name' => 'OMNICOMPAT_FONT_COLOR',
+                        'name' => 'OMNIVERSEPRICING_FONT_COLOR',
                         'tab' => 'design_tab',
                     ],
                     [
                         'col' => 3,
                         'type' => 'text',
                         'desc' => $this->l('Put your font size like "12px"'),
-                        'name' => 'OMNICOMPAT_FONT_SIZE',
+                        'name' => 'OMNIVERSEPRICING_FONT_SIZE',
                         'label' => $this->l('Font Size'),
                         'tab' => 'content_tab',
                     ],
@@ -223,14 +212,14 @@ class Omnicompat extends Module
                         'col' => 3,
                         'type' => 'text',
                         'desc' => $this->l('Put your padding like "6px"'),
-                        'name' => 'OMNICOMPAT_PADDING',
+                        'name' => 'OMNIVERSEPRICING_PADDING',
                         'label' => $this->l('Padding'),
                         'tab' => 'content_tab',
                     ],
                     [
                         'type' => 'switch',
                         'label' => $this->l('Delete Data Before 30 Days?'),
-                        'name' => 'OMNICOMPAT_DELETE_OLD',
+                        'name' => 'OMNIVERSEPRICING_DELETE_OLD',
                         'values' => [
                             [
                                 'id' => 'yes',
@@ -263,16 +252,16 @@ class Omnicompat extends Module
      */
     protected function getConfigFormValues()
     {
-        return array(
-            'OMNICOMPAT_TEXT' => Configuration::get('OMNICOMPAT_TEXT', 'Lowest price within 30 days before promotion.'),
-            'OMNICOMPAT_SHOW_IF_CURRENT' => Configuration::get('OMNICOMPAT_SHOW_IF_CURRENT', true),
-            'OMNICOMPAT_POSITION' => Configuration::get('OMNICOMPAT_POSITION', 'after_price'),
-            'OMNICOMPAT_BACK_COLOR' => Configuration::get('OMNICOMPAT_BACK_COLOR', '#b3a700'),
-            'OMNICOMPAT_FONT_COLOR' => Configuration::get('OMNICOMPAT_FONT_COLOR', '#ffffff'),
-            'OMNICOMPAT_FONT_SIZE' => Configuration::get('OMNICOMPAT_FONT_SIZE', '12px'),
-            'OMNICOMPAT_PADDING' => Configuration::get('OMNICOMPAT_PADDING', '6px'),
-            'OMNICOMPAT_DELETE_OLD' => false,
-        );
+        return [
+            'OMNIVERSEPRICING_TEXT' => Configuration::get('OMNIVERSEPRICING_TEXT', 'Lowest price within 30 days before promotion.'),
+            'OMNIVERSEPRICING_SHOW_IF_CURRENT' => Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true),
+            'OMNIVERSEPRICING_POSITION' => Configuration::get('OMNIVERSEPRICING_POSITION', 'after_price'),
+            'OMNIVERSEPRICING_BACK_COLOR' => Configuration::get('OMNIVERSEPRICING_BACK_COLOR', '#b3a700'),
+            'OMNIVERSEPRICING_FONT_COLOR' => Configuration::get('OMNIVERSEPRICING_FONT_COLOR', '#ffffff'),
+            'OMNIVERSEPRICING_FONT_SIZE' => Configuration::get('OMNIVERSEPRICING_FONT_SIZE', '12px'),
+            'OMNIVERSEPRICING_PADDING' => Configuration::get('OMNIVERSEPRICING_PADDING', '6px'),
+            'OMNIVERSEPRICING_DELETE_OLD' => false,
+        ];
     }
 
     /**
@@ -283,51 +272,64 @@ class Omnicompat extends Module
         $form_values = $this->getConfigFormValues();
 
         foreach (array_keys($form_values) as $key) {
-
-            if($key == 'OMNICOMPAT_POSITION'){
-
-                if(Tools::getValue($key) == 'footer_product'){
+            if ($key == 'OMNIVERSEPRICING_POSITION') {
+                if (Tools::getValue($key) == 'footer_product') {
                     $this->registerHook('displayFooterProduct');
                     $this->unregisterHook('displayProductButtons');
                     $this->unregisterHook('displayProductPriceBlock');
-                }elseif(Tools::getValue($key) == 'product_bts'){
+                } elseif (Tools::getValue($key) == 'product_bts') {
                     $this->registerHook('displayProductButtons');
                     $this->unregisterHook('displayFooterProduct');
                     $this->unregisterHook('displayProductPriceBlock');
-                }else{
+                } else {
                     $this->registerHook('displayProductPriceBlock');
                     $this->unregisterHook('displayFooterProduct');
                     $this->unregisterHook('displayProductButtons');
                 }
-            }elseif($key == 'OMNICOMPAT_DELETE_OLD'){
-
-                if(Tools::getValue($key)){
+            } elseif ($key == 'OMNIVERSEPRICING_DELETE_OLD') {
+                if (Tools::getValue($key)) {
                     $date = date('Y-m-d H:i:s');
                     $date_range = date('Y-m-d H:i:s', strtotime('-31 days'));
 
-                    Db::getInstance()->execute('DELETE FROM `' . _DB_PREFIX_ . 'omnicompat_products` oc
+                    Db::getInstance()->execute(
+                        'DELETE FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
                         WHERE oc.date < "' . $date_range . '"'
                     );
-                    Configuration::updateValue('OMNICOMPAT_DELETE_DATE', $date);
+                    Configuration::updateValue('OMNIVERSEPRICING_DELETE_DATE', $date);
                 }
             }
             Configuration::updateValue($key, Tools::getValue($key));
         }
+
+        $omniversepricing_back_color = Configuration::get('OMNIVERSEPRICING_BACK_COLOR', '#b3a700');
+        $omniversepricing_font_color = Configuration::get('OMNIVERSEPRICING_FONT_COLOR', '#ffffff');
+        $omniversepricing_font_size = Configuration::get('OMNIVERSEPRICING_FONT_SIZE', '12px');
+        $omniversepricing_padding = Configuration::get('OMNIVERSEPRICING_PADDING', '6px');
+        $gen_css = '.omniversepricing-notice{
+                        padding: ' . $omniversepricing_padding . ' !important;
+                        font-size: ' . $omniversepricing_font_size . ' !important;
+                        color: ' . $omniversepricing_font_color . ' !important;
+                        background: ' . $omniversepricing_back_color . ' !important;
+                    }';
+
+        file_put_contents(_PS_MODULE_DIR_ . $this->name . '/views/css/front_generated.css', $gen_css);
     }
 
     /**
-    * Add the CSS & JavaScript files you want to be loaded in the BO.
-    */
+     * Add the CSS & JavaScript files you want to be loaded in the BO.
+     */
     public function hookDisplayBackOfficeHeader()
     {
         $date = date('Y-m-d H:i:s');
         $date_range = date('Y-m-d H:i:s', strtotime('-31 days'));
-        $omnicompat_delete_date = Configuration::get('OMNICOMPAT_DELETE_DATE');
-        if($omnicompat_delete_date == $date_range){
-            Db::getInstance()->execute('DELETE FROM `' . _DB_PREFIX_ . 'omnicompat_products` oc
+        $omniversepricing_delete_date = Configuration::get('OMNIVERSEPRICING_DELETE_DATE');
+
+        if ($omniversepricing_delete_date == $date_range) {
+            Db::getInstance()->execute(
+                'DELETE FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
                 WHERE oc.date < "' . $date_range . '"'
             );
-            Configuration::updateValue('OMNICOMPAT_DELETE_DATE', $date);
+            Configuration::updateValue('OMNIVERSEPRICING_DELETE_DATE', $date);
         }
     }
 
@@ -336,97 +338,100 @@ class Omnicompat extends Module
      */
     public function hookHeader()
     {
-        $this->context->controller->addCSS($this->_path.'/views/css/front.css');
+        $this->context->controller->addCSS($this->_path . '/views/css/front_generated.css');
+        $this->context->controller->addCSS($this->_path . '/views/css/front.css');
     }
-    
+
+    /**
+     * Call back function for the  hook DisplayProductPriceBlock
+     */
     public function hookDisplayProductPriceBlock($params)
     {
         $product = $params['product'];
-        $omnicompat_price = $this->omnicompat_init($product);
+        $omniversepricing_price = $this->omniversepricing_init($product);
 
-        if($omnicompat_price){
-            $omnicompat_pos = Configuration::get('OMNICOMPAT_POSITION', 'after_price');
-            if($params['type'] == $omnicompat_pos ){  
-                $this->omnicompat_show_notice($omnicompat_price); 
-            }
-        }else{
+        if ($omniversepricing_price) {
+            $omniversepricing_pos = Configuration::get('OMNIVERSEPRICING_POSITION', 'after_price');
 
-            if($params['type'] == $omnicompat_pos ){  
-                $omni_if_current = Configuration::get('OMNICOMPAT_SHOW_IF_CURRENT', true);
-    
-                if($omni_if_current){
-                    $this->omnicompat_show_notice($product->price); 
-                }
+            if ($params['type'] == $omniversepricing_pos) {
+                $this->omniversepricing_show_notice($omniversepricing_price);
             }
         }
     }
 
+    /**
+     * Call back function for the  hook DisplayFooterProduct
+     */
     public function hookDisplayFooterProduct($params)
     {
         $product = $params['product'];
-        $omnicompat_price = $this->omnicompat_init($product);
+        $omniversepricing_price = $this->omniversepricing_init($product);
 
-        if($omnicompat_price){ 
-            $this->omnicompat_show_notice($omnicompat_price);
-        }else{
-
-            if($params['type'] == $omnicompat_pos ){  
-                $omni_if_current = Configuration::get('OMNICOMPAT_SHOW_IF_CURRENT', true);
-    
-                if($omni_if_current){
-                    $this->omnicompat_show_notice($product->price); 
-                }
-            }
+        if ($omniversepricing_price) {
+            $this->omniversepricing_show_notice($omniversepricing_price);
         }
     }
 
+    /**
+     * Call back function for the  hook DisplayProductButtons
+     */
     public function hookDisplayProductButtons($params)
     {
         $product = $params['product'];
-        $omnicompat_price = $this->omnicompat_init($product);
+        $omniversepricing_price = $this->omniversepricing_init($product);
 
-        if($omnicompat_price){ 
-            $this->omnicompat_show_notice($omnicompat_price);
-        }else{
-
-            if($params['type'] == $omnicompat_pos ){  
-                $omni_if_current = Configuration::get('OMNICOMPAT_SHOW_IF_CURRENT', true);
-    
-                if($omni_if_current){
-                    $this->omnicompat_show_notice($product->price); 
-                }
-            }
+        if ($omniversepricing_price) {
+            $this->omniversepricing_show_notice($omniversepricing_price);
         }
     }
 
-    private function omnicompat_init($product){
-
+    /**
+     * Returns the Omnibus Price if poduct has promotion
+     */
+    private function omniversepricing_init($product)
+    {
         $controller = Tools::getValue('controller');
 
-        if($controller == 'product'){
-
-            if($product->has_discount){
+        if ($controller == 'product') {
+            if ($product->has_discount) {
                 $price_amount = $product->price_amount;
-                $existing = $this->omnicompat_check_existance($product->id, $price_amount);
-    
-                if(empty($existing)){
-                    $this->omnicompat_insert_data($product->id, $price_amount);   
+                $existing = $this->omniversepricing_check_existance($product->id, $price_amount);
+
+                if (empty($existing)) {
+                    $this->omniversepricing_insert_data($product->id, $price_amount);
                 }
-                $omnicompate_formatted_price = $this->context->getCurrentLocale()->formatPrice($this->omnicompat_get_price($product->id, $price_amount), $this->context->currency->iso_code);     
-    
-                return $omnicompate_formatted_price;
+                $omniverse_price = $this->omniversepricing_get_price($product->id, $price_amount);
+
+                if ($omniverse_price) {
+                    $omniversepricinge_formatted_price = $this->context->getCurrentLocale()->formatPrice($omniverse_price, $this->context->currency->iso_code);
+
+                    return $omniversepricinge_formatted_price;
+                } else {
+                    $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
+
+                    if ($omni_if_current) {
+                        return $product->price;
+                    }
+
+                    return false;
+                }
             }
         }
 
         return false;
     }
-    
-    private function omnicompat_check_existance($prd_id, $price){
+
+    /**
+     * Check if price is alredy available for the product
+     */
+    private function omniversepricing_check_existance($prd_id, $price)
+    {
         $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
 
-        $results = Db::getInstance()->executeS('SELECT *
-            FROM `' . _DB_PREFIX_ . 'omnicompat_products` oc
+        $results = Db::getInstance()->executeS(
+            'SELECT *
+            FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
             WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
             AND oc.`product_id` = ' . (int) $prd_id . ' AND oc.`price` = ' . $price
         );
@@ -434,48 +439,51 @@ class Omnicompat extends Module
         return $results;
     }
 
-    private function omnicompat_insert_data($prd_id, $price){
+    /**
+     * Insert the minimum price to the table
+     */
+    private function omniversepricing_insert_data($prd_id, $price)
+    {
         $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
         $date = date('Y-m-d H:i:s');
 
-        $result = Db::getInstance()->insert('omnicompat_products', [
+        $result = Db::getInstance()->insert('omniversepricing_products', [
             'product_id' => (int) $prd_id,
             'price' => $price,
             'date' => $date,
             'shop_id' => (int) $shop_id,
             'lang_id' => (int) $lang_id,
         ]);
-
     }
 
-    private function omnicompat_get_price($id, $price_amount){
+    /**
+     * Gets the minimum price within 30 days.
+     */
+    private function omniversepricing_get_price($id, $price_amount)
+    {
         $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
         $date = date('Y-m-d H:i:s');
         $date_range = date('Y-m-d H:i:s', strtotime('-31 days'));
-        $result = Db::getInstance()->getValue('SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omnicompat_products` oc 
+        $result = Db::getInstance()->getValue('SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
         WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"');
 
         return $result;
     }
 
-    private function omnicompat_show_notice($price){
-        $omnicompat_text = Configuration::get('OMNICOMPAT_TEXT', 'Lowest price within 30 days before promotion.');
-        $omnicompat_back_color = Configuration::get('OMNICOMPAT_BACK_COLOR', '#b3a700');
-        $omnicompat_font_color = Configuration::get('OMNICOMPAT_FONT_COLOR', '#ffffff');
-        $omnicompat_font_size = Configuration::get('OMNICOMPAT_FONT_SIZE', '12px');
-        $omnicompat_padding = Configuration::get('OMNICOMPAT_PADDING', '6px');
+    /**
+     * Shows the notice
+     */
+    private function omniversepricing_show_notice($price)
+    {
+        $omniversepricing_text = Configuration::get('OMNIVERSEPRICING_TEXT', 'Lowest price within 30 days before promotion.');
         $this->context->smarty->assign([
-            'omnicompat_text' => $omnicompat_text,
-            'omnicompat_price' => $price,
-            'omnicompat_back_color' => $omnicompat_back_color,
-            'omnicompat_font_color' => $omnicompat_font_color,
-            'omnicompat_font_size' => $omnicompat_font_size,
-            'omnicompat_padding' => $omnicompat_padding,
+            'omniversepricing_text' => $omniversepricing_text,
+            'omniversepricing_price' => $price,
         ]);
-        $output = $this->context->smarty->fetch($this->local_path.'views/templates/front/omni_front.tpl');
+        $output = $this->context->smarty->fetch($this->local_path . 'views/templates/front/omni_front.tpl');
 
         echo $output;
     }
