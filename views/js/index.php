@@ -23,22 +23,12 @@
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
-$sql = [];
+header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
 
-$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'omniversepricing_products` (
-    `id_omniversepricing` int(11) NOT NULL AUTO_INCREMENT,
-    `product_id` int(11),
-    `id_product_attribute` int(11),
-    `price` decimal(20,6),
-    `promo` int(3),
-    `date` datetime,
-    `shop_id` int(11),
-    `lang_id` int(11),
-    PRIMARY KEY  (`id_omniversepricing`)
-) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+header('Cache-Control: no-store, no-cache, must-revalidate');
+header('Cache-Control: post-check=0, pre-check=0', false);
+header('Pragma: no-cache');
 
-foreach ($sql as $query) {
-    if (Db::getInstance()->execute($query) == false) {
-        return false;
-    }
-}
+header('Location: ../');
+exit;

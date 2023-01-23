@@ -34,17 +34,19 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.0.0';
+        $this->version = '1.0.1';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
+
+        $this->module_key = '9b8f5f1cfb8a9b1479c52f965758b88f';
 
         $this->bootstrap = true;
 
         parent::__construct();
 
         $this->displayName = $this->l('OmniversePricing');
-        $this->description = $this->l('This is the module you need to make your PrestaShop Pricing Compatibile for Omnibus Directive');
+        $this->description = $this->l('This is the module you need to make your PrestaShop Pricing Compatible for Omnibus Directive');
         $this->ps_versions_compliancy = ['min' => '1.7', 'max' => _PS_VERSION_];
     }
 
@@ -54,19 +56,40 @@ class Omniversepricing extends Module
      */
     public function install()
     {
-        $date = date('Y-m-d H:i:s');
+        $date = date('Y-m-d');
         Configuration::updateValue('OMNIVERSEPRICING_TEXT', 'Lowest price within 30 days before promotion.');
         Configuration::updateValue('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
+        Configuration::updateValue('OMNIVERSEPRICING_AUTO_DELETE_OLD', false);
+        Configuration::updateValue('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after');
         Configuration::updateValue('OMNIVERSEPRICING_POSITION', 'after_price');
         Configuration::updateValue('OMNIVERSEPRICING_BACK_COLOR', '#b3a700');
         Configuration::updateValue('OMNIVERSEPRICING_FONT_COLOR', '#ffffff');
         Configuration::updateValue('OMNIVERSEPRICING_DELETE_DATE', $date);
+
+        $languages = Language::getLanguages(false);
+        $languages = Language::getLanguages(false);
+
+        foreach ($languages as $lang) {
+            Configuration::updateValue('OMNIVERSEPRICING_TEXT_' . $lang['id_lang'], 'Lowest price within 30 days before promotion.');
+        }
+
+        $tab = new Tab();
+        $tab->active = 1;
+        $tab->class_name = 'AdminAjaxOmniverse';
+        $tab->name = [];
+        foreach ($languages as $lang) {
+            $tab->name[$lang['id_lang']] = 'Omniverse Ajax';
+        }
+        $tab->id_parent = -1;
+        $tab->module = $this->name;
+        $tab->add();
 
         include _PS_MODULE_DIR_ . $this->name . '/sql/install.php';
 
         return parent::install() &&
             $this->registerHook('header') &&
             $this->registerHook('displayBackOfficeHeader') &&
+            $this->registerHook('displayAdminProductsExtra') &&
             $this->registerHook('displayProductPriceBlock');
     }
 
@@ -77,8 +100,15 @@ class Omniversepricing extends Module
     {
         include _PS_MODULE_DIR_ . $this->name . '/sql/uninstall.php';
 
+        $languages = Language::getLanguages(false);
+
+        foreach ($languages as $lang) {
+            Configuration::deleteByName('OMNIVERSEPRICING_TEXT_' . $lang['id_lang']);
+        }
+
         Configuration::deleteByName('OMNIVERSEPRICING_TEXT');
         Configuration::deleteByName('OMNIVERSEPRICING_SHOW_IF_CURRENT');
+        Configuration::deleteByName('OMNIVERSEPRICING_AUTO_DELETE_OLD');
         Configuration::deleteByName('OMNIVERSEPRICING_POSITION');
         Configuration::deleteByName('OMNIVERSEPRICING_BACK_COLOR');
         Configuration::deleteByName('OMNIVERSEPRICING_FONT_COLOR');
@@ -135,12 +165,24 @@ class Omniversepricing extends Module
                 ],
                 'input' => [
                     [
-                        'col' => 3,
-                        'type' => 'text',
-                        'desc' => $this->l('Text to show where you show the lowest price in last 30 days.'),
-                        'name' => 'OMNIVERSEPRICING_TEXT',
-                        'label' => $this->l('Omni Directive Text'),
-                        'tab' => 'content_tab',
+                        'type' => 'select',
+                        'label' => $this->l('Show Notice On'),
+                        'name' => 'OMNIVERSEPRICING_SHOW_ON',
+                        'options' => [
+                            'query' => [
+                                [
+                                    'id' => 'all_prds',
+                                    'name' => $this->l('All Products'),
+                                ],
+                                [
+                                    'id' => 'discounted',
+                                    'name' => $this->l('Only Discounted Products'),
+                                ],
+                            ],
+                            'id' => 'id',
+                            'name' => 'name',
+                        ],
+                        'tab' => 'general',
                     ],
                     [
                         'type' => 'switch',
@@ -158,7 +200,54 @@ class Omniversepricing extends Module
                                 'label' => $this->l('No'),
                             ],
                         ],
+                        'tab' => 'general',
+                    ],
+                    [
+                        'type' => 'select',
+                        'label' => $this->l('Select Notice Text Style'),
+                        'name' => 'OMNIVERSEPRICING_NOTICE_STYLE',
+                        'options' => [
+                            'query' => [
+                                [
+                                    'id' => 'before_after',
+                                    'name' => $this->l('Notice Text _ Price'),
+                                ],
+                                [
+                                    'id' => 'after_before',
+                                    'name' => $this->l('Price _ Notice Text'),
+                                ],
+                            ],
+                            'id' => 'id',
+                            'name' => 'name',
+                        ],
+                        'tab' => 'general',
+                    ],
+                    [
+                        'type' => 'switch',
+                        'label' => $this->l('Automatically delete 30 days older data'),
+                        'name' => 'OMNIVERSEPRICING_AUTO_DELETE_OLD',
+                        'values' => [
+                            [
+                                'id' => 'yes',
+                                'value' => true,
+                                'label' => $this->l('Yes'),
+                            ],
+                            [
+                                'id' => 'no',
+                                'value' => false,
+                                'label' => $this->l('No'),
+                            ],
+                        ],
+                        'tab' => 'general',
+                    ],
+                    [
+                        'col' => 3,
+                        'type' => 'text',
+                        'desc' => $this->l('Text to show where you show the lowest price in last 30 days.'),
+                        'name' => 'OMNIVERSEPRICING_TEXT',
+                        'label' => $this->l('Omni Directive Text'),
                         'tab' => 'content_tab',
+                        'lang' => true,
                     ],
                     [
                         'type' => 'select',
@@ -236,6 +325,7 @@ class Omniversepricing extends Module
                     ],
                 ],
                 'tabs' => [
+                    'general' => 'General',
                     'content_tab' => 'Content',
                     'design_tab' => 'Design',
                     'action_tab' => 'Action',
@@ -252,9 +342,11 @@ class Omniversepricing extends Module
      */
     protected function getConfigFormValues()
     {
-        return [
-            'OMNIVERSEPRICING_TEXT' => Configuration::get('OMNIVERSEPRICING_TEXT', 'Lowest price within 30 days before promotion.'),
+        $ret_arr = [
+            'OMNIVERSEPRICING_SHOW_ON' => Configuration::get('OMNIVERSEPRICING_SHOW_ON', 'discounted'),
+            'OMNIVERSEPRICING_NOTICE_STYLE' => Configuration::get('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after'),
             'OMNIVERSEPRICING_SHOW_IF_CURRENT' => Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true),
+            'OMNIVERSEPRICING_AUTO_DELETE_OLD' => Configuration::get('OMNIVERSEPRICING_AUTO_DELETE_OLD', false),
             'OMNIVERSEPRICING_POSITION' => Configuration::get('OMNIVERSEPRICING_POSITION', 'after_price'),
             'OMNIVERSEPRICING_BACK_COLOR' => Configuration::get('OMNIVERSEPRICING_BACK_COLOR', '#b3a700'),
             'OMNIVERSEPRICING_FONT_COLOR' => Configuration::get('OMNIVERSEPRICING_FONT_COLOR', '#ffffff'),
@@ -262,6 +354,14 @@ class Omniversepricing extends Module
             'OMNIVERSEPRICING_PADDING' => Configuration::get('OMNIVERSEPRICING_PADDING', '6px'),
             'OMNIVERSEPRICING_DELETE_OLD' => false,
         ];
+
+        $languages = Language::getLanguages(false);
+
+        foreach ($languages as $lang) {
+            $ret_arr['OMNIVERSEPRICING_TEXT'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang['id_lang'], 'Lowest price within 30 days before promotion');
+        }
+
+        return $ret_arr;
     }
 
     /**
@@ -286,10 +386,16 @@ class Omniversepricing extends Module
                     $this->unregisterHook('displayFooterProduct');
                     $this->unregisterHook('displayProductButtons');
                 }
+            } elseif ($key == 'OMNIVERSEPRICING_TEXT') {
+                $languages = Language::getLanguages(false);
+
+                foreach ($languages as $lang) {
+                    Configuration::updateValue($key . '_' . $lang['id_lang'], Tools::getValue($key . '_' . $lang['id_lang']));
+                }
             } elseif ($key == 'OMNIVERSEPRICING_DELETE_OLD') {
                 if (Tools::getValue($key)) {
-                    $date = date('Y-m-d H:i:s');
-                    $date_range = date('Y-m-d H:i:s', strtotime('-31 days'));
+                    $date = date('Y-m-d');
+                    $date_range = date('Y-m-d', strtotime('-31 days'));
 
                     Db::getInstance()->execute(
                         'DELETE FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
@@ -320,17 +426,70 @@ class Omniversepricing extends Module
      */
     public function hookDisplayBackOfficeHeader()
     {
-        $date = date('Y-m-d H:i:s');
-        $date_range = date('Y-m-d H:i:s', strtotime('-31 days'));
-        $omniversepricing_delete_date = Configuration::get('OMNIVERSEPRICING_DELETE_DATE');
+        $this->context->controller->addCSS($this->_path . 'views/css/admin.css');
+        $this->context->controller->addJS($this->_path . 'views/js/admin.js');
+        $lang_id = $this->context->language->id;
+        $shop_id = $this->context->shop->id;
+        Media::addJsDef([
+            'omniversepricing_ajax_url' => $this->context->link->getAdminLink('AdminAjaxOmniverse'),
+            'omniversepricing_shop_id' => $shop_id,
+            'omniversepricing_lang_id' => $lang_id,
+        ]);
+        $omni_auto_del = Configuration::get('OMNIVERSEPRICING_AUTO_DELETE_OLD', false);
 
-        if ($omniversepricing_delete_date == $date_range) {
-            Db::getInstance()->execute(
-                'DELETE FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
-                WHERE oc.date < "' . $date_range . '"'
-            );
-            Configuration::updateValue('OMNIVERSEPRICING_DELETE_DATE', $date);
+        if ($omni_auto_del) {
+            $date = date('Y-m-d');
+            $date_range = date('Y-m-d', strtotime('-31 days'));
+            $omniversepricing_delete_date = Configuration::get('OMNIVERSEPRICING_DELETE_DATE');
+
+            if ($omniversepricing_delete_date == $date_range) {
+                Db::getInstance()->execute(
+                    'DELETE FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
+                    WHERE oc.date < "' . $date_range . '"'
+                );
+                Configuration::updateValue('OMNIVERSEPRICING_DELETE_DATE', $date);
+            }
         }
+    }
+
+    /**
+     * Shows Price History List in Admin Product Page
+     */
+    public function hookDisplayAdminProductsExtra($params)
+    {
+        $id_product = $params['id_product'];
+
+        $lang_id = $this->context->language->id;
+        $shop_id = $this->context->shop->id;
+
+        $results = Db::getInstance()->executeS(
+            'SELECT *
+            FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
+            WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . ' AND oc.`product_id` = ' . (int) $id_product . ' ORDER BY date DESC',
+            true
+        );
+        $omniverse_prices = [];
+
+        foreach ($results as $result) {
+            $omniverse_prices[$result['id_omniversepricing']]['id'] = $result['id_omniversepricing'];
+            $omniverse_prices[$result['id_omniversepricing']]['date'] = $result['date'];
+            $omniverse_prices[$result['id_omniversepricing']]['price'] = $this->context->getCurrentLocale()->formatPrice($result['price'], $this->context->currency->iso_code);
+            $omniverse_prices[$result['id_omniversepricing']]['promotext'] = 'Normal Price';
+
+            if ($result['promo']) {
+                $omniverse_prices[$result['id_omniversepricing']]['promotext'] = 'Promotional Price';
+            }
+        }
+        $languages = Language::getLanguages(false);
+        $this->context->smarty->assign([
+            'omniverse_prices' => $omniverse_prices,
+            'omniverse_prd_id' => $id_product,
+            'omniverse_langs' => $languages,
+            'omniverse_curr_lang' => $lang_id,
+        ]);
+        $output = $this->context->smarty->fetch($this->local_path . 'views/templates/admin/price_history.tpl');
+
+        return $output;
     }
 
     /**
@@ -391,30 +550,33 @@ class Omniversepricing extends Module
     private function omniversepricing_init($product)
     {
         $controller = Tools::getValue('controller');
+        $show_on = Configuration::get('OMNIVERSEPRICING_SHOW_ON', 'discounted');
+
+        if (!$product->has_discount && $show_on == 'discounted') {
+            return;
+        }
 
         if ($controller == 'product') {
-            if ($product->has_discount) {
-                $price_amount = $product->price_amount;
-                $existing = $this->omniversepricing_check_existance($product->id, $price_amount);
+            $price_amount = $product->price_amount;
+            $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $product->id_product_attribute);
 
-                if (empty($existing)) {
-                    $this->omniversepricing_insert_data($product->id, $price_amount);
+            if (empty($existing)) {
+                $this->omniversepricing_insert_data($product->id, $price_amount, $product->has_discount, $product->id_product_attribute);
+            }
+            $omniverse_price = $this->omniversepricing_get_price($product->id, $price_amount, $product->id_product_attribute);
+
+            if ($omniverse_price) {
+                $omniversepricinge_formatted_price = $this->context->getCurrentLocale()->formatPrice($omniverse_price, $this->context->currency->iso_code);
+
+                return $omniversepricinge_formatted_price;
+            } else {
+                $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
+
+                if ($omni_if_current) {
+                    return $product->price;
                 }
-                $omniverse_price = $this->omniversepricing_get_price($product->id, $price_amount);
 
-                if ($omniverse_price) {
-                    $omniversepricinge_formatted_price = $this->context->getCurrentLocale()->formatPrice($omniverse_price, $this->context->currency->iso_code);
-
-                    return $omniversepricinge_formatted_price;
-                } else {
-                    $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
-
-                    if ($omni_if_current) {
-                        return $product->price;
-                    }
-
-                    return false;
-                }
+                return false;
             }
         }
 
@@ -424,16 +586,21 @@ class Omniversepricing extends Module
     /**
      * Check if price is alredy available for the product
      */
-    private function omniversepricing_check_existance($prd_id, $price)
+    private function omniversepricing_check_existance($prd_id, $price, $id_attr = 0)
     {
         $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
+        $attr_q = '';
+
+        if ($id_attr) {
+            $attr_q = ' AND oc.`id_product_attribute` = ' . $id_attr;
+        }
 
         $results = Db::getInstance()->executeS(
             'SELECT *
             FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
             WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
-            AND oc.`product_id` = ' . (int) $prd_id . ' AND oc.`price` = ' . $price
+            AND oc.`product_id` = ' . (int) $prd_id . ' AND oc.`price` = ' . $price . $attr_q
         );
 
         return $results;
@@ -442,15 +609,21 @@ class Omniversepricing extends Module
     /**
      * Insert the minimum price to the table
      */
-    private function omniversepricing_insert_data($prd_id, $price)
+    private function omniversepricing_insert_data($prd_id, $price, $discounted, $id_attr = 0)
     {
         $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
-        $date = date('Y-m-d H:i:s');
+        $date = date('Y-m-d');
+        $promo = 0;
 
+        if ($discounted) {
+            $promo = 1;
+        }
         $result = Db::getInstance()->insert('omniversepricing_products', [
             'product_id' => (int) $prd_id,
+            'id_product_attribute' => $id_attr,
             'price' => $price,
+            'promo' => $promo,
             'date' => $date,
             'shop_id' => (int) $shop_id,
             'lang_id' => (int) $lang_id,
@@ -460,15 +633,20 @@ class Omniversepricing extends Module
     /**
      * Gets the minimum price within 30 days.
      */
-    private function omniversepricing_get_price($id, $price_amount)
+    private function omniversepricing_get_price($id, $price_amount, $id_attr = 0)
     {
         $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
-        $date = date('Y-m-d H:i:s');
-        $date_range = date('Y-m-d H:i:s', strtotime('-31 days'));
+        $attr_q = '';
+
+        if ($id_attr) {
+            $attr_q = ' AND oc.`id_product_attribute` = ' . $id_attr;
+        }
+        $date = date('Y-m-d');
+        $date_range = date('Y-m-d', strtotime('-31 days'));
         $result = Db::getInstance()->getValue('SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
         WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
-        AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"');
+        AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q);
 
         return $result;
     }
@@ -478,9 +656,12 @@ class Omniversepricing extends Module
      */
     private function omniversepricing_show_notice($price)
     {
-        $omniversepricing_text = Configuration::get('OMNIVERSEPRICING_TEXT', 'Lowest price within 30 days before promotion.');
+        $lang_id = $this->context->language->id;
+        $omniversepricing_text = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang_id, 'Lowest price within 30 days before promotion.');
+        $omniversepricing_text_style = Configuration::get('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after');
         $this->context->smarty->assign([
             'omniversepricing_text' => $omniversepricing_text,
+            'omniversepricing_text_style' => $omniversepricing_text_style,
             'omniversepricing_price' => $price,
         ]);
         $output = $this->context->smarty->fetch($this->local_path . 'views/templates/front/omni_front.tpl');

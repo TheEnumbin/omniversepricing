@@ -22,4 +22,8 @@
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
-<span class="omniversepricing-notice">{$omniversepricing_text} {$omniversepricing_price}</span>
+{if $omniversepricing_text_style == 'before_after'}
+    <span class="omniversepricing-notice">{$omniversepricing_text} {$omniversepricing_price}</span>
+{else}
+    <span class="omniversepricing-notice">{$omniversepricing_price} {$omniversepricing_text}</span>
+{/if}
