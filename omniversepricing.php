@@ -34,7 +34,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.0.1';
+        $this->version = '1.0.3';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
@@ -46,7 +46,7 @@ class Omniversepricing extends Module
         parent::__construct();
 
         $this->displayName = $this->l('OmniversePricing');
-        $this->description = $this->l('This is the module you need to make your PrestaShop Pricing Compatible for Omnibus Directive');
+        $this->description = $this->l('This is the module you need to make your PrestaShop Pricing Compatible for EU Omnibus Directive');
         $this->ps_versions_compliancy = ['min' => '1.7', 'max' => _PS_VERSION_];
     }
 
@@ -57,6 +57,7 @@ class Omniversepricing extends Module
     public function install()
     {
         $date = date('Y-m-d');
+        Configuration::updateValue('OMNIVERSEPRICING_STABLE_VERSION', '1.0.2');
         Configuration::updateValue('OMNIVERSEPRICING_TEXT', 'Lowest price within 30 days before promotion.');
         Configuration::updateValue('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
         Configuration::updateValue('OMNIVERSEPRICING_AUTO_DELETE_OLD', false);
@@ -506,13 +507,18 @@ class Omniversepricing extends Module
      */
     public function hookDisplayProductPriceBlock($params)
     {
-        $product = $params['product'];
-        $omniversepricing_price = $this->omniversepricing_init($product);
+        $omniversepricing_pos = Configuration::get('OMNIVERSEPRICING_POSITION', 'after_price');
 
-        if ($omniversepricing_price) {
-            $omniversepricing_pos = Configuration::get('OMNIVERSEPRICING_POSITION', 'after_price');
+        if ($params['type'] == $omniversepricing_pos) {
+            $product = $params['product'];
+            $omniversepricing_price = $this->omniversepricing_init($product);
 
-            if ($params['type'] == $omniversepricing_pos) {
+            if ($omniversepricing_price) {
+                $show_on = Configuration::get('OMNIVERSEPRICING_SHOW_ON', 'discounted');
+
+                if (!$product->has_discount && $show_on == 'discounted') {
+                    return;
+                }
                 $this->omniversepricing_show_notice($omniversepricing_price);
             }
         }
@@ -550,18 +556,13 @@ class Omniversepricing extends Module
     private function omniversepricing_init($product)
     {
         $controller = Tools::getValue('controller');
-        $show_on = Configuration::get('OMNIVERSEPRICING_SHOW_ON', 'discounted');
-
-        if (!$product->has_discount && $show_on == 'discounted') {
-            return;
-        }
 
         if ($controller == 'product') {
             $price_amount = $product->price_amount;
-            $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $product->id_product_attribute);
+            $existing = $this->omniversepricing_check_existance($product);
 
             if (empty($existing)) {
-                $this->omniversepricing_insert_data($product->id, $price_amount, $product->has_discount, $product->id_product_attribute);
+                $this->omniversepricing_insert_data($product);
             }
             $omniverse_price = $this->omniversepricing_get_price($product->id, $price_amount, $product->id_product_attribute);
 
@@ -586,21 +587,50 @@ class Omniversepricing extends Module
     /**
      * Check if price is alredy available for the product
      */
-    private function omniversepricing_check_existance($prd_id, $price, $id_attr = 0)
+    private function omniversepricing_check_existance($prd)
     {
+        $stable_v = Configuration::get('OMNIVERSEPRICING_STABLE_VERSION');
         $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
         $attr_q = '';
+        $curre_q = '';
+        $countr_q = '';
+        $group_q = '';
+
+        $prd_id = $prd->id;
+        $price = $prd->price_amount;
+        $id_attr = $prd->id_product_attribute;
 
         if ($id_attr) {
             $attr_q = ' AND oc.`id_product_attribute` = ' . $id_attr;
+        }
+
+        if ($stable_v && version_compare($stable_v, '1.0.2', '>')) {
+            $curr_id = $this->context->currency->id;
+            $curre_q = ' AND oc.`id_currency` = ' . $curr_id;
+
+            $country_id = $this->context->country->id;
+            $countr_q = ' AND oc.`id_country` = ' . $country_id;
+
+            $customer = $this->context->customer;
+
+            if ($customer instanceof Customer && $customer->isLogged()) {
+                $groups = $customer->getGroups();
+                $id_group = implode(', ', $groups);
+            } elseif ($customer instanceof Customer && $customer->isLogged(true)) {
+                $id_group = (int) Configuration::get('PS_GUEST_GROUP');
+            } else {
+                $id_group = (int) Configuration::get('PS_UNIDENTIFIED_GROUP');
+            }
+
+            $group_q = ' AND oc.`id_group` IN (' . $id_group . ')';
         }
 
         $results = Db::getInstance()->executeS(
             'SELECT *
             FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
             WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
-            AND oc.`product_id` = ' . (int) $prd_id . ' AND oc.`price` = ' . $price . $attr_q
+            AND oc.`product_id` = ' . (int) $prd_id . ' AND oc.`price` = ' . $price . $attr_q . $curre_q . $countr_q . $group_q
         );
 
         return $results;
@@ -609,25 +639,66 @@ class Omniversepricing extends Module
     /**
      * Insert the minimum price to the table
      */
-    private function omniversepricing_insert_data($prd_id, $price, $discounted, $id_attr = 0)
+    private function omniversepricing_insert_data($prd)
     {
+        $stable_v = Configuration::get('OMNIVERSEPRICING_STABLE_VERSION');
         $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
         $date = date('Y-m-d');
         $promo = 0;
+        $prd_id = $prd->id;
+        $price = $prd->price_amount;
+        $id_attr = $prd->id_product_attribute;
+        $curr_id = $this->context->currency->id;
+        $country_id = $this->context->country->id;
+        $customer = $this->context->customer;
 
-        if ($discounted) {
+        if ($prd->has_discount) {
             $promo = 1;
         }
-        $result = Db::getInstance()->insert('omniversepricing_products', [
-            'product_id' => (int) $prd_id,
-            'id_product_attribute' => $id_attr,
-            'price' => $price,
-            'promo' => $promo,
-            'date' => $date,
-            'shop_id' => (int) $shop_id,
-            'lang_id' => (int) $lang_id,
-        ]);
+
+        if ($stable_v && version_compare($stable_v, '1.0.2', '>')) {
+            if ($customer instanceof Customer && $customer->isLogged()) {
+                $groups = $customer->getGroups();
+
+                if ($prd->has_discount) {
+                    $id_group = 0;
+                } else {
+                    if (isset($prd->specific_price['id_group'])) {
+                        $id_group = $prd->specific_price['id_group'];
+                    } else {
+                        $id_group = 0;
+                    }
+                }
+            } elseif ($customer instanceof Customer && $customer->isLogged(true)) {
+                $id_group = (int) Configuration::get('PS_GUEST_GROUP');
+            } else {
+                $id_group = (int) Configuration::get('PS_UNIDENTIFIED_GROUP');
+            }
+
+            $result = Db::getInstance()->insert('omniversepricing_products', [
+                'product_id' => (int) $prd_id,
+                'id_product_attribute' => $id_attr,
+                'id_country' => $country_id,
+                'id_currency' => $curr_id,
+                'id_group' => $id_group,
+                'price' => $price,
+                'promo' => $promo,
+                'date' => $date,
+                'shop_id' => (int) $shop_id,
+                'lang_id' => (int) $lang_id,
+            ]);
+        } else {
+            $result = Db::getInstance()->insert('omniversepricing_products', [
+                'product_id' => (int) $prd_id,
+                'id_product_attribute' => $id_attr,
+                'price' => $price,
+                'promo' => $promo,
+                'date' => $date,
+                'shop_id' => (int) $shop_id,
+                'lang_id' => (int) $lang_id,
+            ]);
+        }
     }
 
     /**
@@ -635,18 +706,42 @@ class Omniversepricing extends Module
      */
     private function omniversepricing_get_price($id, $price_amount, $id_attr = 0)
     {
+        $stable_v = Configuration::get('OMNIVERSEPRICING_STABLE_VERSION');
         $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
         $attr_q = '';
+        $curre_q = '';
+        $countr_q = '';
+        $group_q = '';
 
         if ($id_attr) {
             $attr_q = ' AND oc.`id_product_attribute` = ' . $id_attr;
+        }
+
+        if ($stable_v && version_compare($stable_v, '1.0.2', '>')) {
+            $curr_id = $this->context->currency->id;
+            $curre_q = ' AND oc.`id_currency` = ' . $curr_id;
+
+            $country_id = $this->context->country->id;
+            $countr_q = ' AND oc.`id_country` = ' . $country_id;
+            $customer = $this->context->customer;
+
+            if ($customer instanceof Customer && $customer->isLogged()) {
+                $groups = $customer->getGroups();
+                $id_group = implode(', ', $groups);
+            } elseif ($customer instanceof Customer && $customer->isLogged(true)) {
+                $id_group = (int) Configuration::get('PS_GUEST_GROUP');
+            } else {
+                $id_group = (int) Configuration::get('PS_UNIDENTIFIED_GROUP');
+            }
+
+            $group_q = ' AND oc.`id_group` IN (' . $id_group . ')';
         }
         $date = date('Y-m-d');
         $date_range = date('Y-m-d', strtotime('-31 days'));
         $result = Db::getInstance()->getValue('SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
         WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
-        AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q);
+        AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q . $curre_q . $countr_q . $group_q);
 
         return $result;
     }
