@@ -1,0 +1,32 @@
+<?php
+
+global $_MODULE;
+$_MODULE = array();
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_6eddf78c2da323580a54be1b8b32ce40'] = 'OmniversePricing';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_be3e81417c52b1373abba76ffcd5dec5'] = 'Jest to moduł, którego potrzebujesz, aby Twój cennik PrestaShop był zgodny z unijną dyrektywą Omnibus';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_f4f70727dc34561dfde1a3c529b6205c'] = 'Ustawienia';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_3b7ccc25994f1191df766a51d3fab3e7'] = 'Pokaż powiadomienie włączone';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_a40de094ebb292b72fa2a4f3a1cf1209'] = 'Wszystkie produkty';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_536f68bf3f32e6711a1eb59f6e30c3f0'] = 'Tylko przecenione produkty';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_a2f34eea3395ce52441afa0bac18e47c'] = 'Pokaż ogłoszenie, jeśli aktualna cena jest najniższa.';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_93cba07454f06a4a960172bbd6e2a435'] = 'Tak';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_bafd7322c6e97d25b6299b5d6fe8920b'] = 'NIE';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_ed8b22ee8e4b875f7ab0833396e70886'] = 'Wybierz styl tekstu powiadomienia';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_22e5157fd9002a61713feba36fe481e5'] = 'Tekst powiadomienia _ Cena';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_9bfe95058b6f646aa4357aa3b6a4a3a3'] = 'Cena _ Tekst powiadomienia';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_0f567a05d8ffc4251ffd6abe79e9887f'] = 'Automatycznie usuwaj dane starsze o 30 dni';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_fa4bffc435cc56d3fc0b40ed7567b808'] = 'Tekst pokazujący, gdzie pokazujesz najniższą cenę w ciągu ostatnich 30 dni.';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_d675a413b4e3d73423c02ee45f93f0a6'] = 'Omni Directive Tekst';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_d48305ae66ee0de5777023c449b85d73'] = 'Wybierz pozycję powiadomienia';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_6b89093ddc565df90fc31eb03b9c5b45'] = 'Po cenie';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_fcaff05954744f2dddbcd292b91ed8c7'] = 'Przed starą ceną';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_65b9b423b41d60bdd8ca4ff357587029'] = 'Produkt w stopce';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_6cdf75b46e0b9193abab037dd8c6d05a'] = 'Po przyciskach produktu';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_75e7422f2fe253fc69d3f6c148d197ee'] = 'Kolor tła';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_8903861290617267b361478ab7f16f31'] = 'Kolor tekstu';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_659e6460da1dc6f0fc5225f0cdda50b9'] = 'Umieść rozmiar czcionki, np. „12px”';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_45f0d4fa9a30e9c5571dbaa9ad1be931'] = 'Rozmiar czcionki';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_da5c63571d61185624bf31b272fecc52'] = 'Umieść swoje wypełnienie jak „6px”';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_a10443964156b9e87c95e74c8f9baf15'] = 'Wyściółka';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_8f48fdd7217451fd3e5aaa5937599df8'] = 'Usunąć dane przed upływem 30 dni?';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_c9cc8cce247e49bae79f15173ce97354'] = 'Ratować';
