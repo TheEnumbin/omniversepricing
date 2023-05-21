@@ -34,7 +34,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.0.4';
+        $this->version = '1.0.5';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
@@ -60,6 +60,7 @@ class Omniversepricing extends Module
         Configuration::updateValue('OMNIVERSEPRICING_STABLE_VERSION', '1.0.2');
         Configuration::updateValue('OMNIVERSEPRICING_TEXT', 'Lowest price within 30 days before promotion.');
         Configuration::updateValue('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
+        Configuration::updateValue('OMNIVERSEPRICING_STOP_RECORD', false);
         Configuration::updateValue('OMNIVERSEPRICING_AUTO_DELETE_OLD', false);
         Configuration::updateValue('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after');
         Configuration::updateValue('OMNIVERSEPRICING_POSITION', 'after_price');
@@ -109,6 +110,7 @@ class Omniversepricing extends Module
 
         Configuration::deleteByName('OMNIVERSEPRICING_TEXT');
         Configuration::deleteByName('OMNIVERSEPRICING_SHOW_IF_CURRENT');
+        Configuration::deleteByName('OMNIVERSEPRICING_STOP_RECORD');
         Configuration::deleteByName('OMNIVERSEPRICING_AUTO_DELETE_OLD');
         Configuration::deleteByName('OMNIVERSEPRICING_POSITION');
         Configuration::deleteByName('OMNIVERSEPRICING_BACK_COLOR');
@@ -308,6 +310,24 @@ class Omniversepricing extends Module
                     ],
                     [
                         'type' => 'switch',
+                        'label' => $this->l('Stop Recording Price History'),
+                        'name' => 'OMNIVERSEPRICING_STOP_RECORD',
+                        'values' => [
+                            [
+                                'id' => 'yes',
+                                'value' => true,
+                                'label' => $this->l('Yes'),
+                            ],
+                            [
+                                'id' => 'no',
+                                'value' => false,
+                                'label' => $this->l('No'),
+                            ],
+                        ],
+                        'tab' => 'action_tab',
+                    ],
+                    [
+                        'type' => 'switch',
                         'label' => $this->l('Delete Data Before 30 Days?'),
                         'name' => 'OMNIVERSEPRICING_DELETE_OLD',
                         'values' => [
@@ -347,6 +367,7 @@ class Omniversepricing extends Module
             'OMNIVERSEPRICING_SHOW_ON' => Configuration::get('OMNIVERSEPRICING_SHOW_ON', 'discounted'),
             'OMNIVERSEPRICING_NOTICE_STYLE' => Configuration::get('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after'),
             'OMNIVERSEPRICING_SHOW_IF_CURRENT' => Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true),
+            'OMNIVERSEPRICING_STOP_RECORD' => Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false),
             'OMNIVERSEPRICING_AUTO_DELETE_OLD' => Configuration::get('OMNIVERSEPRICING_AUTO_DELETE_OLD', false),
             'OMNIVERSEPRICING_POSITION' => Configuration::get('OMNIVERSEPRICING_POSITION', 'after_price'),
             'OMNIVERSEPRICING_BACK_COLOR' => Configuration::get('OMNIVERSEPRICING_BACK_COLOR', '#b3a700'),
@@ -560,9 +581,12 @@ class Omniversepricing extends Module
         if ($controller == 'product') {
             $price_amount = $product->price_amount;
             $existing = $this->omniversepricing_check_existance($product);
+            $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
 
-            if (empty($existing)) {
-                $this->omniversepricing_insert_data($product);
+            if (!$omni_stop) {
+                if (empty($existing)) {
+                    $this->omniversepricing_insert_data($product);
+                }
             }
             $omniverse_price = $this->omniversepricing_get_price($product->id, $price_amount, $product->id_product_attribute);
 
