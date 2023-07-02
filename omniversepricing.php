@@ -34,7 +34,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.0.5';
+        $this->version = '1.0.6';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
@@ -60,6 +60,7 @@ class Omniversepricing extends Module
         Configuration::updateValue('OMNIVERSEPRICING_STABLE_VERSION', '1.0.2');
         Configuration::updateValue('OMNIVERSEPRICING_TEXT', 'Lowest price within 30 days before promotion.');
         Configuration::updateValue('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
+        Configuration::updateValue('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
         Configuration::updateValue('OMNIVERSEPRICING_STOP_RECORD', false);
         Configuration::updateValue('OMNIVERSEPRICING_AUTO_DELETE_OLD', false);
         Configuration::updateValue('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after');
@@ -110,6 +111,7 @@ class Omniversepricing extends Module
 
         Configuration::deleteByName('OMNIVERSEPRICING_TEXT');
         Configuration::deleteByName('OMNIVERSEPRICING_SHOW_IF_CURRENT');
+        Configuration::deleteByName('OMNIVERSEPRICING_PRICE_WITH_TAX');
         Configuration::deleteByName('OMNIVERSEPRICING_STOP_RECORD');
         Configuration::deleteByName('OMNIVERSEPRICING_AUTO_DELETE_OLD');
         Configuration::deleteByName('OMNIVERSEPRICING_POSITION');
@@ -184,6 +186,24 @@ class Omniversepricing extends Module
                             ],
                             'id' => 'id',
                             'name' => 'name',
+                        ],
+                        'tab' => 'general',
+                    ],
+                    [
+                        'type' => 'switch',
+                        'label' => $this->l('Price With/Without Tax'),
+                        'name' => 'OMNIVERSEPRICING_PRICE_WITH_TAX',
+                        'values' => [
+                            [
+                                'id' => 'including',
+                                'value' => true,
+                                'label' => $this->l('With Tax'),
+                            ],
+                            [
+                                'id' => 'excluding',
+                                'value' => false,
+                                'label' => $this->l('Without Tax'),
+                            ],
                         ],
                         'tab' => 'general',
                     ],
@@ -367,6 +387,7 @@ class Omniversepricing extends Module
             'OMNIVERSEPRICING_SHOW_ON' => Configuration::get('OMNIVERSEPRICING_SHOW_ON', 'discounted'),
             'OMNIVERSEPRICING_NOTICE_STYLE' => Configuration::get('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after'),
             'OMNIVERSEPRICING_SHOW_IF_CURRENT' => Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true),
+            'OMNIVERSEPRICING_PRICE_WITH_TAX' => Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false),
             'OMNIVERSEPRICING_STOP_RECORD' => Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false),
             'OMNIVERSEPRICING_AUTO_DELETE_OLD' => Configuration::get('OMNIVERSEPRICING_AUTO_DELETE_OLD', false),
             'OMNIVERSEPRICING_POSITION' => Configuration::get('OMNIVERSEPRICING_POSITION', 'after_price'),
@@ -579,13 +600,19 @@ class Omniversepricing extends Module
         $controller = Tools::getValue('controller');
 
         if ($controller == 'product') {
-            $price_amount = $product->price_amount;
-            $existing = $this->omniversepricing_check_existance($product);
+            $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
+
+            if($omni_tax_include){
+                $price_amount = $product->rounded_display_price;
+            }else{
+                $price_amount = $product->price_amount;
+            }
+            $existing = $this->omniversepricing_check_existance($product, $omni_tax_include);
             $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
 
             if (!$omni_stop) {
                 if (empty($existing)) {
-                    $this->omniversepricing_insert_data($product);
+                    $this->omniversepricing_insert_data($product, $omni_tax_include);
                 }
             }
             $omniverse_price = $this->omniversepricing_get_price($product->id, $price_amount, $product->id_product_attribute);
@@ -598,7 +625,12 @@ class Omniversepricing extends Module
                 $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
 
                 if ($omni_if_current) {
-                    return $product->price;
+
+                    if($omni_tax_include){
+                        return $this->context->getCurrentLocale()->formatPrice($product->rounded_display_price, $this->context->currency->iso_code);
+                    }else{
+                        return $product->price;
+                    }
                 }
 
                 return false;
@@ -611,7 +643,7 @@ class Omniversepricing extends Module
     /**
      * Check if price is alredy available for the product
      */
-    private function omniversepricing_check_existance($prd)
+    private function omniversepricing_check_existance($prd, $with_tax = false)
     {
         $stable_v = Configuration::get('OMNIVERSEPRICING_STABLE_VERSION');
         $lang_id = $this->context->language->id;
@@ -622,8 +654,13 @@ class Omniversepricing extends Module
         $group_q = '';
 
         $prd_id = $prd->id;
-        $price = $prd->price_amount;
         $id_attr = $prd->id_product_attribute;
+
+        if($with_tax){
+            $price = $prd->rounded_display_price;
+        }else{
+            $price = $prd->price_amount;
+        }
 
         if ($id_attr) {
             $attr_q = ' AND oc.`id_product_attribute` = ' . $id_attr;
@@ -663,7 +700,7 @@ class Omniversepricing extends Module
     /**
      * Insert the minimum price to the table
      */
-    private function omniversepricing_insert_data($prd)
+    private function omniversepricing_insert_data($prd, $with_tax = false)
     {
         $stable_v = Configuration::get('OMNIVERSEPRICING_STABLE_VERSION');
         $lang_id = $this->context->language->id;
@@ -671,11 +708,16 @@ class Omniversepricing extends Module
         $date = date('Y-m-d');
         $promo = 0;
         $prd_id = $prd->id;
-        $price = $prd->price_amount;
         $id_attr = $prd->id_product_attribute;
         $curr_id = $this->context->currency->id;
         $country_id = $this->context->country->id;
         $customer = $this->context->customer;
+
+        if($with_tax){
+            $price = $prd->rounded_display_price;
+        }else{
+            $price = $prd->price_amount;
+        }
 
         if ($prd->has_discount) {
             $promo = 1;
