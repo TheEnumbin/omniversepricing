@@ -27,8 +27,9 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-function upgrade_module_1_0_6($object, $install = false)
+function upgrade_module_1_0_7($object, $install = false)
 {
     Configuration::updateValue('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
+    Configuration::updateValue('OMNIVERSEPRICING_CRON_OR_HOOK', 'by_hook');
     return true;
 }

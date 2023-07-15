@@ -31,4 +31,8 @@
     font-weight: 600;
     color: #fff;
     background: #b3a700;
+    width: fit-content;
+    display: flex;
+    margin-top: 6px;
+    margin-bottom: 6px;
 }

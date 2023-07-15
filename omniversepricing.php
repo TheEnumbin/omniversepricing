@@ -26,7 +26,7 @@
 if (!defined('_PS_VERSION_')) {
     exit;
 }
-
+use PrestaShop\PrestaShop\Adapter\Product\PriceFormatter;
 class Omniversepricing extends Module
 {
     protected $config_form = false;
@@ -34,7 +34,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.0.6';
+        $this->version = '1.0.7';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
@@ -64,6 +64,7 @@ class Omniversepricing extends Module
         Configuration::updateValue('OMNIVERSEPRICING_STOP_RECORD', false);
         Configuration::updateValue('OMNIVERSEPRICING_AUTO_DELETE_OLD', false);
         Configuration::updateValue('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after');
+        Configuration::updateValue('OMNIVERSEPRICING_CRON_OR_HOOK', 'by_hook');
         Configuration::updateValue('OMNIVERSEPRICING_POSITION', 'after_price');
         Configuration::updateValue('OMNIVERSEPRICING_BACK_COLOR', '#b3a700');
         Configuration::updateValue('OMNIVERSEPRICING_FONT_COLOR', '#ffffff');
@@ -162,6 +163,17 @@ class Omniversepricing extends Module
      */
     protected function getConfigForm()
     {
+        $tabs = [
+            'general' => $this->l('General'),
+            'content_tab' => $this->l('Content'),
+            'design_tab' => $this->l('Design'),
+            'action_tab' => $this->l('Action'),
+        ];
+        $cron_or_hook = Configuration::get('OMNIVERSEPRICING_CRON_OR_HOOK', 'by_hook');
+
+        if($cron_or_hook == 'by_cron'){
+            $tabs['cron_tab'] = $this->l('Cron Function');
+        }
         return [
             'form' => [
                 'legend' => [
@@ -169,6 +181,26 @@ class Omniversepricing extends Module
                     'icon' => 'icon-cogs',
                 ],
                 'input' => [
+                    [
+                        'type' => 'select',
+                        'label' => $this->l('Collect Price History By'),
+                        'name' => 'OMNIVERSEPRICING_CRON_OR_HOOK',
+                        'options' => [
+                            'query' => [
+                                [
+                                    'id' => 'by_cron',
+                                    'name' => $this->l('Cron (Automatically everyday)'),
+                                ],
+                                [
+                                    'id' => 'by_hook',
+                                    'name' => $this->l('Hook (Automatically when the product page is opens)'),
+                                ],
+                            ],
+                            'id' => 'id',
+                            'name' => 'name',
+                        ],
+                        'tab' => 'general',
+                    ],
                     [
                         'type' => 'select',
                         'label' => $this->l('Show Notice On'),
@@ -365,12 +397,7 @@ class Omniversepricing extends Module
                         'tab' => 'action_tab',
                     ],
                 ],
-                'tabs' => [
-                    'general' => 'General',
-                    'content_tab' => 'Content',
-                    'design_tab' => 'Design',
-                    'action_tab' => 'Action',
-                ],
+                'tabs' => $tabs,
                 'submit' => [
                     'title' => $this->l('Save'),
                 ],
@@ -386,6 +413,7 @@ class Omniversepricing extends Module
         $ret_arr = [
             'OMNIVERSEPRICING_SHOW_ON' => Configuration::get('OMNIVERSEPRICING_SHOW_ON', 'discounted'),
             'OMNIVERSEPRICING_NOTICE_STYLE' => Configuration::get('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after'),
+            'OMNIVERSEPRICING_CRON_OR_HOOK' => Configuration::get('OMNIVERSEPRICING_CRON_OR_HOOK', 'by_hook'),
             'OMNIVERSEPRICING_SHOW_IF_CURRENT' => Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true),
             'OMNIVERSEPRICING_PRICE_WITH_TAX' => Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false),
             'OMNIVERSEPRICING_STOP_RECORD' => Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false),
@@ -512,11 +540,11 @@ class Omniversepricing extends Module
             true
         );
         $omniverse_prices = [];
-
+        $priceFormatter = new PriceFormatter();
         foreach ($results as $result) {
             $omniverse_prices[$result['id_omniversepricing']]['id'] = $result['id_omniversepricing'];
             $omniverse_prices[$result['id_omniversepricing']]['date'] = $result['date'];
-            $omniverse_prices[$result['id_omniversepricing']]['price'] = $this->context->getCurrentLocale()->formatPrice($result['price'], $this->context->currency->iso_code);
+            $omniverse_prices[$result['id_omniversepricing']]['price'] = $priceFormatter->format($result['price']);
             $omniverse_prices[$result['id_omniversepricing']]['promotext'] = 'Normal Price';
 
             if ($result['promo']) {
@@ -598,6 +626,16 @@ class Omniversepricing extends Module
     private function omniversepricing_init($product)
     {
         $controller = Tools::getValue('controller');
+        // $product_obj = new Product($product['id_product'], true, $this->context->language->id);
+        // $combination_images = $product_obj->getCombinationImages($this->context->language->id);
+
+        $product_attributes = Db::getInstance()->executeS(
+            'SELECT *
+            FROM `' . _DB_PREFIX_ . 'product_attribute`
+            WHERE `id_product` = ' . (int) $product['id_product']
+        );
+
+        
 
         if ($controller == 'product') {
             $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
@@ -607,7 +645,7 @@ class Omniversepricing extends Module
             }else{
                 $price_amount = $product->price_amount;
             }
-            $existing = $this->omniversepricing_check_existance($product, $omni_tax_include);
+            $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $product->id_product_attribute);
             $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
 
             if (!$omni_stop) {
@@ -616,9 +654,9 @@ class Omniversepricing extends Module
                 }
             }
             $omniverse_price = $this->omniversepricing_get_price($product->id, $price_amount, $product->id_product_attribute);
-
+            $priceFormatter = new PriceFormatter();
             if ($omniverse_price) {
-                $omniversepricinge_formatted_price = $this->context->getCurrentLocale()->formatPrice($omniverse_price, $this->context->currency->iso_code);
+                $omniversepricinge_formatted_price = $priceFormatter->format($omniverse_price);
 
                 return $omniversepricinge_formatted_price;
             } else {
@@ -627,7 +665,7 @@ class Omniversepricing extends Module
                 if ($omni_if_current) {
 
                     if($omni_tax_include){
-                        return $this->context->getCurrentLocale()->formatPrice($product->rounded_display_price, $this->context->currency->iso_code);
+                        return $priceFormatter->format($product->rounded_display_price);
                     }else{
                         return $product->price;
                     }
@@ -643,7 +681,7 @@ class Omniversepricing extends Module
     /**
      * Check if price is alredy available for the product
      */
-    private function omniversepricing_check_existance($prd, $with_tax = false)
+    private function omniversepricing_check_existance($prd_id, $price, $id_attr = 0)
     {
         $stable_v = Configuration::get('OMNIVERSEPRICING_STABLE_VERSION');
         $lang_id = $this->context->language->id;
@@ -652,15 +690,6 @@ class Omniversepricing extends Module
         $curre_q = '';
         $countr_q = '';
         $group_q = '';
-
-        $prd_id = $prd->id;
-        $id_attr = $prd->id_product_attribute;
-
-        if($with_tax){
-            $price = $prd->rounded_display_price;
-        }else{
-            $price = $prd->price_amount;
-        }
 
         if ($id_attr) {
             $attr_q = ' AND oc.`id_product_attribute` = ' . $id_attr;
