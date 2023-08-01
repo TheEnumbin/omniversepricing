@@ -36,3 +36,23 @@
     margin-top: 6px;
     margin-bottom: 6px;
 }
+
+.omniversepricing-pricing-table table {
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.omniversepricing-pricing-table th, td {
+    padding: 10px;
+    text-align: left;
+}
+
+.omniversepricing-pricing-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    color: #333;
+}
+
+.omniversepricing-pricing-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
