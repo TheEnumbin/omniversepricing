@@ -109,4 +109,28 @@ $(document).ready(function() {
             }
         });
     });
+
+
+    $(document).on('click', '#omni_sync_bt', function(){
+        console.log("syncing")
+        call_sync_ajax(1);
+        
+    });
+
+    function call_sync_ajax(start){
+        $.ajax({
+            type: 'POST',
+            url: omniversepricing_ajax_url,
+            dataType: 'html',
+            data: {
+                controller : 'AdminAjaxOmniverse',
+                action : 'OmniDataSync',
+                start : start,
+                ajax : true
+            },
+            success : function(data) {
+                // call_sync_ajax();
+            }
+        });
+    }
 });
