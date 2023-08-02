@@ -152,66 +152,22 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $products = Product::getProducts($this->context->language->getId(), 0, 10, 'id_product', 'ASC');
         $insert_q = '';
         foreach($products as $product){
-           
-            $attributes = Product::getProductAttributesIds($product['id_product']);
+
+            $attributes = $this->getProductAttributesInfo($product['id_product']);
+
             if(isset($attributes) && !empty($attributes)){
-                // die(__FILE__ . ' : ' . __LINE__);
-            }else{
-                $specific_prices = SpecificPrice::getByProductId($product['id_product']);
-                $price_amount = $product['price'];
-                if(isset($specific_prices) && !empty($specific_prices)){
 
-                    foreach($specific_prices as $specific_price){
-
-                        // Reduction
-                        if ($specific_price['reduction_type'] == 'amount') {
-                            $reduction_amount = $specific_price['reduction'];
-
-                            // if (!$specific_price['id_currency']) {
-                            //     $reduction_amount = Tools::convertPrice($reduction_amount, $id_currency);
-                            // }
-
-                            $specific_price_reduction = $reduction_amount;
-
-                            // Adjust taxes if required
-
-                            // if (!$use_tax && $specific_price['reduction_tax']) {
-                            //     $specific_price_reduction = $product_tax_calculator->removeTaxes($specific_price_reduction);
-                            // }
-                            // if ($use_tax && !$specific_price['reduction_tax']) {
-                            //     $specific_price_reduction = $product_tax_calculator->addTaxes($specific_price_reduction);
-                            // }
-                        } else {
-                            $specific_price_reduction = $price * $specific_price['reduction'];
-                        }
-                        $price_amount -= $specific_price_reduction;
-
-                        $existing = $this->check_existance($product['id_product'], $price_amount, $specific_price['id_product_attribute'], $specific_price['id_country'], $specific_price['id_currency'], $specific_price['id_group']);
-
-                        if (empty($existing)) {
-
-                            if($insert_q != ""){
-                                $insert_q .= ',';
-                            }
-                            $insert_q .= '(' . $product['id_product'] . ',' . $specific_price['id_product_attribute'] . ',' . $specific_price['id_country'] . ',' . $specific_price['id_currency'] . ',' . $specific_price['id_group'] . ',' . $price_amount . ',1,"' . date('Y-m-d') . '",' . $shop_id . ',' . $lang_id . ')';
-                        }
+                foreach($attributes as $attribute){
+                    if($insert_q != ""){
+                        $insert_q .= ',';
                     }
-
-                }else{
-                    $price_amount = Product::getPriceStatic(
-                        (int) $product['id_product'],
-                        false
-                    );
-                    $existing = $this->check_existance($product['id_product'], $price_amount);
-
-                    if (empty($existing)) {
-
-                        if($insert_q != ""){
-                            $insert_q .= ',';
-                        }
-                        $insert_q .= '(' . $product['id_product'] . ',0,0,0,0,' . $price_amount . ',0,"' . date('Y-m-d') . '",' . $shop_id . ',' . $lang_id . ')';
-                    }
+                    $insert_q .= $this->create_insert_query($product, $attribute['id_product_attribute'], $attribute['price']);
                 }
+            }else{
+                if($insert_q != ""){
+                    $insert_q .= ',';
+                }
+                $insert_q .= $this->create_insert_query($product);
             }
         }
 
@@ -223,6 +179,83 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         echo '</pre>';
         echo __FILE__ . ' : ' . __LINE__;
         die(__FILE__ . ' : ' . __LINE__);
+    }
+
+    private function create_insert_query($product, $id_attribute = false, $attr_price = false){
+        $specific_prices = SpecificPrice::getByProductId($product['id_product'], $id_attribute);
+        $price_amount = $product['price'];
+        $q = '';
+        $context = Context::getContext();
+        $lang_id = $context->language->id;
+        $shop_id = $context->shop->id;
+        if(isset($specific_prices) && !empty($specific_prices)){
+
+            foreach($specific_prices as $specific_price){
+                // Reduction
+                if ($specific_price['reduction_type'] == 'amount') {
+                    $reduction_amount = $specific_price['reduction'];
+
+                    if (!$specific_price['id_currency']) {
+                        $reduction_amount = Tools::convertPrice($reduction_amount, $context->currency->id);
+                    }else{
+                        $reduction_amount = Tools::convertPrice($reduction_amount, $specific_price['id_currency']);
+                        $attr_price = Tools::convertPrice($attr_price, $specific_price['id_currency']);
+                        $price_amount = Tools::convertPrice($price_amount, $specific_price['id_currency']);
+                        $price_amount += $attr_price;
+                    }
+
+                    $specific_price_reduction = $reduction_amount;
+
+                    // Adjust taxes if required
+                    $address = new Address();
+                    $use_tax = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
+                    $tax_manager = TaxManagerFactory::getManager($address, Product::getIdTaxRulesGroupByIdProduct((int) $product['id_product'], $context));
+                    $product_tax_calculator = $tax_manager->getTaxCalculator();
+                    if (!$use_tax && $specific_price['reduction_tax']) {
+                        $specific_price_reduction = $product_tax_calculator->removeTaxes($specific_price_reduction);
+                    }
+                    if ($use_tax && !$specific_price['reduction_tax']) {
+                        $specific_price_reduction = $product_tax_calculator->addTaxes($specific_price_reduction);
+                    }
+                } else {
+                    $specific_price_reduction = $price * $specific_price['reduction'];
+                }
+                $price_amount -= $specific_price_reduction;
+
+                $existing = $this->check_existance($product['id_product'], $price_amount, $specific_price['id_product_attribute'], $specific_price['id_country'], $specific_price['id_currency'], $specific_price['id_group']);
+
+                if (empty($existing)) {
+                    if($q != ""){
+                        $q .= ',';
+                    }
+                    $q .= "\n" . '(' . $product['id_product'] . ',' . $specific_price['id_product_attribute'] . ',' . $specific_price['id_country'] . ',' . $specific_price['id_currency'] . ',' . $specific_price['id_group'] . ',' . $price_amount . ',1,"' . date('Y-m-d') . '",' . $shop_id . ',' . $lang_id . ')';
+                }
+            }
+
+        }
+
+        if($id_attribute === false){
+            $id_attribute = null;
+        }
+        $price_amount = Product::getPriceStatic(
+            (int) $product['id_product'],
+            false,
+            $id_attribute
+        );
+        $existing = $this->check_existance($product['id_product'], $price_amount, $id_attribute);
+
+        if($id_attribute === null){
+            $id_attribute = 0;
+        }
+
+        if (empty($existing)) {
+            if($q != ""){
+                $q .= ',';
+            }
+            return $q .= "\n" . '(' . $product['id_product'] . ',' . $id_attribute . ',0,0,0,' . $price_amount . ',0,"' . date('Y-m-d') . '",' . $shop_id . ',' . $lang_id . ')';
+        }
+
+        return '';
     }
 
     /**
@@ -238,6 +271,9 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $countr_q = '';
         $group_q = '';
 
+        if(!$id_attr){
+            $id_attr = 0;
+        }
         $attr_q = ' AND oc.`id_product_attribute` = ' . $id_attr;
         $curre_q = ' AND oc.`id_currency` = ' . $currency;
         $countr_q = ' AND oc.`id_country` = ' . $country;
@@ -250,5 +286,14 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         );
 
         return $results;
+    }
+
+    private function getProductAttributesInfo($id_product, $shop_only = false)
+    {
+        return Db::getInstance()->executeS('
+        SELECT pa.id_product_attribute, pa.price
+        FROM `' . _DB_PREFIX_ . 'product_attribute` pa' .
+        ($shop_only ? Shop::addSqlAssociation('product_attribute', 'pa') : '') . '
+        WHERE pa.`id_product` = ' . (int) $id_product);
     }
 }
