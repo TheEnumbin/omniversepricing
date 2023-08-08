@@ -149,36 +149,57 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         // foreach ($languages as $lang) {
             
         // }
-        $products = Product::getProducts($this->context->language->getId(), 0, 10, 'id_product', 'ASC');
+        $products = Product::getProducts($this->context->language->getId(), $start, 10, 'id_product', 'ASC');
         $insert_q = '';
-        foreach($products as $product){
 
-            $attributes = $this->getProductAttributesInfo($product['id_product']);
+        if(isset($products) && !empty($products)){
+            foreach($products as $product){
 
-            if(isset($attributes) && !empty($attributes)){
-
-                foreach($attributes as $attribute){
+                $attributes = $this->getProductAttributesInfo($product['id_product']);
+    
+                if(isset($attributes) && !empty($attributes)){
+    
+                    foreach($attributes as $attribute){
+                        if($insert_q != ""){
+                            $insert_q .= ',';
+                        }
+                        $insert_q .= $this->create_insert_query($product, $attribute['id_product_attribute'], $attribute['price']);
+                    }
+                }else{
                     if($insert_q != ""){
                         $insert_q .= ',';
                     }
-                    $insert_q .= $this->create_insert_query($product, $attribute['id_product_attribute'], $attribute['price']);
+                    $insert_q .= $this->create_insert_query($product);
                 }
-            }else{
-                if($insert_q != ""){
-                    $insert_q .= ',';
-                }
-                $insert_q .= $this->create_insert_query($product);
             }
+    
+            if($insert_q != "") {
+                $insert_q = "INSERT INTO `" . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`) VALUES $insert_q";
+                $insertion = Db::getInstance()->execute($insert_q);
+            }
+            $response = [
+                'success' => 1,
+                'start' => $start + 10,
+            ];
+            $response = json_encode($response);
+            echo $response;
+            die();
+        }else{
+            $response = [
+                'success' => 1,
+                'start' => 0,
+            ];
+            $response = json_encode($response);
+            echo $response;
+            die();
         }
-
-        if($insert_q != "") {
-            $insert_q = "INSERT INTO `" . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`) VALUES $insert_q";
-        }
-        echo '<pre>';
-        print_r($insert_q);
-        echo '</pre>';
-        echo __FILE__ . ' : ' . __LINE__;
-        die(__FILE__ . ' : ' . __LINE__);
+        
+        $response = [
+            'success' => 0,
+        ];
+        $response = json_encode($response);
+        echo $response;
+        die();
     }
 
     private function create_insert_query($product, $id_attribute = false, $attr_price = false){
@@ -188,10 +209,15 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $context = Context::getContext();
         $lang_id = $context->language->id;
         $shop_id = $context->shop->id;
+        $need_default = true;
+
         if(isset($specific_prices) && !empty($specific_prices)){
 
             foreach($specific_prices as $specific_price){
                 // Reduction
+                if(!$specific_price['id_currency'] && !$specific_price['id_group'] && !$specific_price['id_country']){
+                    $need_default = false;
+                }
                 if ($specific_price['reduction_type'] == 'amount') {
                     $reduction_amount = $specific_price['reduction'];
 
@@ -211,6 +237,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                     $use_tax = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
                     $tax_manager = TaxManagerFactory::getManager($address, Product::getIdTaxRulesGroupByIdProduct((int) $product['id_product'], $context));
                     $product_tax_calculator = $tax_manager->getTaxCalculator();
+
                     if (!$use_tax && $specific_price['reduction_tax']) {
                         $specific_price_reduction = $product_tax_calculator->removeTaxes($specific_price_reduction);
                     }
@@ -221,9 +248,8 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                     $specific_price_reduction = $price * $specific_price['reduction'];
                 }
                 $price_amount -= $specific_price_reduction;
-
                 $existing = $this->check_existance($product['id_product'], $price_amount, $specific_price['id_product_attribute'], $specific_price['id_country'], $specific_price['id_currency'], $specific_price['id_group']);
-
+                
                 if (empty($existing)) {
                     if($q != ""){
                         $q .= ',';
@@ -237,25 +263,28 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         if($id_attribute === false){
             $id_attribute = null;
         }
-        $price_amount = Product::getPriceStatic(
-            (int) $product['id_product'],
-            false,
-            $id_attribute
-        );
-        $existing = $this->check_existance($product['id_product'], $price_amount, $id_attribute);
 
-        if($id_attribute === null){
-            $id_attribute = 0;
-        }
-
-        if (empty($existing)) {
-            if($q != ""){
-                $q .= ',';
+        if($need_default){
+            $price_amount = Product::getPriceStatic(
+                (int) $product['id_product'],
+                false,
+                $id_attribute
+            );
+            $existing = $this->check_existance($product['id_product'], $price_amount, $id_attribute);
+    
+            if($id_attribute === null){
+                $id_attribute = 0;
             }
-            return $q .= "\n" . '(' . $product['id_product'] . ',' . $id_attribute . ',0,0,0,' . $price_amount . ',0,"' . date('Y-m-d') . '",' . $shop_id . ',' . $lang_id . ')';
+    
+            if (empty($existing)) {
+                if($q != ""){
+                    $q .= ',';
+                }
+                $q .= "\n" . '(' . $product['id_product'] . ',' . $id_attribute . ',0,0,0,' . $price_amount . ',0,"' . date('Y-m-d') . '",' . $shop_id . ',' . $lang_id . ')';
+            }
         }
 
-        return '';
+        return $q;
     }
 
     /**

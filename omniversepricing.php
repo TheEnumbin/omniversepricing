@@ -395,7 +395,7 @@ class Omniversepricing extends Module
                         'type' => 'html',
                         'label' => $this->l('Sync Products Now'),
                         'name' => 'OMNIVERSEPRICING_SYNC_PRODUCTS',
-                        'html_content' => '<button id="omni_sync_bt" class="btn btn-default" type="button">' . $this->l('Sync Now!!!') . '</button>',
+                        'html_content' => '<div><button id="omni_sync_bt" class="btn btn-default" type="button">' . $this->l('Sync Now!!!') . '<img class="omni-sync-loader" src="' . $this->_path . 'views/img/loader.gif' . '" alt="this slowpoke moves"  width="25" /></button></div>',
                         'tab' => 'action_tab',
                     ],
                 ],

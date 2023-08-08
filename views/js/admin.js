@@ -112,12 +112,15 @@ $(document).ready(function() {
 
 
     $(document).on('click', '#omni_sync_bt', function(){
-        console.log("syncing")
-        call_sync_ajax(1);
+        console.log($(".omni-sync-loader"));
+        $(".omni-sync-loader").show();
+        $(this).html("Syncing...")
+        call_sync_ajax(0);
         
     });
 
     function call_sync_ajax(start){
+        console.log(start)
         $.ajax({
             type: 'POST',
             url: omniversepricing_ajax_url,
@@ -129,7 +132,13 @@ $(document).ready(function() {
                 ajax : true
             },
             success : function(data) {
-                // call_sync_ajax();
+                var response = JSON.parse(data);
+                if(response.start != 0){
+                    call_sync_ajax(response.start)
+                }else{
+                    $(".omni-sync-loader").hide();
+                    $('#omni_sync_bt').html("Sync Completed")
+                }
             }
         });
     }
