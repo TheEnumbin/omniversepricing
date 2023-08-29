@@ -30,6 +30,7 @@ if (!defined('_PS_VERSION_')) {
 function upgrade_module_1_0_7($object, $install = false)
 {
     Configuration::updateValue('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
-    Configuration::updateValue('OMNIVERSEPRICING_CRON_OR_HOOK', 'by_hook');
+    Configuration::updateValue('OMNIVERSEPRICING_HISTORY_FUNC', 'w_hook');
+    Configuration::updateValue('OMNIVERSEPRICING_NOTICE_PAGE', 'single');
     return true;
 }
