@@ -165,6 +165,7 @@ class Omniversepricing extends Module
      */
     protected function getConfigForm()
     {
+        $cron_url = $this->context->link->getModuleLink('omniversepricing', 'sync');
         $tabs = [
             'general' => $this->l('General'),
             'content_tab' => $this->l('Content'),
@@ -444,6 +445,13 @@ class Omniversepricing extends Module
                         'label' => $this->l('Sync Products Now'),
                         'name' => 'OMNIVERSEPRICING_SYNC_PRODUCTS',
                         'html_content' => '<div><button id="omni_sync_bt" class="btn btn-default" type="button">' . $this->l('Sync Now!!!') . '<img class="omni-sync-loader" src="' . $this->_path . 'views/img/loader.gif' . '" alt="this slowpoke moves"  width="25" /></button></div>',
+                        'tab' => 'action_tab',
+                    ],
+                    [
+                        'type' => 'html',
+                        'label' => $this->l('Cron URL'),
+                        'name' => 'OMNIVERSEPRICING_CRON_URL',
+                        'html_content' => '<div class="input-group"><div class="form-control-plaintext"><a class="d-block" href="#">' . $cron_url . '</a></div></div>',
                         'tab' => 'action_tab',
                     ],
                 ],
