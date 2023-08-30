@@ -1,13 +1,26 @@
 <?php
 
 global $_MODULE;
-$_MODULE = [];
+$_MODULE = array();
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_6eddf78c2da323580a54be1b8b32ce40'] = 'OmniversePricing';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_be3e81417c52b1373abba76ffcd5dec5'] = 'Jest to moduł, którego potrzebujesz, aby Twój cennik PrestaShop był zgodny z unijną dyrektywą Omnibus';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_0db377921f4ce762c62526131097968f'] = 'Ogólny';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_f15c1cae7882448b3fb0404682e17e61'] = 'Treść';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_1afa74da05ca145d3418aad9af510109'] = 'Projekt';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_004bf6c9a40003140292e97330236c53'] = 'Działanie';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_f4f70727dc34561dfde1a3c529b6205c'] = 'Ustawienia';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_16ed90d8d0a0a73838c406bded2b3e85'] = 'Jak zachować historię cen?';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_a9c5790e757aefe37f846c7c01579c31'] = 'Zautomatyzowane z Cronem';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_ecca96704a65488f4bb3e8a6ffae6042'] = 'Automatycznie z hakiem';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_3b7ccc25994f1191df766a51d3fab3e7'] = 'Pokaż powiadomienie włączone';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_93ddb948766e84b565489787d313b16e'] = 'Wszystkie strony';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_c3ba4782a0ed8e3e3fc4a6e3122c0eca'] = 'Strona pojedynczego produktu';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_83b85c70a5b753dc110e0dc1924788ab'] = 'Pokaż powiadomienie dla';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_a40de094ebb292b72fa2a4f3a1cf1209'] = 'Wszystkie produkty';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_536f68bf3f32e6711a1eb59f6e30c3f0'] = 'Tylko przecenione produkty';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_cad4a7d7bf7211318e12c2ed8e4a4489'] = 'Cena z/bez podatku';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_126b532b64f7ee38323271d8dac7d814'] = 'Z podatkiem';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_fb4870293d5f5ebfeb3f45ab6bde7170'] = 'Bez podatku';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_a2f34eea3395ce52441afa0bac18e47c'] = 'Pokaż ogłoszenie, jeśli aktualna cena jest najniższa.';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_93cba07454f06a4a960172bbd6e2a435'] = 'Tak';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_bafd7322c6e97d25b6299b5d6fe8920b'] = 'NIE';
@@ -28,5 +41,9 @@ $_MODULE['<{omniversepricing}prestashop>omniversepricing_659e6460da1dc6f0fc5225f
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_45f0d4fa9a30e9c5571dbaa9ad1be931'] = 'Rozmiar czcionki';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_da5c63571d61185624bf31b272fecc52'] = 'Umieść swoje wypełnienie jak „6px”';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_a10443964156b9e87c95e74c8f9baf15'] = 'Wyściółka';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_e39c01aed5a41069c04200dbcdadb6ba'] = 'Przestań rejestrować historię cen';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_8f48fdd7217451fd3e5aaa5937599df8'] = 'Usunąć dane przed upływem 30 dni?';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_a0010bb17c28ef0980689869fd0bb89e'] = 'Zsynchronizuj produkty teraz';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_92419071e88f5bc7ebd8a88fbbff0270'] = 'Synchronizuj teraz!!!';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_0ee80c26200aac48102c0225f716a262'] = 'Adres URL Crona';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_c9cc8cce247e49bae79f15173ce97354'] = 'Ratować';

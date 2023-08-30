@@ -1,13 +1,27 @@
 <?php
 
 global $_MODULE;
-$_MODULE = [];
+$_MODULE = array();
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_6eddf78c2da323580a54be1b8b32ce40'] = 'OmniversePricing';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_be3e81417c52b1373abba76ffcd5dec5'] = 'Este es el módulo que necesita para que sus precios de PrestaShop sean compatibles con la directiva ómnibus de la UE';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_0db377921f4ce762c62526131097968f'] = 'General';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_f15c1cae7882448b3fb0404682e17e61'] = 'Contenido';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_1afa74da05ca145d3418aad9af510109'] = 'Diseño';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_004bf6c9a40003140292e97330236c53'] = 'Acción';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_f4f70727dc34561dfde1a3c529b6205c'] = 'Ajustes';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_16ed90d8d0a0a73838c406bded2b3e85'] = '¿Cómo mantener el historial de precios?';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_d9881b1948b6d246334055c3b8197c96'] = 'Sincronización manual: sincronización con un clic';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_a9c5790e757aefe37f846c7c01579c31'] = 'Automatizado con Cron';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_ecca96704a65488f4bb3e8a6ffae6042'] = 'Automatizado con gancho';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_3b7ccc25994f1191df766a51d3fab3e7'] = 'Mostrar aviso en';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_93ddb948766e84b565489787d313b16e'] = 'Todas las páginas';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_c3ba4782a0ed8e3e3fc4a6e3122c0eca'] = 'Página de producto único';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_83b85c70a5b753dc110e0dc1924788ab'] = 'Mostrar aviso para';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_a40de094ebb292b72fa2a4f3a1cf1209'] = 'Todos los productos';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_536f68bf3f32e6711a1eb59f6e30c3f0'] = 'Solo productos con descuento';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_cad4a7d7bf7211318e12c2ed8e4a4489'] = 'Precio Con/Sin Impuestos';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_126b532b64f7ee38323271d8dac7d814'] = 'Con impuesto';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_fb4870293d5f5ebfeb3f45ab6bde7170'] = 'Sin impuestos';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_a2f34eea3395ce52441afa0bac18e47c'] = 'Mostrar aviso si el precio actual es el más bajo.';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_93cba07454f06a4a960172bbd6e2a435'] = 'Sí';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_bafd7322c6e97d25b6299b5d6fe8920b'] = 'No';
@@ -30,4 +44,7 @@ $_MODULE['<{omniversepricing}prestashop>omniversepricing_da5c63571d61185624bf31b
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_a10443964156b9e87c95e74c8f9baf15'] = 'Relleno';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_e39c01aed5a41069c04200dbcdadb6ba'] = 'Dejar de registrar el historial de precios';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_8f48fdd7217451fd3e5aaa5937599df8'] = '¿Eliminar datos antes de 30 días?';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_a0010bb17c28ef0980689869fd0bb89e'] = 'Sincronizar productos ahora';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_92419071e88f5bc7ebd8a88fbbff0270'] = 'Sincroniza ahora!!!';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_0ee80c26200aac48102c0225f716a262'] = 'URL cronificada';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_c9cc8cce247e49bae79f15173ce97354'] = 'Ahorrar';

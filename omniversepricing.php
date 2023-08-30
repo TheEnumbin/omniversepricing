@@ -183,7 +183,6 @@ class Omniversepricing extends Module
                         'type' => 'select',
                         'label' => $this->l('How to Keep Price History?'),
                         'name' => 'OMNIVERSEPRICING_HISTORY_FUNC',
-                        'desc' => $this->l(''),
                         'options' => [
                             'query' => [
                                 [
