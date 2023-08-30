@@ -65,7 +65,6 @@ class Omniversepricing extends Module
         Configuration::updateValue('OMNIVERSEPRICING_AUTO_DELETE_OLD', false);
         Configuration::updateValue('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after');
         Configuration::updateValue('OMNIVERSEPRICING_HISTORY_FUNC', 'manual');
-        Configuration::updateValue('OMNIVERSEPRICING_COMB_PRICING_DISPLAY', 'single');
         Configuration::updateValue('OMNIVERSEPRICING_POSITION', 'after_price');
         Configuration::updateValue('OMNIVERSEPRICING_BACK_COLOR', '#b3a700');
         Configuration::updateValue('OMNIVERSEPRICING_FONT_COLOR', '#ffffff');
@@ -198,26 +197,6 @@ class Omniversepricing extends Module
                                 [
                                     'id' => 'w_hook',
                                     'name' => $this->l('Automated with Hook'),
-                                ],
-                            ],
-                            'id' => 'id',
-                            'name' => 'name',
-                        ],
-                        'tab' => 'general',
-                    ],
-                    [
-                        'type' => 'select',
-                        'label' => $this->l('Combination pricing display style'),
-                        'name' => 'OMNIVERSEPRICING_COMB_PRICING_DISPLAY',
-                        'options' => [
-                            'query' => [
-                                [
-                                    'id' => 'single',
-                                    'name' => $this->l('Single Combination Price'),
-                                ],
-                                [
-                                    'id' => 'table',
-                                    'name' => $this->l('All combinations ina a table'),
                                 ],
                             ],
                             'id' => 'id',
@@ -473,7 +452,6 @@ class Omniversepricing extends Module
             'OMNIVERSEPRICING_NOTICE_PAGE' => Configuration::get('OMNIVERSEPRICING_NOTICE_PAGE', 'single'),
             'OMNIVERSEPRICING_NOTICE_STYLE' => Configuration::get('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after'),
             'OMNIVERSEPRICING_HISTORY_FUNC' => Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC', 'manual'),
-            'OMNIVERSEPRICING_COMB_PRICING_DISPLAY' => Configuration::get('OMNIVERSEPRICING_COMB_PRICING_DISPLAY', 'single'),
             'OMNIVERSEPRICING_SHOW_IF_CURRENT' => Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true),
             'OMNIVERSEPRICING_PRICE_WITH_TAX' => Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false),
             'OMNIVERSEPRICING_STOP_RECORD' => Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false),
@@ -688,12 +666,8 @@ class Omniversepricing extends Module
         $product = $params['product'];
         $omniversepricing_price = $this->omniversepricing_init($product);
 
-        if(is_array($omniversepricing_price) && !empty($omniversepricing_price)){
-            $this->omniversepricing_show_table($omniversepricing_price);
-        }else{
-            if ($omniversepricing_price) {
-                $this->omniversepricing_show_notice($omniversepricing_price);
-            }
+        if ($omniversepricing_price) {
+            $this->omniversepricing_show_notice($omniversepricing_price);
         }
         
     }
@@ -706,12 +680,8 @@ class Omniversepricing extends Module
         $product = $params['product'];
         $omniversepricing_price = $this->omniversepricing_init($product);
 
-        if(is_array($omniversepricing_price) && !empty($omniversepricing_price)){
-            $this->omniversepricing_show_table($omniversepricing_price);
-        }else{
-            if ($omniversepricing_price) {
-                $this->omniversepricing_show_notice($omniversepricing_price);
-            }
+        if ($omniversepricing_price) {
+            $this->omniversepricing_show_notice($omniversepricing_price);
         }
     }
 
@@ -722,7 +692,6 @@ class Omniversepricing extends Module
     {
         $controller = Tools::getValue('controller');
         $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC', 'manual');
-        $comb_pricing = Configuration::get('OMNIVERSEPRICING_COMB_PRICING_DISPLAY', 'single');
         $notice_page = Configuration::get('OMNIVERSEPRICING_NOTICE_PAGE', 'single');
         $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
         $product_obj = new Product($product['id_product'], true, $this->context->language->id);
@@ -737,77 +706,37 @@ class Omniversepricing extends Module
             $omni_tax_include = false;
         }
 
-        if($product_obj->hasAttributes() && $comb_pricing == 'table'){
-            $product_attributes = Db::getInstance()->executeS(
-                'SELECT *
-                FROM `' . _DB_PREFIX_ . 'product_attribute`
-                WHERE `id_product` = ' . (int) $product['id_product']
-            );
-            $combinations = $product_obj->getAttributeCombinations();
-            $comb_table = [];
-            foreach($combinations as $combination){
-                $price_amount = Product::getPriceStatic(
-                    (int) $product['id_product'],
-                    $omni_tax_include,
-                    $combination['id_product_attribute']
-                );
+        $price_amount = Product::getPriceStatic(
+            (int) $product->id,
+            $omni_tax_include,
+            $product->id_product_attribute
+        );
+        
+        if($history_func == 'w_hook'){
+            $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $product->id_product_attribute);
+            $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
 
-                $omniverse_price = $this->omniversepricing_get_price($product['id_product'], $price_amount, $combination['id_product_attribute']);
-                $priceFormatter = new PriceFormatter();
-                if ($omniverse_price) {
-                    $omniversepricinge_formatted_price = $priceFormatter->format($omniverse_price);
-                    $comb_table[] = array(
-                        'name' => $combination['attribute_name'],
-                        'price' => $omniversepricinge_formatted_price,
-                    );
-                } else {
-                    $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
-
-                    if ($omni_if_current) {
-
-                        $comb_table[] = array(
-                            'name' => $combination['attribute_name'],
-                            'price' => $priceFormatter->format($price_amount),
-                        );
-                    }
+            if (!$omni_stop) {
+                if (empty($existing)) {
+                    $this->omniversepricing_insert_data($product, $omni_tax_include);
                 }
             }
-            return $comb_table;
-        }else{
+        }
+        
+        $omniverse_price = $this->omniversepricing_get_price($product->id, $price_amount, $product->id_product_attribute);
+        $priceFormatter = new PriceFormatter();
+        if ($omniverse_price) {
+            $omniversepricinge_formatted_price = $priceFormatter->format($omniverse_price);
 
+            return $omniversepricinge_formatted_price;
+        } else {
+            $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
 
-            $price_amount = Product::getPriceStatic(
-                (int) $product->id,
-                $omni_tax_include,
-                $product->id_product_attribute
-            );
-            
-            if($history_func == 'w_hook'){
-                $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $product->id_product_attribute);
-                $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
-
-                if (!$omni_stop) {
-                    if (empty($existing)) {
-                        $this->omniversepricing_insert_data($product, $omni_tax_include);
-                    }
-                }
+            if ($omni_if_current) {
+                return $priceFormatter->format($price_amount);
             }
-            
-            $omniverse_price = $this->omniversepricing_get_price($product->id, $price_amount, $product->id_product_attribute);
-            $priceFormatter = new PriceFormatter();
-            if ($omniverse_price) {
-                $omniversepricinge_formatted_price = $priceFormatter->format($omniverse_price);
 
-                return $omniversepricinge_formatted_price;
-            } else {
-                $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
-
-                if ($omni_if_current) {
-                    return $priceFormatter->format($price_amount);
-                }
-
-                return false;
-            }
+            return false;
         }
 
         return false;
@@ -1002,31 +931,5 @@ class Omniversepricing extends Module
         $output = $this->context->smarty->fetch($this->local_path . 'views/templates/front/omni_front.tpl');
 
         echo $output;
-    }
-
-    private function omniversepricing_show_table($prices_array){
-        $lang_id = $this->context->language->id;
-        $omniversepricing_text = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang_id, 'Lowest price within 30 days before promotion.');
-        ?>
-        <div class="omniversepricing-pricing-table">
-            <span class="omniversepricing-notice"><?php echo $omniversepricing_text; ?></span>
-            <table>
-                <tr>
-                    <th><?php echo $this->l('Combination'); ?></th>
-                    <th><?php echo $this->l('Price'); ?></th>
-                </tr>
-            <?php
-                    foreach($prices_array as $price){
-                        ?>
-                        <tr>
-                            <td><?php echo $price['name']; ?></td>
-                            <td><?php echo $price['price']; ?></td>
-                        </tr>
-                        <?php   
-                    }
-            ?>
-            </table>
-        </div>
-        <?php 
     }
 }
