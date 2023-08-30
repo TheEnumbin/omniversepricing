@@ -858,6 +858,7 @@ class Omniversepricing extends Module
             AND oc.`product_id` = ' . (int) $prd_id . ' AND oc.`price` = ' . $price . $attr_q . $curre_q . $countr_q . $group_q
         );
 
+        
         return $results;
     }
 
