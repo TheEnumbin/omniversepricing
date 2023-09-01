@@ -62,11 +62,11 @@ class Omniversepricing extends Module
         Configuration::updateValue('OMNIVERSEPRICING_AUTO_DELETE_OLD', false);
         Configuration::updateValue('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after');
         Configuration::updateValue('OMNIVERSEPRICING_HISTORY_FUNC', 'manual');
+        Configuration::updateValue('OMNIVERSEPRICING_COMB_PRICING_DISPLAY', 'single');
         Configuration::updateValue('OMNIVERSEPRICING_POSITION', 'after_price');
         Configuration::updateValue('OMNIVERSEPRICING_BACK_COLOR', '#b3a700');
         Configuration::updateValue('OMNIVERSEPRICING_FONT_COLOR', '#ffffff');
         Configuration::updateValue('OMNIVERSEPRICING_DELETE_DATE', $date);
-
         $languages = Language::getLanguages(false);
 
         foreach ($languages as $lang) {
@@ -231,6 +231,26 @@ class Omniversepricing extends Module
                                 [
                                     'id' => 'discounted',
                                     'name' => $this->l('Only Discounted Products'),
+                                ],
+                            ],
+                            'id' => 'id',
+                            'name' => 'name',
+                        ],
+                        'tab' => 'general',
+                    ],
+                    [
+                        'type' => 'select',
+                        'label' => $this->l('Combination pricing display style'),
+                        'name' => 'OMNIVERSEPRICING_COMB_PRICING_DISPLAY',
+                        'options' => [
+                            'query' => [
+                                [
+                                    'id' => 'single',
+                                    'name' => $this->l('Single Combination Price'),
+                                ],
+                                [
+                                    'id' => 'table',
+                                    'name' => $this->l('All combinations ina a table'),
                                 ],
                             ],
                             'id' => 'id',
@@ -446,6 +466,7 @@ class Omniversepricing extends Module
             'OMNIVERSEPRICING_NOTICE_PAGE' => Configuration::get('OMNIVERSEPRICING_NOTICE_PAGE', 'single'),
             'OMNIVERSEPRICING_NOTICE_STYLE' => Configuration::get('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after'),
             'OMNIVERSEPRICING_HISTORY_FUNC' => Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC', 'manual'),
+            'OMNIVERSEPRICING_COMB_PRICING_DISPLAY' => Configuration::get('OMNIVERSEPRICING_COMB_PRICING_DISPLAY', 'single'),
             'OMNIVERSEPRICING_SHOW_IF_CURRENT' => Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true),
             'OMNIVERSEPRICING_PRICE_WITH_TAX' => Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false),
             'OMNIVERSEPRICING_STOP_RECORD' => Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false),
@@ -654,8 +675,12 @@ class Omniversepricing extends Module
         $product = $params['product'];
         $omniversepricing_price = $this->omniversepricing_init($product);
 
-        if ($omniversepricing_price) {
-            $this->omniversepricing_show_notice($omniversepricing_price);
+        if(is_array($omniversepricing_price) && !empty($omniversepricing_price)){
+            $this->omniversepricing_show_table($omniversepricing_price);
+        }else{
+            if ($omniversepricing_price) {
+                $this->omniversepricing_show_notice($omniversepricing_price);
+            }
         }
     }
 
@@ -666,8 +691,13 @@ class Omniversepricing extends Module
     {
         $product = $params['product'];
         $omniversepricing_price = $this->omniversepricing_init($product);
-        if ($omniversepricing_price) {
-            $this->omniversepricing_show_notice($omniversepricing_price);
+
+        if(is_array($omniversepricing_price) && !empty($omniversepricing_price)){
+            $this->omniversepricing_show_table($omniversepricing_price);
+        }else{
+            if ($omniversepricing_price) {
+                $this->omniversepricing_show_notice($omniversepricing_price);
+            }
         }
     }
 
@@ -690,34 +720,74 @@ class Omniversepricing extends Module
         } else {
             $omni_tax_include = false;
         }
-        $price_amount = Product::getPriceStatic(
-            (int) $product->id,
-            $omni_tax_include,
-            $product->id_product_attribute
-        );
+        if ($product_obj->hasAttributes() && $comb_pricing == 'table'){
+            $product_attributes = Db::getInstance()->executeS(
+                'SELECT *
+                FROM `' . _DB_PREFIX_ . 'product_attribute`
+                WHERE `id_product` = ' . (int) $product['id_product']
+            );
+            $combinations = $product_obj->getAttributeCombinations();
+            $comb_table = [];
 
-        if ($history_func == 'w_hook') {
-            $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $product->id_product_attribute);
-            $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
-            if (!$omni_stop) {
-                if (empty($existing)) {
-                    $this->omniversepricing_insert_data($product, $omni_tax_include);
+            foreach ($combinations as $combination){
+                $price_amount = Product::getPriceStatic(
+                    (int) $product['id_product'],
+                    $omni_tax_include,
+                    $combination['id_product_attribute']
+                );
+                $omniverse_price = $this->omniversepricing_get_price($product['id_product'], $price_amount, $combination['id_product_attribute']);
+                $priceFormatter = new PriceFormatter();
+
+                if ($omniverse_price) {
+                    $omniversepricinge_formatted_price = $priceFormatter->format($omniverse_price);
+                    $comb_table[] = array(
+                        'name' => $combination['attribute_name'],
+                        'price' => $omniversepricinge_formatted_price,
+                    );
+                } else {
+                    $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
+
+                    if ($omni_if_current) {
+                        $comb_table[] = array(
+                            'name' => $combination['attribute_name'],
+                            'price' => $priceFormatter->format($price_amount),
+                        );
+                    }
                 }
             }
-        }
+            return $comb_table;
+        }else{
+            $price_amount = Product::getPriceStatic(
+                (int) $product->id,
+                $omni_tax_include,
+                $product->id_product_attribute
+            );
 
-        $omniverse_price = $this->omniversepricing_get_price($product->id, $price_amount, $product->id_product_attribute);
-        $priceFormatter = new PriceFormatter();
-        if ($omniverse_price) {
-            $omniversepricinge_formatted_price = $priceFormatter->format($omniverse_price);
+            if ($history_func == 'w_hook') {
+                $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $product->id_product_attribute);
+                $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
 
-            return $omniversepricinge_formatted_price;
-        } else {
-            $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
-            if ($omni_if_current) {
-                return $priceFormatter->format($price_amount);
+                if (!$omni_stop) {
+                    if (empty($existing)) {
+                        $this->omniversepricing_insert_data($product, $omni_tax_include);
+                    }
+                }
             }
-            return false;
+            $omniverse_price = $this->omniversepricing_get_price($product->id, $price_amount, $product->id_product_attribute);
+            $priceFormatter = new PriceFormatter();
+
+            if ($omniverse_price) {
+                $omniversepricinge_formatted_price = $priceFormatter->format($omniverse_price);
+
+                return $omniversepricinge_formatted_price;
+            } else {
+                $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
+
+                if ($omni_if_current) {
+                    return $priceFormatter->format($price_amount);
+                }
+                return false;
+            }
         }
         return false;
     }
@@ -742,11 +812,10 @@ class Omniversepricing extends Module
         if ($stable_v && version_compare($stable_v, '1.0.2', '>')) {
             $curr_id = $this->context->currency->id;
             $curre_q = ' AND oc.`id_currency` = ' . $curr_id;
-
             $country_id = $this->context->country->id;
             $countr_q = ' AND oc.`id_country` = ' . $country_id;
-
             $customer = $this->context->customer;
+
             if ($customer instanceof Customer && $customer->isLogged()) {
                 $groups = $customer->getGroups();
                 $id_group = implode(', ', $groups);
@@ -764,7 +833,6 @@ class Omniversepricing extends Module
             AND oc.`product_id` = ' . (int) $prd_id . ' AND oc.`price` = ' . $price . $attr_q . $curre_q . $countr_q . $group_q
         );
 
-        
         return $results;
     }
 
@@ -897,5 +965,31 @@ class Omniversepricing extends Module
         ]);
         $output = $this->context->smarty->fetch($this->local_path . 'views/templates/front/omni_front.tpl');
         echo $output;
+    }
+
+    private function omniversepricing_show_table($prices_array){
+        $lang_id = $this->context->language->id;
+        $omniversepricing_text = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang_id, 'Lowest price within 30 days before promotion.');
+        ?>
+        <div class="omniversepricing-pricing-table">
+            <span class="omniversepricing-notice"><?php echo $omniversepricing_text; ?></span>
+            <table>
+                <tr>
+                    <th><?php echo $this->l('Combination'); ?></th>
+                    <th><?php echo $this->l('Price'); ?></th>
+                </tr>
+            <?php
+                    foreach ($prices_array as $price){
+                        ?>
+                        <tr>
+                            <td><?php echo $price['name']; ?></td>
+                            <td><?php echo $price['price']; ?></td>
+                        </tr>
+                        <?php   
+                    }
+            ?>
+            </table>
+        </div>
+        <?php 
     }
 }
