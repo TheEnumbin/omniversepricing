@@ -5,6 +5,7 @@ $_MODULE = [];
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_6eddf78c2da323580a54be1b8b32ce40'] = 'OmniversePricing';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_be3e81417c52b1373abba76ffcd5dec5'] = 'Questo è il modulo di cui hai bisogno per rendere i tuoi prezzi PrestaShop compatibili con la Direttiva Omnibus dell\'UE';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_f4f70727dc34561dfde1a3c529b6205c'] = 'Impostazioni';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_16ed90d8d0a0a73838c406bded2b3e85'] = 'Come mantenere la cronologia dei prezzi?';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_3b7ccc25994f1191df766a51d3fab3e7'] = 'Mostra avviso attivo';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_a40de094ebb292b72fa2a4f3a1cf1209'] = 'Tutti i prodotti';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_536f68bf3f32e6711a1eb59f6e30c3f0'] = 'Solo prodotti scontati';
