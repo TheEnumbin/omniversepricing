@@ -1,7 +1,7 @@
 <?php
 
 global $_MODULE;
-$_MODULE = array();
+$_MODULE = [];
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_6eddf78c2da323580a54be1b8b32ce40'] = 'OmniversePricing';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_be3e81417c52b1373abba76ffcd5dec5'] = 'C\'est le module dont vous avez besoin pour rendre votre tarification PrestaShop compatible avec la directive européenne Omnibus';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_0db377921f4ce762c62526131097968f'] = 'Général';
@@ -9,7 +9,7 @@ $_MODULE['<{omniversepricing}prestashop>omniversepricing_f15c1cae7882448b3fb0404
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_1afa74da05ca145d3418aad9af510109'] = 'Conception';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_004bf6c9a40003140292e97330236c53'] = 'Action';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_f4f70727dc34561dfde1a3c529b6205c'] = 'Paramètres';
-$_MODULE['<{omniversepricing}prestashop>omniversepricing_16ed90d8d0a0a73838c406bded2b3e85'] = 'Comment conserver l’historique des prix ?';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_16ed90d8d0a0a73838c406bded2b3e85'] = 'Comment conserver lhistorique des prix ?';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_d9881b1948b6d246334055c3b8197c96'] = 'Synchronisation manuelle - Synchronisation en un clic';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_a9c5790e757aefe37f846c7c01579c31'] = 'Automatisé avec Cron';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_ecca96704a65488f4bb3e8a6ffae6042'] = 'Automatisé avec Hook';
@@ -19,7 +19,7 @@ $_MODULE['<{omniversepricing}prestashop>omniversepricing_c3ba4782a0ed8e3e3fc4a6e
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_83b85c70a5b753dc110e0dc1924788ab'] = 'Afficher l\'avis pour';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_a40de094ebb292b72fa2a4f3a1cf1209'] = 'Tous les produits';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_536f68bf3f32e6711a1eb59f6e30c3f0'] = 'Seuls les produits à prix réduit';
-$_MODULE['<{omniversepricing}prestashop>omniversepricing_cad4a7d7bf7211318e12c2ed8e4a4489'] = 'Prix ​​Avec/Sans Taxe';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_cad4a7d7bf7211318e12c2ed8e4a4489'] = 'Prix Avec/Sans Taxe';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_126b532b64f7ee38323271d8dac7d814'] = 'Avec les taxes';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_fb4870293d5f5ebfeb3f45ab6bde7170'] = 'Sans taxe';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_a2f34eea3395ce52441afa0bac18e47c'] = 'Afficher un avis si le prix actuel est le plus bas.';

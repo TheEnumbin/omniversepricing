@@ -1,7 +1,7 @@
 <?php
 
 global $_MODULE;
-$_MODULE = array();
+$_MODULE = [];
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_6eddf78c2da323580a54be1b8b32ce40'] = 'OmniversePricing';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_be3e81417c52b1373abba76ffcd5dec5'] = 'Este es el módulo que necesita para que sus precios de PrestaShop sean compatibles con la directiva ómnibus de la UE';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_0db377921f4ce762c62526131097968f'] = 'General';

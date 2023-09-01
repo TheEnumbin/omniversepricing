@@ -151,59 +151,58 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             $products = Product::getProducts($lang['id_lang'], $start, $end, 'id_product', 'ASC');
             $insert_q = '';
 
-            if(isset($products) && !empty($products)){
+            if (isset($products) && !empty($products)) {
                 $not_found = false;
-                foreach($products as $product){
 
+                foreach ($products as $product) {
                     $attributes = $this->getProductAttributesInfo($product['id_product']);
-        
-                    if(isset($attributes) && !empty($attributes)){
 
-                        foreach($attributes as $attribute){
+                    if (isset($attributes) && !empty($attributes)) {
+                        foreach ($attributes as $attribute) {
                             $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $attribute['id_product_attribute'], $attribute['price']);
                         }
-                    }else{
+                    } else {
                         $insert_q .= $this->create_insert_query($product, $lang['id_lang']);
                     }
                 }
 
                 $insert_q = rtrim($insert_q, ',' . "\n");
-        
-                if($insert_q != "") {
-                    $insert_q = "INSERT INTO `" . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`) VALUES $insert_q";
+
+                if ($insert_q != '') {
+                    $insert_q = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`) VALUES $insert_q";
                     $insertion = Db::getInstance()->execute($insert_q);
                 }
             }
         }
 
-        if($not_found){
+        if ($not_found) {
             $response = [
                 'success' => 1,
                 'start' => 0,
             ];
             $response = json_encode($response);
             echo $response;
-            die();
-        }else{
+            exit;
+        } else {
             $response = [
                 'success' => 1,
                 'start' => $start + $end,
             ];
             $response = json_encode($response);
             echo $response;
-            die();
+            exit;
         }
-        
-        
         $response = [
             'success' => 0,
         ];
         $response = json_encode($response);
         echo $response;
-        die();
+
+        exit;
     }
 
-    private function create_insert_query($product, $lang_id, $id_attribute = false, $attr_price = false){
+    private function create_insert_query($product, $lang_id, $id_attribute = false, $attr_price = false)
+    {
         $specific_prices = SpecificPrice::getByProductId($product['id_product'], $id_attribute);
         $price_amount = $product['price'];
         $q = '';
@@ -211,11 +210,9 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $shop_id = $context->shop->id;
         $need_default = true;
 
-        if(isset($specific_prices) && !empty($specific_prices)){
-
-            foreach($specific_prices as $specific_price){
-                // Reduction
-                if(!$specific_price['id_currency'] && !$specific_price['id_group'] && !$specific_price['id_country']){
+        if (isset($specific_prices) && !empty($specific_prices)) {
+            foreach ($specific_prices as $specific_price) {
+                if (!$specific_price['id_currency'] && !$specific_price['id_group'] && !$specific_price['id_country']) {
                     $need_default = false;
                 }
                 if ($specific_price['reduction_type'] == 'amount') {
@@ -223,16 +220,13 @@ class AdminAjaxOmniverseController extends ModuleAdminController
 
                     if (!$specific_price['id_currency']) {
                         $reduction_amount = Tools::convertPrice($reduction_amount, $context->currency->id);
-                    }else{
+                    } else {
                         $reduction_amount = Tools::convertPrice($reduction_amount, $specific_price['id_currency']);
                         $attr_price = Tools::convertPrice($attr_price, $specific_price['id_currency']);
                         $price_amount = Tools::convertPrice($price_amount, $specific_price['id_currency']);
                         $price_amount += $attr_price;
                     }
-
                     $specific_price_reduction = $reduction_amount;
-
-                    // Adjust taxes if required
                     $address = new Address();
                     $use_tax = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
                     $tax_manager = TaxManagerFactory::getManager($address, Product::getIdTaxRulesGroupByIdProduct((int) $product['id_product'], $context));
@@ -252,43 +246,37 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                 }
                 $price_amount -= $specific_price_reduction;
                 $existing = $this->check_existance($product['id_product'], $lang_id, $price_amount, $specific_price['id_product_attribute'], $specific_price['id_country'], $specific_price['id_currency'], $specific_price['id_group']);
-                
+
                 if (empty($existing)) {
-                    
-                    if($q != ""){
+                    if ($q != '') {
                         $q .= ',';
                     }
                     $q .= "\n" . '(' . $product['id_product'] . ',' . $specific_price['id_product_attribute'] . ',' . $specific_price['id_country'] . ',' . $specific_price['id_currency'] . ',' . $specific_price['id_group'] . ',' . $price_amount . ',1,"' . date('Y-m-d') . '",' . $shop_id . ',' . $lang_id . ')';
                 }
             }
-
         }
-
-        if($id_attribute === false){
+        if ($id_attribute === false) {
             $id_attribute = null;
         }
-
-        if($need_default){
+        if ($need_default) {
             $price_amount = Product::getPriceStatic(
                 (int) $product['id_product'],
                 false,
                 $id_attribute
             );
             $existing = $this->check_existance($product['id_product'], $lang_id, $price_amount, $id_attribute);
-    
-            if($id_attribute === null){
+
+            if ($id_attribute === null) {
                 $id_attribute = 0;
             }
-    
             if (empty($existing)) {
-                if($q != ""){
+                if ($q != '') {
                     $q .= ',';
                 }
                 $q .= "\n" . '(' . $product['id_product'] . ',' . $id_attribute . ',0,0,0,' . $price_amount . ',0,"' . date('Y-m-d') . '",' . $shop_id . ',' . $lang_id . ')';
             }
         }
-
-        if($q != ''){
+        if ($q != '') {
             $q .= ',' . "\n";
         }
         return $q;
@@ -306,7 +294,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $countr_q = '';
         $group_q = '';
 
-        if(!$id_attr){
+        if (!$id_attr) {
             $id_attr = 0;
         }
         $attr_q = ' AND oc.`id_product_attribute` = ' . $id_attr;

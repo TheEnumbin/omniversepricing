@@ -1,32 +1,33 @@
 <?php
 /**
-* 2007-2022 PrestaShop
-*
-* NOTICE OF LICENSE
-*
-* This source file is subject to the Academic Free License (AFL 3.0)
-* that is bundled with this package in the file LICENSE.txt.
-* It is also available through the world-wide-web at this URL:
-* http://opensource.org/licenses/afl-3.0.php
-* If you did not receive a copy of the license and are unable to
-* obtain it through the world-wide-web, please send an email
-* to license@prestashop.com so we can send you a copy immediately.
-*
-* DISCLAIMER
-*
-* Do not edit or add to this file if you wish to upgrade PrestaShop to newer
-* versions in the future. If you wish to customize PrestaShop for your
-* needs please refer to http://www.prestashop.com for more information.
-*
-*  @author    PrestaShop SA <contact@prestashop.com>
-*  @copyright 2007-2022 PrestaShop SA
-*  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
-*  International Registered Trademark & Property of PrestaShop SA
-*/
+ * 2007-2022 PrestaShop
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade PrestaShop to newer
+ * versions in the future. If you wish to customize PrestaShop for your
+ * needs please refer to http://www.prestashop.com for more information.
+ *
+ *  @author    PrestaShop SA <contact@prestashop.com>
+ *  @copyright 2007-2022 PrestaShop SA
+ *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ *  International Registered Trademark & Property of PrestaShop SA
+ */
 if (!defined('_PS_VERSION_')) {
     exit;
 }
 use PrestaShop\PrestaShop\Adapter\Product\PriceFormatter;
+
 class Omniversepricing extends Module
 {
     protected $config_form = false;
@@ -38,13 +39,9 @@ class Omniversepricing extends Module
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
-
         $this->module_key = '9b8f5f1cfb8a9b1479c52f965758b88f';
-
         $this->bootstrap = true;
-
         parent::__construct();
-
         $this->displayName = $this->l('OmniversePricing');
         $this->description = $this->l('This is the module you need to make your PrestaShop Pricing Compatible for EU Omnibus Directive');
         $this->ps_versions_compliancy = ['min' => '1.7', 'max' => _PS_VERSION_];
@@ -75,25 +72,24 @@ class Omniversepricing extends Module
         foreach ($languages as $lang) {
             Configuration::updateValue('OMNIVERSEPRICING_TEXT_' . $lang['id_lang'], 'Lowest price within 30 days before promotion.');
         }
-
         $tab = new Tab();
         $tab->active = 1;
         $tab->class_name = 'AdminAjaxOmniverse';
         $tab->name = [];
+
         foreach ($languages as $lang) {
             $tab->name[$lang['id_lang']] = 'Omniverse Ajax';
         }
         $tab->id_parent = -1;
         $tab->module = $this->name;
         $tab->add();
-
         include _PS_MODULE_DIR_ . $this->name . '/sql/install.php';
 
-        return parent::install() &&
-            $this->registerHook('header') &&
-            $this->registerHook('displayBackOfficeHeader') &&
-            $this->registerHook('displayAdminProductsExtra') &&
-            $this->registerHook('displayProductPriceBlock');
+        return parent::install()
+        && $this->registerHook('header')
+        && $this->registerHook('displayBackOfficeHeader')
+        && $this->registerHook('displayAdminProductsExtra')
+        && $this->registerHook('displayProductPriceBlock');
     }
 
     /**
@@ -102,7 +98,6 @@ class Omniversepricing extends Module
     public function uninstall()
     {
         include _PS_MODULE_DIR_ . $this->name . '/sql/uninstall.php';
-
         $languages = Language::getLanguages(false);
 
         foreach ($languages as $lang) {
@@ -422,7 +417,7 @@ class Omniversepricing extends Module
                         'type' => 'html',
                         'label' => $this->l('Sync Products Now'),
                         'name' => 'OMNIVERSEPRICING_SYNC_PRODUCTS',
-                        'html_content' => '<div><button id="omni_sync_bt" class="btn btn-default" type="button">' . $this->l('Sync Now!!!') . '<img class="omni-sync-loader" src="' . $this->_path . 'views/img/loader.gif' . '" alt="this slowpoke moves"  width="25" /></button></div>',
+                        'html_content' => '<div><button id="omni_sync_bt" class="btn btn-default" type="button">' . $this->l('Sync Now!!!') . '<img class="omni-sync-loader" src="' . $this->_path . 'views/img/loader.gif" alt="this slowpoke moves"  width="25" /></button></div>',
                         'tab' => 'action_tab',
                     ],
                     [
@@ -504,7 +499,6 @@ class Omniversepricing extends Module
                 if (Tools::getValue($key)) {
                     $date = date('Y-m-d');
                     $date_range = date('Y-m-d', strtotime('-31 days'));
-
                     Db::getInstance()->execute(
                         'DELETE FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
                         WHERE oc.date < "' . $date_range . '"'
@@ -549,7 +543,6 @@ class Omniversepricing extends Module
             $date = date('Y-m-d');
             $date_range = date('Y-m-d', strtotime('-31 days'));
             $omniversepricing_delete_date = Configuration::get('OMNIVERSEPRICING_DELETE_DATE');
-
             if ($omniversepricing_delete_date == $date_range) {
                 Db::getInstance()->execute(
                     'DELETE FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
@@ -578,12 +571,12 @@ class Omniversepricing extends Module
         );
         $omniverse_prices = [];
         $priceFormatter = new PriceFormatter();
+
         foreach ($results as $result) {
             $omniverse_prices[$result['id_omniversepricing']]['id'] = $result['id_omniversepricing'];
             $omniverse_prices[$result['id_omniversepricing']]['date'] = $result['date'];
             $omniverse_prices[$result['id_omniversepricing']]['price'] = $priceFormatter->format($result['price']);
             $omniverse_prices[$result['id_omniversepricing']]['promotext'] = 'Normal Price';
-
             if ($result['promo']) {
                 $omniverse_prices[$result['id_omniversepricing']]['promotext'] = 'Promotional Price';
             }
@@ -617,43 +610,39 @@ class Omniversepricing extends Module
         $controller = Tools::getValue('controller');
         $notice_page = Configuration::get('OMNIVERSEPRICING_NOTICE_PAGE', 'single');
 
-        if($controller == 'product'){
+        if ($controller == 'product') {
             $omniversepricing_pos = Configuration::get('OMNIVERSEPRICING_POSITION', 'after_price');
-        
+
             if ($params['type'] == $omniversepricing_pos) {
                 $product = $params['product'];
                 $omniversepricing_price = $this->omniversepricing_init($product);
-    
+
                 if ($omniversepricing_price) {
                     $show_on = Configuration::get('OMNIVERSEPRICING_SHOW_ON', 'discounted');
-    
+
                     if (!$product->has_discount && $show_on == 'discounted') {
-    
                         return;
                     }
                     $this->omniversepricing_show_notice($omniversepricing_price);
                 }
             }
-        }else{
-
-            if($notice_page == 'single' && $controller != 'product'){
+        } else {
+            if ($notice_page == 'single' && $controller != 'product') {
                 return;
             }
-            if ($params['type'] == 'unit_price'){
+            if ($params['type'] == 'unit_price') {
                 $product = $params['product'];
                 $omniversepricing_price = $this->omniversepricing_init($product);
-    
+
                 if ($omniversepricing_price) {
                     $show_on = Configuration::get('OMNIVERSEPRICING_SHOW_ON', 'discounted');
-    
+
                     if (!$product->has_discount && $show_on == 'discounted') {
-    
                         return;
                     }
                     $this->omniversepricing_show_notice($omniversepricing_price);
                 }
             }
-            
         }
     }
 
@@ -668,7 +657,6 @@ class Omniversepricing extends Module
         if ($omniversepricing_price) {
             $this->omniversepricing_show_notice($omniversepricing_price);
         }
-        
     }
 
     /**
@@ -678,7 +666,6 @@ class Omniversepricing extends Module
     {
         $product = $params['product'];
         $omniversepricing_price = $this->omniversepricing_init($product);
-
         if ($omniversepricing_price) {
             $this->omniversepricing_show_notice($omniversepricing_price);
         }
@@ -695,33 +682,30 @@ class Omniversepricing extends Module
         $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
         $product_obj = new Product($product['id_product'], true, $this->context->language->id);
 
-        if($notice_page == 'single' && $controller != 'product'){
+        if ($notice_page == 'single' && $controller != 'product') {
             return;
         }
-
-        if($omni_tax_include){
+        if ($omni_tax_include) {
             $omni_tax_include = true;
-        }else{
+        } else {
             $omni_tax_include = false;
         }
-
         $price_amount = Product::getPriceStatic(
             (int) $product->id,
             $omni_tax_include,
             $product->id_product_attribute
         );
-        
-        if($history_func == 'w_hook'){
+
+        if ($history_func == 'w_hook') {
             $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $product->id_product_attribute);
             $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
-
             if (!$omni_stop) {
                 if (empty($existing)) {
                     $this->omniversepricing_insert_data($product, $omni_tax_include);
                 }
             }
         }
-        
+
         $omniverse_price = $this->omniversepricing_get_price($product->id, $price_amount, $product->id_product_attribute);
         $priceFormatter = new PriceFormatter();
         if ($omniverse_price) {
@@ -730,14 +714,11 @@ class Omniversepricing extends Module
             return $omniversepricinge_formatted_price;
         } else {
             $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
-
             if ($omni_if_current) {
                 return $priceFormatter->format($price_amount);
             }
-
             return false;
         }
-
         return false;
     }
 
@@ -766,7 +747,6 @@ class Omniversepricing extends Module
             $countr_q = ' AND oc.`id_country` = ' . $country_id;
 
             $customer = $this->context->customer;
-
             if ($customer instanceof Customer && $customer->isLogged()) {
                 $groups = $customer->getGroups();
                 $id_group = implode(', ', $groups);
@@ -775,10 +755,8 @@ class Omniversepricing extends Module
             } else {
                 $id_group = (int) Configuration::get('PS_UNIDENTIFIED_GROUP');
             }
-
             $group_q = ' AND oc.`id_group` IN (' . $id_group . ')';
         }
-
         $results = Db::getInstance()->executeS(
             'SELECT *
             FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
@@ -804,21 +782,17 @@ class Omniversepricing extends Module
         $curr_id = $this->context->currency->id;
         $country_id = $this->context->country->id;
         $customer = $this->context->customer;
-
-        if($with_tax){
+        if ($with_tax) {
             $price = $prd->rounded_display_price;
-        }else{
+        } else {
             $price = $prd->price_amount;
         }
-
         if ($prd->has_discount) {
             $promo = 1;
         }
-
         if ($stable_v && version_compare($stable_v, '1.0.2', '>')) {
             if ($customer instanceof Customer && $customer->isLogged()) {
                 $groups = $customer->getGroups();
-
                 if ($prd->has_discount) {
                     $id_group = 0;
                 } else {
@@ -833,7 +807,6 @@ class Omniversepricing extends Module
             } else {
                 $id_group = (int) Configuration::get('PS_UNIDENTIFIED_GROUP');
             }
-
             $result = Db::getInstance()->insert('omniversepricing_products', [
                 'product_id' => (int) $prd_id,
                 'id_product_attribute' => $id_attr,
@@ -871,19 +844,15 @@ class Omniversepricing extends Module
         $curre_q = '';
         $countr_q = '';
         $group_q = '';
-
         if ($id_attr) {
             $attr_q = ' AND oc.`id_product_attribute` = ' . $id_attr;
         }
-
         if ($stable_v && version_compare($stable_v, '1.0.2', '>')) {
             $curr_id = $this->context->currency->id;
             $curre_q = ' AND oc.`id_currency` = ' . $curr_id;
-
             $country_id = $this->context->country->id;
             $countr_q = ' OR oc.`id_country` = ' . $country_id;
             $customer = $this->context->customer;
-
             if ($customer instanceof Customer && $customer->isLogged()) {
                 $groups = $customer->getGroups();
                 $id_group = implode(', ', $groups);
@@ -893,7 +862,7 @@ class Omniversepricing extends Module
                 $id_group = (int) Configuration::get('PS_UNIDENTIFIED_GROUP');
             }
 
-            $group_q = ' OR oc.`id_group` IN (' . $id_group . ')'; 
+            $group_q = ' OR oc.`id_group` IN (' . $id_group . ')';
         }
         $date = date('Y-m-d');
         $date_range = date('Y-m-d', strtotime('-31 days'));
@@ -904,10 +873,8 @@ class Omniversepricing extends Module
         $q_2 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
         WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q . ' AND oc.`id_currency` = 0 AND oc.`id_country` = 0';
-
         $result = Db::getInstance()->executeS($q_1 . ' UNION ' . $q_2);
- 
-        if(isset($result)){
+        if (isset($result)) {
             return $result[0][$this->name . '_price'];
         }
 
@@ -928,7 +895,6 @@ class Omniversepricing extends Module
             'omniversepricing_price' => $price,
         ]);
         $output = $this->context->smarty->fetch($this->local_path . 'views/templates/front/omni_front.tpl');
-
         echo $output;
     }
 }
