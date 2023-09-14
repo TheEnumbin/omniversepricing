@@ -126,8 +126,24 @@ class Omniversepricing extends Module
         if (((bool) Tools::isSubmit('submitOmniversepricingModule')) == true) {
             $this->postProcess();
         }
+        
+        // demo code 
+        $html = '
+        <style>
+        .notice {
+            background-color: #eee0e0;
+            border-left: 6px solid #CE0000;
+            padding: 10px;
+            margin: 20px;
+            font-size: 18px;
+            color: #ce0000;
+        }
+        </style>
+        <div class="notice">
+                <p><strong>Notice:</strong> Setting will not be saved on demo mode.</p>
+            </div>';
 
-        return $this->renderForm();
+        return $html . $this->renderForm();
     }
 
     /**
@@ -472,6 +488,8 @@ class Omniversepricing extends Module
      */
     protected function postProcess()
     {
+        // demo code
+        return;
         $form_values = $this->getConfigFormValues();
 
         foreach (array_keys($form_values) as $key) {
