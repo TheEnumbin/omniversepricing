@@ -82,11 +82,22 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
     private function create_insert_query($product, $lang_id, $id_attribute = false, $attr_price = false)
     {
         $specific_prices = SpecificPrice::getByProductId($product['id_product'], $id_attribute);
-        $price_amount = $product['price'];
         $q = '';
         $context = Context::getContext();
         $shop_id = $context->shop->id;
         $need_default = true;
+        $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
+
+        if ($omni_tax_include) {
+            $omni_tax_include = true;
+        } else {
+            $omni_tax_include = false;
+        }
+        $price_amount = Product::getPriceStatic(
+            (int) $product['id_product'],
+            $omni_tax_include,
+            $id_attribute
+        );
 
         if (isset($specific_prices) && !empty($specific_prices)) {
             foreach ($specific_prices as $specific_price) {
@@ -105,7 +116,6 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                         $price_amount = Tools::convertPrice($price_amount, $specific_price['id_currency']);
                         $price_amount += $attr_price;
                     }
-
                     $specific_price_reduction = $reduction_amount;
                     $address = new Address();
                     $use_tax = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
@@ -115,7 +125,6 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                     if (!$use_tax && $specific_price['reduction_tax']) {
                         $specific_price_reduction = $product_tax_calculator->removeTaxes($specific_price_reduction);
                     }
-
                     if ($use_tax && !$specific_price['reduction_tax']) {
                         $specific_price_reduction = $product_tax_calculator->addTaxes($specific_price_reduction);
                     }
@@ -140,11 +149,6 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
             $id_attribute = null;
         }
         if ($need_default) {
-            $price_amount = Product::getPriceStatic(
-                (int) $product['id_product'],
-                false,
-                $id_attribute
-            );
             $existing = $this->check_existance($product['id_product'], $lang_id, $price_amount, $id_attribute);
 
             if ($id_attribute === null) {

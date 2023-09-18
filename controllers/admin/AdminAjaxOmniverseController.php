@@ -204,11 +204,22 @@ class AdminAjaxOmniverseController extends ModuleAdminController
     private function create_insert_query($product, $lang_id, $id_attribute = false, $attr_price = false)
     {
         $specific_prices = SpecificPrice::getByProductId($product['id_product'], $id_attribute);
-        $price_amount = $product['price'];
+        $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
         $q = '';
         $context = Context::getContext();
         $shop_id = $context->shop->id;
         $need_default = true;
+
+        if ($omni_tax_include) {
+            $omni_tax_include = true;
+        } else {
+            $omni_tax_include = false;
+        }
+        $price_amount = Product::getPriceStatic(
+            (int) $product['id_product'],
+            $omni_tax_include,
+            $id_attribute
+        );
 
         if (isset($specific_prices) && !empty($specific_prices)) {
             foreach ($specific_prices as $specific_price) {
@@ -259,11 +270,6 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             $id_attribute = null;
         }
         if ($need_default) {
-            $price_amount = Product::getPriceStatic(
-                (int) $product['id_product'],
-                false,
-                $id_attribute
-            );
             $existing = $this->check_existance($product['id_product'], $lang_id, $price_amount, $id_attribute);
 
             if ($id_attribute === null) {
