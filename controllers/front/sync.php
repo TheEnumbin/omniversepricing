@@ -105,34 +105,33 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                     $need_default = false;
                 }
 
-                if ($specific_price['reduction_type'] == 'amount') {
-                    $reduction_amount = $specific_price['reduction'];
-
-                    if (!$specific_price['id_currency']) {
-                        $reduction_amount = Tools::convertPrice($reduction_amount, $context->currency->id);
-                    } else {
+                if ($specific_price['id_currency']) {
+                    $price_amount = $product['price'];
+                    if ($specific_price['reduction_type'] == 'amount') {
+                        $reduction_amount = $specific_price['reduction'];
                         $reduction_amount = Tools::convertPrice($reduction_amount, $specific_price['id_currency']);
                         $attr_price = Tools::convertPrice($attr_price, $specific_price['id_currency']);
                         $price_amount = Tools::convertPrice($price_amount, $specific_price['id_currency']);
                         $price_amount += $attr_price;
-                    }
-                    $specific_price_reduction = $reduction_amount;
-                    $address = new Address();
-                    $use_tax = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
-                    $tax_manager = TaxManagerFactory::getManager($address, Product::getIdTaxRulesGroupByIdProduct((int) $product['id_product'], $context));
-                    $product_tax_calculator = $tax_manager->getTaxCalculator();
+                        $specific_price_reduction = $reduction_amount;
+                        $address = new Address();
+                        $use_tax = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
+                        $tax_manager = TaxManagerFactory::getManager($address, Product::getIdTaxRulesGroupByIdProduct((int) $product['id_product'], $context));
+                        $product_tax_calculator = $tax_manager->getTaxCalculator();
 
-                    if (!$use_tax && $specific_price['reduction_tax']) {
-                        $specific_price_reduction = $product_tax_calculator->removeTaxes($specific_price_reduction);
+                        if (!$use_tax && $specific_price['reduction_tax']) {
+                            $specific_price_reduction = $product_tax_calculator->removeTaxes($specific_price_reduction);
+                        }
+                        if ($use_tax && !$specific_price['reduction_tax']) {
+                            $specific_price_reduction = $product_tax_calculator->addTaxes($specific_price_reduction);
+                        }
+                    } else {
+                        $attr_price = Tools::convertPrice($attr_price, $specific_price['id_currency']);
+                        $price_amount = Tools::convertPrice($price_amount, $specific_price['id_currency']);
+                        $price_amount += $attr_price;
+                        $specific_price_reduction = $price_amount * $specific_price['reduction'];
                     }
-                    if ($use_tax && !$specific_price['reduction_tax']) {
-                        $specific_price_reduction = $product_tax_calculator->addTaxes($specific_price_reduction);
-                    }
-                } else {
-                    $attr_price = Tools::convertPrice($attr_price, $specific_price['id_currency']);
-                    $price_amount = Tools::convertPrice($price_amount, $specific_price['id_currency']);
-                    $price_amount += $attr_price;
-                    $specific_price_reduction = $price_amount * $specific_price['reduction'];
+                    $price_amount -= $specific_price_reduction;
                 }
                 $price_amount -= $specific_price_reduction;
                 $existing = $this->check_existance($product['id_product'], $lang_id, $price_amount, $specific_price['id_product_attribute'], $specific_price['id_country'], $specific_price['id_currency'], $specific_price['id_group']);

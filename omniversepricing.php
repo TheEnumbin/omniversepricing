@@ -35,7 +35,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.0.8';
+        $this->version = '1.0.9';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
@@ -397,6 +397,24 @@ class Omniversepricing extends Module
                     ],
                     [
                         'type' => 'switch',
+                        'label' => $this->l('Reset Price History'),
+                        'name' => 'OMNIVERSEPRICING_RESET_HISTORY',
+                        'values' => [
+                            [
+                                'id' => 'yes',
+                                'value' => true,
+                                'label' => $this->l('Yes'),
+                            ],
+                            [
+                                'id' => 'no',
+                                'value' => false,
+                                'label' => $this->l('No'),
+                            ],
+                        ],
+                        'tab' => 'action_tab',
+                    ],
+                    [
+                        'type' => 'switch',
                         'label' => $this->l('Delete Data Before 30 Days?'),
                         'name' => 'OMNIVERSEPRICING_DELETE_OLD',
                         'values' => [
@@ -456,6 +474,7 @@ class Omniversepricing extends Module
             'OMNIVERSEPRICING_FONT_SIZE' => Configuration::get('OMNIVERSEPRICING_FONT_SIZE', '12px'),
             'OMNIVERSEPRICING_PADDING' => Configuration::get('OMNIVERSEPRICING_PADDING', '6px'),
             'OMNIVERSEPRICING_DELETE_OLD' => false,
+            'OMNIVERSEPRICING_RESET_HISTORY' => false,
         ];
 
         $languages = Language::getLanguages(false);
@@ -505,7 +524,14 @@ class Omniversepricing extends Module
                     );
                     Configuration::updateValue('OMNIVERSEPRICING_DELETE_DATE', $date);
                 }
+            } elseif ($key == 'OMNIVERSEPRICING_RESET_HISTORY') {
+                if (Tools::getValue($key)) {
+                    Db::getInstance()->execute(
+                        'TRUNCATE `' . _DB_PREFIX_ . 'omniversepricing_products`'
+                    );
+                }
             }
+
             Configuration::updateValue($key, Tools::getValue($key));
         }
 
