@@ -762,15 +762,15 @@ class Omniversepricing extends Module
         $group_q = '';
 
         if ($id_attr) {
-            $attr_q = ' AND oc.`id_product_attribute` = ' . $id_attr;
+            $attr_q = ' AND oc.`id_product_attribute` = ' . (int) $id_attr;
         }
 
         if ($stable_v && version_compare($stable_v, '1.0.2', '>')) {
             $curr_id = $this->context->currency->id;
-            $curre_q = ' AND oc.`id_currency` = ' . $curr_id;
+            $curre_q = ' AND oc.`id_currency` = ' . (int) $curr_id;
 
             $country_id = $this->context->country->id;
-            $countr_q = ' AND oc.`id_country` = ' . $country_id;
+            $countr_q = ' AND oc.`id_country` = ' . (int) $country_id;
 
             $customer = $this->context->customer;
             if ($customer instanceof Customer && $customer->isLogged()) {
@@ -871,13 +871,13 @@ class Omniversepricing extends Module
         $countr_q = '';
         $group_q = '';
         if ($id_attr) {
-            $attr_q = ' AND oc.`id_product_attribute` = ' . $id_attr;
+            $attr_q = ' AND oc.`id_product_attribute` = ' . (int) $id_attr;
         }
         if ($stable_v && version_compare($stable_v, '1.0.2', '>')) {
             $curr_id = $this->context->currency->id;
-            $curre_q = ' AND oc.`id_currency` = ' . $curr_id;
+            $curre_q = ' AND oc.`id_currency` = ' . (int) $curr_id;
             $country_id = $this->context->country->id;
-            $countr_q = ' OR oc.`id_country` = ' . $country_id;
+            $countr_q = ' OR oc.`id_country` = ' . (int) $country_id;
             $customer = $this->context->customer;
             if ($customer instanceof Customer && $customer->isLogged()) {
                 $groups = $customer->getGroups();
