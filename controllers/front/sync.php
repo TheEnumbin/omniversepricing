@@ -103,6 +103,7 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
         );
 
         if (isset($specific_prices) && !empty($specific_prices)) {
+
             foreach ($specific_prices as $specific_price) {
                 if (!$specific_price['id_currency'] && !$specific_price['id_group'] && !$specific_price['id_country']) {
                     $need_default = false;
@@ -136,7 +137,6 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                     }
                     $price_amount -= $specific_price_reduction;
                 }
-                $price_amount -= $specific_price_reduction;
                 $existing = $this->check_existance($product['id_product'], $lang_id, $price_amount, $specific_price['id_product_attribute'], $specific_price['id_country'], $specific_price['id_currency'], $specific_price['id_group']);
 
                 if (empty($existing)) {
