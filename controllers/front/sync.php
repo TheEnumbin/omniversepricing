@@ -39,33 +39,36 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
             $lang_id = $context->language->id;
             $shop_id = $context->shop->id;
             $languages = Language::getLanguages(false);
+            $shops = Shop::getShops(true, null, true);
             $end = 5;
             $not_found = true;
 
-            foreach ($languages as $lang) {
-                $products = Product::getProducts($lang['id_lang'], $start, $end, 'id_product', 'ASC');
-                $insert_q = '';
+            foreach ($shops as $shop) {
+                foreach ($languages as $lang) {
+                    $products = Product::getProducts($lang['id_lang'], $start, $end, 'id_product', 'ASC');
+                    $insert_q = '';
 
-                if (isset($products) && !empty($products)) {
-                    $not_found = false;
+                    if (isset($products) && !empty($products)) {
+                        $not_found = false;
 
-                    foreach ($products as $product) {
-                        $attributes = $this->getProductAttributesInfo($product['id_product']);
+                        foreach ($products as $product) {
+                            $attributes = $this->getProductAttributesInfo($product['id_product']);
 
-                        if (isset($attributes) && !empty($attributes)) {
-                            foreach ($attributes as $attribute) {
-                                $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $attribute['id_product_attribute'], $attribute['price']);
+                            if (isset($attributes) && !empty($attributes)) {
+                                foreach ($attributes as $attribute) {
+                                    $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $shop, $attribute['id_product_attribute'], $attribute['price']);
+                                }
+                            } else {
+                                $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $shop);
                             }
-                        } else {
-                            $insert_q .= $this->create_insert_query($product, $lang['id_lang']);
                         }
-                    }
 
-                    $insert_q = rtrim($insert_q, ',' . "\n");
+                        $insert_q = rtrim($insert_q, ',' . "\n");
 
-                    if ($insert_q != '') {
-                        $insert_q = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`) VALUES $insert_q";
-                        $insertion = Db::getInstance()->execute($insert_q);
+                        if ($insert_q != '') {
+                            $insert_q = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`) VALUES $insert_q";
+                            $insertion = Db::getInstance()->execute($insert_q);
+                        }
                     }
                 }
             }
@@ -82,12 +85,11 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
         exit;
     }
 
-    private function create_insert_query($product, $lang_id, $id_attribute = false, $attr_price = false)
+    private function create_insert_query($product, $lang_id, $shop_id, $id_attribute = false, $attr_price = false)
     {
         $specific_prices = SpecificPrice::getByProductId($product['id_product'], $id_attribute);
         $q = '';
         $context = Context::getContext();
-        $shop_id = $context->shop->id;
         $need_default = true;
         $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
 
@@ -103,7 +105,6 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
         );
 
         if (isset($specific_prices) && !empty($specific_prices)) {
-
             foreach ($specific_prices as $specific_price) {
                 if (!$specific_price['id_currency'] && !$specific_price['id_group'] && !$specific_price['id_country']) {
                     $need_default = false;
