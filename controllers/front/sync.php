@@ -30,7 +30,6 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
 {
     public function initContent()
     {
-        $start = Configuration::get('OMNIVERSEPRICING_CRON_START', '0');
         $date_cron = Configuration::get('OMNIVERSEPRICING_CRON_DATE', '');
         $today = date('j-n-Y');
 
@@ -40,7 +39,6 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
             $shop_id = $context->shop->id;
             $languages = Language::getLanguages(false);
             $shops = Shop::getShops(true, null, true);
-            $end = 5;
             $not_found = true;
 
             $productsCount = Db::getInstance()->getValue('SELECT COUNT(*) FROM `' . _DB_PREFIX_ . 'product`');
@@ -77,15 +75,8 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                     $insert_q = '';
                 }
             }
-            
 
-            // if ($not_found) {
-            //     Configuration::updateValue('OMNIVERSEPRICING_CRON_START', '0');
-            //     Configuration::updateValue('OMNIVERSEPRICING_CRON_DATE', $today);
-            // } else {
-            //     $new_start = $start + $end;
-            //     Configuration::updateValue('OMNIVERSEPRICING_CRON_START', $new_start);
-            // }
+            Configuration::updateValue('OMNIVERSEPRICING_CRON_DATE', $today);
         }
 
         exit;
