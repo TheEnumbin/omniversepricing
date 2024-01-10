@@ -445,6 +445,7 @@ class Omniversepricing extends Module
                         'name' => 'OMNIVERSEPRICING_CRON_URL',
                         'html_content' => '<div class="input-group"><div class="form-control-plaintext"><a class="d-block" href="#">' . $cron_url . '</a></div></div>',
                         'tab' => 'action_tab',
+                        'desc' => $this->l('This url will run Cron job for this shop. Change shop context to get cron url for separate shops.'),
                     ],
                 ],
                 'tabs' => $tabs,

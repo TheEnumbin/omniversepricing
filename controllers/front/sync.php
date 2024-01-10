@@ -44,66 +44,37 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
             $not_found = true;
 
             $productsCount = Db::getInstance()->getValue('SELECT COUNT(*) FROM `' . _DB_PREFIX_ . 'product`');
-            // $productsCount = 1;
-            // echo '<pre>';
-            // print_r($productsCount);
-            // echo '</pre>';
-            // echo __FILE__ . ' : ' . __LINE__;
-            echo '<pre>';
-            print_r($shops);
-            echo '</pre>';
-            echo __FILE__ . ' : ' . __LINE__;
-            echo '<pre>';
-            print_r($languages);
-            echo '</pre>';
-            echo __FILE__ . ' : ' . __LINE__;
-            // die(__FILE__ . ' : ' . __LINE__);
 
             for ($i = 0; $i <= $productsCount; $i++){
-                foreach ($shops as $shop) {
-                    echo '<pre>';
-                    print_r($shop);
-                    echo '</pre>';
-                    echo __FILE__ . ' : ' . __LINE__;
-                    foreach ($languages as $lang) {
-                        $products = Product::getProducts($lang['id_lang'], $i, 1, 'id_product', 'ASC');
-                        $insert_q = '';
-                        
-                        if (isset($products) && !empty($products)) {
-                            $not_found = false;
-                            echo '<pre>';
-                            print_r($products);
-                            echo '</pre>';
-                            echo __FILE__ . ' : ' . __LINE__;
-    
-    
-                            foreach ($products as $product) {
-                                $attributes = $this->getProductAttributesInfo($product['id_product']);
-    
-                                if (isset($attributes) && !empty($attributes)) {
-                                    foreach ($attributes as $attribute) {
-                                        $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $shop, $attribute['id_product_attribute'], $attribute['price']);
-                                    }
-                                } else {
-                                    $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $shop);
+                foreach ($languages as $lang) {
+                    $products = Product::getProducts($lang['id_lang'], $i, 1, 'id_product', 'ASC');
+                    $insert_q = '';
+                    
+                    if (isset($products) && !empty($products)) {
+
+
+                        foreach ($products as $product) {
+                            $attributes = $this->getProductAttributesInfo($product['id_product']);
+
+                            if (isset($attributes) && !empty($attributes)) {
+                                foreach ($attributes as $attribute) {
+                                    $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $shop_id, $attribute['id_product_attribute'], $attribute['price']);
                                 }
-                            }
-    
-                            $insert_q = rtrim($insert_q, ',' . "\n");
-    
-                            if ($insert_q != '') {
-                                $insert_q = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`) VALUES $insert_q";
-                                $insertion = Db::getInstance()->execute($insert_q);
+                            } else {
+                                $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $shop_id);
                             }
                         }
-                        echo '<pre>';
-                        print_r($insertion);
-                        echo '</pre>';
-                        echo __FILE__ . ' : ' . __LINE__;
-                        $products = [];
-                        $attributes = [];
-                        $insert_q = '';
+
+                        $insert_q = rtrim($insert_q, ',' . "\n");
+
+                        if ($insert_q != '') {
+                            $insert_q = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`) VALUES $insert_q";
+                            $insertion = Db::getInstance()->execute($insert_q);
+                        }
                     }
+                    $products = [];
+                    $attributes = [];
+                    $insert_q = '';
                 }
             }
             
