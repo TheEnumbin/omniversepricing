@@ -766,12 +766,17 @@ class Omniversepricing extends Module
         $priceFormatter = new PriceFormatter();
         if ($omniverse_price) {
             $omniversepricinge_formatted_price = $priceFormatter->format($omniverse_price);
-
-            return $omniversepricinge_formatted_price;
+            $return_arr['omni_price'] = $omniversepricinge_formatted_price;
+            
+            if ($percent_indicator) {
+                
+            }
+            return $return_arr;
         } else {
             $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
             if ($omni_if_current) {
-                return $priceFormatter->format($price_amount);
+                $return_arr['omni_price'] = $priceFormatter->format($price_amount);
+                return $return_arr;
             }
             return false;
         }
@@ -940,12 +945,12 @@ class Omniversepricing extends Module
     /**
      * Shows the notice
      */
-    private function omniversepricing_show_notice($price)
+    private function omniversepricing_show_notice($price_data)
     {
         $lang_id = $this->context->language->id;
         $omniversepricing_text = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang_id, 'Lowest price within 30 days before promotion.');
         $omniversepricing_text_style = Configuration::get('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after');
-
+        $price = $price_data['omni_price'];
         if ($omniversepricing_text_style == 'mixed') {
             $omniversepricing_text = str_replace('{{omni_price}}', $price, $omniversepricing_text);
         }
