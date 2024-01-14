@@ -24,6 +24,8 @@
 *}
 {if $omniversepricing_text_style == 'before_after'}
     <span class="omniversepricing-notice">{$omniversepricing_text} {$omniversepricing_price}</span>
-{else}
+{elseif $omniversepricing_text_style == 'after_before' }
     <span class="omniversepricing-notice">{$omniversepricing_price} {$omniversepricing_text}</span>
+{else}
+    <span class="omniversepricing-notice">{$omniversepricing_text}</span>
 {/if}
