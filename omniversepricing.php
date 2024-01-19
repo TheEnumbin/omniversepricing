@@ -337,12 +337,12 @@ class Omniversepricing extends Module
                             [
                                 'id' => 'including',
                                 'value' => true,
-                                'label' => $this->l('With Tax'),
+                                'label' => $this->l('Yes'),
                             ],
                             [
                                 'id' => 'excluding',
                                 'value' => false,
-                                'label' => $this->l('Without Tax'),
+                                'label' => $this->l('No'),
                             ],
                         ],
                         'tab' => 'general',
