@@ -28,9 +28,12 @@ $_MODULE['<{omniversepricing}prestashop>omniversepricing_bafd7322c6e97d25b6299b5
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_ed8b22ee8e4b875f7ab0833396e70886'] = 'Sélectionnez le style de texte de l\'avis';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_22e5157fd9002a61713feba36fe481e5'] = 'Texte de lavis _ Prix';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_9bfe95058b6f646aa4357aa3b6a4a3a3'] = 'Prix Texte de lavis';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_699b4f79215d191584653efebf156e52'] = 'Misto';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_0f567a05d8ffc4251ffd6abe79e9887f'] = 'Supprimer automatiquement les données plus anciennes de 30 jours';
-$_MODULE['<{omniversepricing}prestashop>omniversepricing_fa4bffc435cc56d3fc0b40ed7567b808'] = 'Texte indiquant où vous avez affiché le prix le plus bas au cours des 30 derniers jours.';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_64483740fd4a2326db81f4d86785bf06'] = 'Avviso testo.  Utilizza {{omni_price}} per il prezzo e {{omni_percent}} per la percentuale.  Esempio: prezzo più basso entro 30 giorni prima della promozione {{omni_price}} ({{omni_percent}})';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_d675a413b4e3d73423c02ee45f93f0a6'] = 'Omni Directive Texte';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_6a8090a83a7da4bf765d9dbe1ed14ca1'] = 'Utilizza l\'indicatore di aumento/diminuzione';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_781eb419c8436333728c6cc771ecad1a'] = 'Indica quanto è aumentato o diminuito rispetto al prezzo precedente.';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_d48305ae66ee0de5777023c449b85d73'] = 'Sélectionnez la position de l\'avis';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_6b89093ddc565df90fc31eb03b9c5b45'] = 'Après prix';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_fcaff05954744f2dddbcd292b91ed8c7'] = 'Avant l\'ancien prix';
@@ -43,8 +46,11 @@ $_MODULE['<{omniversepricing}prestashop>omniversepricing_45f0d4fa9a30e9c5571dbaa
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_da5c63571d61185624bf31b272fecc52'] = 'Mettez votre rembourrage comme \"6px\"';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_a10443964156b9e87c95e74c8f9baf15'] = 'Rembourrage';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_e39c01aed5a41069c04200dbcdadb6ba'] = 'Arrêter l\'enregistrement de l\'historique des prix';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_f53eb193441131f3ae5d70f3cc496f90'] = 'Reimposta la cronologia dei prezzi';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_8f48fdd7217451fd3e5aaa5937599df8'] = 'Supprimer les données avant 30 jours?';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_a0010bb17c28ef0980689869fd0bb89e'] = 'Synchroniser les produits maintenant';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_92419071e88f5bc7ebd8a88fbbff0270'] = 'Synchroniser maintenant!!!';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_0f3855d48f75aa43dd2fc2cdbb9eea0e'] = 'La sincronizzazione verrà eseguita solo per questo negozio.  Per gli altri negozi è necessario andare nel contesto di quel negozio.';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_0ee80c26200aac48102c0225f716a262'] = 'URL Cron';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_bc1c6f9b9f6599179536f632c7c63d24'] = 'Questo URL eseguirà il lavoro Cron per questo negozio.  Modifica il contesto del negozio per ottenere l\'URL cron per negozi separati.';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_c9cc8cce247e49bae79f15173ce97354'] = 'Sauvegarder';

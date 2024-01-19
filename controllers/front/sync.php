@@ -40,20 +40,16 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
             $languages = Language::getLanguages(false);
             $shops = Shop::getShops(true, null, true);
             $not_found = true;
-
             $productsCount = Db::getInstance()->getValue('SELECT COUNT(*) FROM `' . _DB_PREFIX_ . 'product`');
 
-            for ($i = 0; $i <= $productsCount; $i++){
+            for ($i = 0; $i <= $productsCount; $i++) {
                 foreach ($languages as $lang) {
                     $products = Product::getProducts($lang['id_lang'], $i, 1, 'id_product', 'ASC');
                     $insert_q = '';
-                    
+
                     if (isset($products) && !empty($products)) {
-
-
                         foreach ($products as $product) {
                             $attributes = $this->getProductAttributesInfo($product['id_product']);
-
                             if (isset($attributes) && !empty($attributes)) {
                                 foreach ($attributes as $attribute) {
                                     $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $shop_id, $attribute['id_product_attribute'], $attribute['price']);

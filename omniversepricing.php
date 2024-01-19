@@ -55,7 +55,7 @@ class Omniversepricing extends Module
     {
         $date = date('Y-m-d');
         Configuration::updateValue('OMNIVERSEPRICING_STABLE_VERSION', $this->version);
-        Configuration::updateValue('OMNIVERSEPRICING_TEXT', 'Lowest price within 30 days before promotion {{omni_price}} ({{omni_percentage}})');
+        Configuration::updateValue('OMNIVERSEPRICING_TEXT', 'Lowest price within 30 days before promotion {{omni_price}} ({{omni_percent}})');
         Configuration::updateValue('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
         Configuration::updateValue('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
         Configuration::updateValue('OMNIVERSEPRICING_PRECENT_INDICATOR', true);
@@ -757,7 +757,7 @@ class Omniversepricing extends Module
             $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
             if (!$omni_stop) {
                 if (empty($existing)) {
-                    $this->omniversepricing_insert_data($product, $omni_tax_include);
+                    $this->omniversepricing_insert_data($product, $price_amount, $omni_tax_include);
                 }
             }
         }
@@ -767,7 +767,7 @@ class Omniversepricing extends Module
         if ($omniverse_price) {
             $omniversepricinge_formatted_price = $priceFormatter->format($omniverse_price);
             if ($omniverse_price > $price_amount) {
-                $omniversepricinge_percentage_amount = ceil((( $omniverse_price - $price_amount ) / $omniverse_price ) * 100);
+                $omniversepricinge_percentage_amount = ceil((($omniverse_price - $price_amount) / $omniverse_price) * 100);
 
                 if ($percent_indicator) {
                     $omniversepricinge_percentage = '-' . $omniversepricinge_percentage_amount . '%';
@@ -775,7 +775,7 @@ class Omniversepricing extends Module
                     $omniversepricinge_percentage = $omniversepricinge_percentage_amount . '%';
                 }
             } elseif ($omniverse_price < $price_amount) {
-                $omniversepricinge_percentage_amount = ceil((( $price_amount - $omniverse_price ) / $price_amount ) * 100);
+                $omniversepricinge_percentage_amount = ceil((($price_amount - $omniverse_price) / $price_amount) * 100);
 
                 if ($percent_indicator) {
                     $omniversepricinge_percentage = '+' . $omniversepricinge_percentage_amount . '%';
@@ -786,14 +786,14 @@ class Omniversepricing extends Module
                 $omniversepricinge_percentage = '0%';
             }
             $return_arr['omni_price'] = $omniversepricinge_formatted_price;
-            $return_arr['omni_percentage'] = $omniversepricinge_percentage;
+            $return_arr['omni_percent'] = $omniversepricinge_percentage;
             return $return_arr;
         } else {
             $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
             if ($omni_if_current) {
                 $omniversepricinge_percentage = '0%';
                 $return_arr['omni_price'] = $priceFormatter->format($price_amount);
-                $return_arr['omni_percentage'] = $omniversepricinge_percentage;
+                $return_arr['omni_percent'] = $omniversepricinge_percentage;
                 return $return_arr;
             }
             return false;
@@ -849,7 +849,7 @@ class Omniversepricing extends Module
     /**
      * Insert the minimum price to the table
      */
-    private function omniversepricing_insert_data($prd, $with_tax = false)
+    private function omniversepricing_insert_data($prd, $price, $with_tax = false)
     {
         $stable_v = Configuration::get('OMNIVERSEPRICING_STABLE_VERSION');
         $lang_id = $this->context->language->id;
@@ -861,11 +861,7 @@ class Omniversepricing extends Module
         $curr_id = $this->context->currency->id;
         $country_id = $this->context->country->id;
         $customer = $this->context->customer;
-        if ($with_tax) {
-            $price = $prd->rounded_display_price;
-        } else {
-            $price = $prd->price_amount;
-        }
+
         if ($prd->has_discount) {
             $promo = 1;
         }
@@ -969,10 +965,10 @@ class Omniversepricing extends Module
         $omniversepricing_text = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang_id, 'Lowest price within 30 days before promotion.');
         $omniversepricing_text_style = Configuration::get('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after');
         $price = $price_data['omni_price'];
-        $omni_percentage = $price_data['omni_percentage'];
+        $omni_percentage = $price_data['omni_percent'];
         if ($omniversepricing_text_style == 'mixed') {
             $omniversepricing_text = str_replace('{{omni_price}}', $price, $omniversepricing_text);
-            $omniversepricing_text = str_replace('{{omni_percentage}}', $omni_percentage, $omniversepricing_text);
+            $omniversepricing_text = str_replace('{{omni_percent}}', $omni_percentage, $omniversepricing_text);
         }
         $this->context->smarty->assign([
             'omniversepricing_text' => $omniversepricing_text,

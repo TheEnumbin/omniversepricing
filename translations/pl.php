@@ -10,6 +10,7 @@ $_MODULE['<{omniversepricing}prestashop>omniversepricing_1afa74da05ca145d3418aad
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_004bf6c9a40003140292e97330236c53'] = 'Działanie';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_f4f70727dc34561dfde1a3c529b6205c'] = 'Ustawienia';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_16ed90d8d0a0a73838c406bded2b3e85'] = 'Jak zachować historię cen?';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_d9881b1948b6d246334055c3b8197c96'] = 'Sincronizzazione manuale: sincronizzazione con un clic';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_a9c5790e757aefe37f846c7c01579c31'] = 'Zautomatyzowane z Cronem';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_ecca96704a65488f4bb3e8a6ffae6042'] = 'Automatycznie z hakiem';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_3b7ccc25994f1191df766a51d3fab3e7'] = 'Pokaż powiadomienie włączone';
@@ -27,9 +28,12 @@ $_MODULE['<{omniversepricing}prestashop>omniversepricing_bafd7322c6e97d25b6299b5
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_ed8b22ee8e4b875f7ab0833396e70886'] = 'Wybierz styl tekstu powiadomienia';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_22e5157fd9002a61713feba36fe481e5'] = 'Tekst powiadomienia _ Cena';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_9bfe95058b6f646aa4357aa3b6a4a3a3'] = 'Cena _ Tekst powiadomienia';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_699b4f79215d191584653efebf156e52'] = 'Misto';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_0f567a05d8ffc4251ffd6abe79e9887f'] = 'Automatycznie usuwaj dane starsze o 30 dni';
-$_MODULE['<{omniversepricing}prestashop>omniversepricing_fa4bffc435cc56d3fc0b40ed7567b808'] = 'Tekst pokazujący, gdzie pokazujesz najniższą cenę w ciągu ostatnich 30 dni.';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_64483740fd4a2326db81f4d86785bf06'] = 'Avviso testo.  Utilizza {{omni_price}} per il prezzo e {{omni_percent}} per la percentuale.  Esempio: prezzo più basso entro 30 giorni prima della promozione {{omni_price}} ({{omni_percent}})';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_d675a413b4e3d73423c02ee45f93f0a6'] = 'Omni Directive Tekst';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_6a8090a83a7da4bf765d9dbe1ed14ca1'] = 'Utilizza l\'indicatore di aumento/diminuzione';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_781eb419c8436333728c6cc771ecad1a'] = 'Indica quanto è aumentato o diminuito rispetto al prezzo precedente.';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_d48305ae66ee0de5777023c449b85d73'] = 'Wybierz pozycję powiadomienia';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_6b89093ddc565df90fc31eb03b9c5b45'] = 'Po cenie';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_fcaff05954744f2dddbcd292b91ed8c7'] = 'Przed starą ceną';
@@ -42,8 +46,11 @@ $_MODULE['<{omniversepricing}prestashop>omniversepricing_45f0d4fa9a30e9c5571dbaa
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_da5c63571d61185624bf31b272fecc52'] = 'Umieść swoje wypełnienie jak „6px”';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_a10443964156b9e87c95e74c8f9baf15'] = 'Wyściółka';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_e39c01aed5a41069c04200dbcdadb6ba'] = 'Przestań rejestrować historię cen';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_f53eb193441131f3ae5d70f3cc496f90'] = 'Reimposta la cronologia dei prezzi';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_8f48fdd7217451fd3e5aaa5937599df8'] = 'Usunąć dane przed upływem 30 dni?';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_a0010bb17c28ef0980689869fd0bb89e'] = 'Zsynchronizuj produkty teraz';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_92419071e88f5bc7ebd8a88fbbff0270'] = 'Synchronizuj teraz!!!';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_0f3855d48f75aa43dd2fc2cdbb9eea0e'] = 'La sincronizzazione verrà eseguita solo per questo negozio.  Per gli altri negozi è necessario andare nel contesto di quel negozio.';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_0ee80c26200aac48102c0225f716a262'] = 'Adres URL Crona';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_bc1c6f9b9f6599179536f632c7c63d24'] = 'Questo URL eseguirà il lavoro Cron per questo negozio.  Modifica il contesto del negozio per ottenere l\'URL cron per negozi separati.';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_c9cc8cce247e49bae79f15173ce97354'] = 'Ratować';
