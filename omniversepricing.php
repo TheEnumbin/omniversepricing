@@ -924,9 +924,9 @@ class Omniversepricing extends Module
         }
         if ($stable_v && version_compare($stable_v, '1.0.2', '>')) {
             $curr_id = $this->context->currency->id;
-            $curre_q = ' AND oc.`id_currency` = ' . (int) $curr_id;
+            $curre_q = ' oc2.`id_currency` = ' . (int) $curr_id;
             $country_id = $this->context->country->id;
-            $countr_q = ' OR oc.`id_country` = ' . (int) $country_id;
+            $countr_q = ' OR oc2.`id_country` = ' . (int) $country_id;
             $customer = $this->context->customer;
             if ($customer instanceof Customer && $customer->isLogged()) {
                 $groups = $customer->getGroups();
@@ -937,13 +937,16 @@ class Omniversepricing extends Module
                 $id_group = (int) Configuration::get('PS_UNIDENTIFIED_GROUP');
             }
 
-            $group_q = ' OR oc.`id_group` IN (' . $id_group . ')';
+            $group_q = ' OR oc2.`id_group` IN (' . $id_group . ')';
+
+            $inner_q = 'SELECT oc2.id_omniversepricing FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc2 
+                       WHERE ' . $curre_q . $countr_q . $group_q;
         }
         $date = date('Y-m-d');
         $date_range = date('Y-m-d', strtotime('-31 days'));
         $q_1 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
         WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
-        AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q . $curre_q . $countr_q . $group_q;
+        AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q . ' AND oc.id_omniversepricing IN (' . $inner_q . ') ';
         $q_2 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
         WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q . ' AND oc.`id_currency` = 0 AND oc.`id_country` = 0';
