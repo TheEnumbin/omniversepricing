@@ -29,6 +29,6 @@ if (!defined('_PS_VERSION_')) {
 
 function upgrade_module_1_0_9($object, $install = false)
 {
-    Configuration::updateValue('OMNIVERSEPRICING_STABLE_VERSION', '1.0.10');
+    Configuration::updateValue('OMNIVERSEPRICING_STABLE_VERSION', '1.0.9');
     return true;
 }
