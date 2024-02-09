@@ -71,7 +71,7 @@ class Omniversepricing extends Module
         $languages = Language::getLanguages(false);
 
         foreach ($languages as $lang) {
-            Configuration::updateValue('OMNIVERSEPRICING_TEXT_' . $lang['id_lang'], 'Lowest price within 30 days before promotion.');
+            Configuration::updateValue('OMNIVERSEPRICING_TEXT_' . $lang['id_lang'], 'Lowest price within 30 days before promotion {{omni_price}} ({{omni_percent}})');
         }
         $tab = new Tab();
         $tab->active = 1;
@@ -125,11 +125,12 @@ class Omniversepricing extends Module
      */
     public function getContent()
     {
+        $html = '';
         if (((bool) Tools::isSubmit('submitOmniversepricingModule')) == true) {
-            $this->postProcess();
+            $html .= $this->postProcess();
         }
 
-        return $this->renderForm();
+        return $html . $this->renderForm();
     }
 
     /**
@@ -520,6 +521,11 @@ class Omniversepricing extends Module
      */
     protected function postProcess()
     {
+        $isdemo = false;
+
+        if ($isdemo){
+            return $this->displayError($this->l('Changes are not saved because you are in Demo Mode!!!'));
+        }
         $form_values = $this->getConfigFormValues();
 
         foreach (array_keys($form_values) as $key) {
