@@ -35,7 +35,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.0.11';
+        $this->version = '1.0.12';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
@@ -523,7 +523,7 @@ class Omniversepricing extends Module
     {
         $isdemo = false;
 
-        if ($isdemo){
+        if ($isdemo) {
             return $this->displayError($this->l('Changes are not saved because you are in Demo Mode!!!'));
         }
         $form_values = $this->getConfigFormValues();

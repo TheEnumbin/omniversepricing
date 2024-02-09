@@ -54,3 +54,4 @@ $_MODULE['<{omniversepricing}prestashop>omniversepricing_0f3855d48f75aa43dd2fc2c
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_0ee80c26200aac48102c0225f716a262'] = 'URL cronificada';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_bc1c6f9b9f6599179536f632c7c63d24'] = 'Questo URL eseguirà il lavoro Cron per questo negozio.  Modifica il contesto del negozio per ottenere l\'URL cron per negozi separati.';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_c9cc8cce247e49bae79f15173ce97354'] = 'Ahorrar';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_840778de1a5b3795c5161db622c12f86'] = '¡¡¡Los cambios no se guardan porque estás en Modo Demostración!!!';

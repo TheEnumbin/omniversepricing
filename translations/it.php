@@ -10,6 +10,9 @@ $_MODULE['<{omniversepricing}prestashop>omniversepricing_1afa74da05ca145d3418aad
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_004bf6c9a40003140292e97330236c53'] = 'Azione';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_f4f70727dc34561dfde1a3c529b6205c'] = 'Impostazioni';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_16ed90d8d0a0a73838c406bded2b3e85'] = 'Come mantenere la cronologia dei prezzi?';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_d9881b1948b6d246334055c3b8197c96'] = 'Sincronizzazione manuale: sincronizzazione con un clic';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_a9c5790e757aefe37f846c7c01579c31'] = 'Automatizzato con Cron';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_ecca96704a65488f4bb3e8a6ffae6042'] = 'Automatizzato con Hook';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_3b7ccc25994f1191df766a51d3fab3e7'] = 'Mostra avviso attivo';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_93ddb948766e84b565489787d313b16e'] = 'Tutte le pagine';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_c3ba4782a0ed8e3e3fc4a6e3122c0eca'] = 'Pagina prodotto singolo';
@@ -51,3 +54,4 @@ $_MODULE['<{omniversepricing}prestashop>omniversepricing_0f3855d48f75aa43dd2fc2c
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_0ee80c26200aac48102c0225f716a262'] = 'URL cronologico';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_bc1c6f9b9f6599179536f632c7c63d24'] = 'Questo URL eseguirà il lavoro Cron per questo negozio.  Modifica il contesto del negozio per ottenere l\'URL cron per negozi separati.';
 $_MODULE['<{omniversepricing}prestashop>omniversepricing_c9cc8cce247e49bae79f15173ce97354'] = 'Salva';
+$_MODULE['<{omniversepricing}prestashop>omniversepricing_840778de1a5b3795c5161db622c12f86'] = 'Le modifiche non vengono salvate perché sei in modalità Demo!!!';
