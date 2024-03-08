@@ -763,7 +763,7 @@ class Omniversepricing extends Module
             $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
             if (!$omni_stop) {
                 if (empty($existing)) {
-                    $this->omniversepricing_insert_data($product_obj, $price_amount, $omni_tax_include);
+                    $this->omniversepricing_insert_data($product, $product_obj, $price_amount, $omni_tax_include);
                 }
             }
         }
@@ -855,30 +855,30 @@ class Omniversepricing extends Module
     /**
      * Insert the minimum price to the table
      */
-    private function omniversepricing_insert_data($prd, $price, $with_tax = false)
+    private function omniversepricing_insert_data($prd, $prd_obj, $price, $with_tax = false)
     {
         $stable_v = Configuration::get('OMNIVERSEPRICING_STABLE_VERSION');
         $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
         $date = date('Y-m-d');
         $promo = 0;
-        $prd_id = $prd->id;
-        $id_attr = $prd->id_product_attribute;
+        $prd_id = $prd_obj->id;
+        $id_attr = $prd['id_product_attribute'];
         $curr_id = $this->context->currency->id;
         $country_id = $this->context->country->id;
         $customer = $this->context->customer;
 
-        if ($prd->has_discount) {
+        if ($prd_obj->has_discount) {
             $promo = 1;
         }
         if ($stable_v && version_compare($stable_v, '1.0.2', '>')) {
             if ($customer instanceof Customer && $customer->isLogged()) {
                 $groups = $customer->getGroups();
-                if ($prd->has_discount) {
+                if ($prd_obj->has_discount) {
                     $id_group = 0;
                 } else {
-                    if (isset($prd->specific_price['id_group'])) {
-                        $id_group = $prd->specific_price['id_group'];
+                    if (isset($prd_obj->specific_price['id_group'])) {
+                        $id_group = $prd_obj->specific_price['id_group'];
                     } else {
                         $id_group = 0;
                     }
