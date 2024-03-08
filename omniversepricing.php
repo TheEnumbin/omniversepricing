@@ -680,7 +680,6 @@ class Omniversepricing extends Module
 
                 if ($omniversepricing_price) {
                     $show_on = Configuration::get('OMNIVERSEPRICING_SHOW_ON', 'discounted');
-
                     if (!$product->has_discount && $show_on == 'discounted') {
                         return;
                     }
@@ -753,22 +752,23 @@ class Omniversepricing extends Module
             $omni_tax_include = false;
         }
         $price_amount = Product::getPriceStatic(
-            (int) $product->id,
+            (int) $product_obj->id,
             $omni_tax_include,
-            $product->id_product_attribute
+            $product['id_product_attribute']
         );
+        
 
         if ($history_func == 'w_hook') {
-            $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $product->id_product_attribute);
+            $existing = $this->omniversepricing_check_existance($product_obj->id, $price_amount, $product['id_product_attribute']);
             $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
             if (!$omni_stop) {
                 if (empty($existing)) {
-                    $this->omniversepricing_insert_data($product, $price_amount, $omni_tax_include);
+                    $this->omniversepricing_insert_data($product_obj, $price_amount, $omni_tax_include);
                 }
             }
         }
 
-        $omniverse_price = $this->omniversepricing_get_price($product->id, $price_amount, $product->id_product_attribute);
+        $omniverse_price = $this->omniversepricing_get_price($product_obj->id, $price_amount, $product['id_product_attribute']);
         $priceFormatter = new PriceFormatter();
         if ($omniverse_price) {
             $omniversepricinge_formatted_price = $priceFormatter->format($omniverse_price);
