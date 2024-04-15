@@ -756,7 +756,7 @@ class Omniversepricing extends Module
             $omni_tax_include,
             $product['id_product_attribute']
         );
-        
+
 
         if ($history_func == 'w_hook') {
             $existing = $this->omniversepricing_check_existance($product_obj->id, $price_amount, $product['id_product_attribute']);
