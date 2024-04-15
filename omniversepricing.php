@@ -530,7 +530,7 @@ class Omniversepricing extends Module
 
         foreach (array_keys($form_values) as $key) {
             if ($key == 'OMNIVERSEPRICING_POSITION') {
-                if (Tools::getValue($key) == 'footer_product') {
+               /* if (Tools::getValue($key) == 'footer_product') {
                     $this->registerHook('displayFooterProduct');
                     $this->unregisterHook('displayProductButtons');
                     $this->unregisterHook('displayProductPriceBlock');
@@ -542,7 +542,7 @@ class Omniversepricing extends Module
                     $this->registerHook('displayProductPriceBlock');
                     $this->unregisterHook('displayFooterProduct');
                     $this->unregisterHook('displayProductButtons');
-                }
+                } */
             } elseif ($key == 'OMNIVERSEPRICING_TEXT') {
                 $languages = Language::getLanguages(false);
 
