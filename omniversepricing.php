@@ -35,7 +35,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.0.12';
+        $this->version = '1.0.13';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
@@ -90,6 +90,7 @@ class Omniversepricing extends Module
         && $this->registerHook('header')
         && $this->registerHook('displayBackOfficeHeader')
         && $this->registerHook('displayAdminProductsExtra')
+        && $this->registerHook('displayOmniverseNotice')
         && $this->registerHook('displayProductPriceBlock');
     }
 
@@ -370,11 +371,23 @@ class Omniversepricing extends Module
                                     'id' => 'product_bts',
                                     'name' => $this->l('After Product Buttons'),
                                 ],
+                                [
+                                    'id' => 'with_custom_hook',
+                                    'name' => $this->l('With Custom Hook'),
+                                ],
                             ],
                             'id' => 'id',
                             'name' => 'name',
                         ],
                         'tab' => 'content_tab',
+                    ],
+                    [
+                        'type' => 'html',
+                        'label' => $this->l('Use This Hook to Show Notice'),
+                        'name' => 'OMNIVERSEPRICING_CUSTOM_HOOK',
+                        'html_content' => "<div class=\"omni-custom-hook\">{hook h='displayOmniverseNotice' product=\$product}</div>",
+                        'tab' => 'content_tab',
+                        'desc' => $this->l('This will work when you select the Notice Position to With Custom Hook'),
                     ],
                     [
                         'type' => 'color',
@@ -531,19 +544,26 @@ class Omniversepricing extends Module
         foreach (array_keys($form_values) as $key) {
             if ($key == 'OMNIVERSEPRICING_POSITION') {
                 if (Tools::getValue($key) == 'footer_product') {
-                    if(!$this->isRegisteredInHook($hookName)) {
+                    if (!$this->isRegisteredInHook('displayFooterProduct')) {
                         $this->registerHook('displayFooterProduct');
                     }
                     $this->unregisterHook('displayProductButtons');
                     $this->unregisterHook('displayProductPriceBlock');
                 } elseif (Tools::getValue($key) == 'product_bts') {
-                    if(!$this->isRegisteredInHook($hookName)) {
+                    if (!$this->isRegisteredInHook('displayProductButtons')) {
                         $this->registerHook('displayProductButtons');
                     }
                     $this->unregisterHook('displayFooterProduct');
                     $this->unregisterHook('displayProductPriceBlock');
+                } elseif (Tools::getValue($key) == 'with_custom_hook') {
+                    if (!$this->isRegisteredInHook('displayOmniverseNotice')) {
+                        $this->registerHook('displayOmniverseNotice');
+                    }
+                    $this->unregisterHook('displayFooterProduct');
+                    $this->unregisterHook('displayProductButtons');
+                    $this->unregisterHook('displayProductPriceBlock');
                 } else {
-                    if(!$this->isRegisteredInHook($hookName)) {
+                    if (!$this->isRegisteredInHook('displayProductPriceBlock')) {
                         $this->registerHook('displayProductPriceBlock');
                     }
                     $this->unregisterHook('displayFooterProduct');
@@ -669,6 +689,20 @@ class Omniversepricing extends Module
         $this->context->controller->addCSS($this->_path . '/views/css/front.css');
     }
 
+    public function hookDisplayOmniverseNotice($params)
+    {
+        $product = $params['product'];
+        $omniversepricing_price = $this->omniversepricing_init($product);
+
+        if ($omniversepricing_price) {
+            $show_on = Configuration::get('OMNIVERSEPRICING_SHOW_ON', 'discounted');
+            if (!$product->has_discount && $show_on == 'discounted') {
+                return;
+            }
+            $this->omniversepricing_show_notice($omniversepricing_price);
+        }
+    }
+
     /**
      * Call back function for the  hook DisplayProductPriceBlock
      */
@@ -762,7 +796,6 @@ class Omniversepricing extends Module
             $omni_tax_include,
             $product['id_product_attribute']
         );
-
 
         if ($history_func == 'w_hook') {
             $existing = $this->omniversepricing_check_existance($product_obj->id, $price_amount, $product['id_product_attribute']);
