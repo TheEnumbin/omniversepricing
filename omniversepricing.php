@@ -610,6 +610,15 @@ class Omniversepricing extends Module
         file_put_contents(_PS_MODULE_DIR_ . $this->name . '/views/css/front_generated.css', $gen_css);
     }
 
+    public function getProductCount($shopId)
+    {
+        $sql = 'SELECT COUNT(*) FROM '._DB_PREFIX_.'product p
+            INNER JOIN '._DB_PREFIX_.'product_shop ps ON p.id_product = ps.id_product
+            WHERE ps.id_shop = '.(int)$shopId.' AND p.active = 1';
+        $count = Db::getInstance()->getValue($sql);
+        return $count;
+    }
+
     /**
      * Add the CSS & JavaScript files you want to be loaded in the BO.
      */
@@ -623,6 +632,7 @@ class Omniversepricing extends Module
             'omniversepricing_ajax_url' => $this->context->link->getAdminLink('AdminAjaxOmniverse'),
             'omniversepricing_shop_id' => $shop_id,
             'omniversepricing_lang_id' => $lang_id,
+            'total_products' => $this->getProductCount($shop_id),
         ]);
         $omni_auto_del = Configuration::get('OMNIVERSEPRICING_AUTO_DELETE_OLD', false);
 

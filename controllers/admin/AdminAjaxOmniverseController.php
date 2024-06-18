@@ -150,12 +150,14 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $languages = Language::getLanguages(false);
         $end = 5;
         $not_found = true;
+        $synced_ids = [];
         foreach ($languages as $lang) {
             $products = Product::getProducts($lang['id_lang'], $start, $end, 'id_product', 'ASC');
             $insert_q = '';
 
             if (isset($products) && !empty($products)) {
                 $not_found = false;
+                $synced_ids[] = $product['id_product'];
 
                 foreach ($products as $product) {
                     $attributes = $this->getProductAttributesInfo($product['id_product']);
@@ -186,9 +188,11 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             echo $response;
             exit;
         } else {
+            array_unique($synced_id);
             $response = [
                 'success' => 1,
                 'start' => $start + $end,
+                'synced_ids' => $synced_ids,
             ];
             $response = json_encode($response);
             echo $response;
