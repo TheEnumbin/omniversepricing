@@ -632,7 +632,7 @@ class Omniversepricing extends Module
             'omniversepricing_ajax_url' => $this->context->link->getAdminLink('AdminAjaxOmniverse'),
             'omniversepricing_shop_id' => $shop_id,
             'omniversepricing_lang_id' => $lang_id,
-            'total_products' => $this->getProductCount($shop_id),
+            'omniversepricing_total_products' => $this->getProductCount($shop_id),
         ]);
         $omni_auto_del = Configuration::get('OMNIVERSEPRICING_AUTO_DELETE_OLD', false);
 

@@ -157,9 +157,9 @@ class AdminAjaxOmniverseController extends ModuleAdminController
 
             if (isset($products) && !empty($products)) {
                 $not_found = false;
-                $synced_ids[] = $product['id_product'];
 
                 foreach ($products as $product) {
+                    $synced_ids[] = $product['id_product'];
                     $attributes = $this->getProductAttributesInfo($product['id_product']);
 
                     if (isset($attributes) && !empty($attributes)) {
@@ -188,7 +188,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             echo $response;
             exit;
         } else {
-            array_unique($synced_id);
+            array_unique($synced_ids);
             $response = [
                 'success' => 1,
                 'start' => $start + $end,
