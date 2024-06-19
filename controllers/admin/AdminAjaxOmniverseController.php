@@ -163,10 +163,12 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                     $attributes = $this->getProductAttributesInfo($product['id_product']);
 
                     if (isset($attributes) && !empty($attributes)) {
+                        $insert_q .= "-- Query of Combination Product";
                         foreach ($attributes as $attribute) {
                             $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $attribute['id_product_attribute'], $attribute['price']);
                         }
                     } else {
+                        $insert_q .= "-- Query of Simple Product";
                         $insert_q .= $this->create_insert_query($product, $lang['id_lang']);
                     }
                 }
@@ -226,7 +228,9 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             $omni_tax_include,
             $id_attribute
         );
-
+        if($price_amount === null) {
+            return '';
+        }
         if (isset($specific_prices) && !empty($specific_prices)) {
             foreach ($specific_prices as $specific_price) {
                 if (!$specific_price['id_currency'] && !$specific_price['id_group'] && !$specific_price['id_country']) {
