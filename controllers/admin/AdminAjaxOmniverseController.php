@@ -313,7 +313,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $attr_q = ' AND oc.`id_product_attribute` = ' . (int) $id_attr;
         $curre_q = ' AND oc.`id_currency` = ' . (int) $currency;
         $countr_q = ' AND oc.`id_country` = ' . (int) $country;
-        $countr_q = ' AND oc.`id_country` = ' . (int) $group;
+        $group_q = ' AND oc.`id_group` = ' . (int) $group;
         $results = Db::getInstance()->executeS(
             'SELECT *
             FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc

@@ -45,6 +45,11 @@ class Omniversepricing extends Module
         $this->displayName = $this->l('OmniversePricing');
         $this->description = $this->l('This is the module you need to make your PrestaShop Pricing Compatible for EU Omnibus Directive');
         $this->ps_versions_compliancy = ['min' => '1.7', 'max' => _PS_VERSION_];
+
+        $this->registerHook('actionProductUpdate');
+        $this->registerHook('actionObjectSpecificPriceAddAfter');
+        $this->registerHook('actionObjectSpecificPriceUpdateAfter');
+
     }
 
     /**
@@ -187,6 +192,10 @@ class Omniversepricing extends Module
                                 [
                                     'id' => 'manual',
                                     'name' => $this->l('Manual Sync - One click syncing'),
+                                ],
+                                [
+                                    'id' => 'w_change',
+                                    'name' => $this->l('Automated when product price changes or discount added/updated'),
                                 ],
                                 [
                                     'id' => 'w_cron',
@@ -713,6 +722,60 @@ class Omniversepricing extends Module
         }
     }
 
+    public function hookActionProductUpdate($params)
+    {
+        $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
+        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC', 'manual');
+        if (!$omni_stop) {
+            if ($history_func == 'w_change') {
+                $product = new Product($params['id_product']);
+                $attributes = $this->omniGetProductAttributesInfo($product->id);
+                $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
+                if ($omni_tax_include) {
+                    $omni_tax_include = true;
+                } else {
+                    $omni_tax_include = false;
+                }
+                if (isset($attributes) && !empty($attributes)) {
+                    echo '<pre>';
+                    print_r($attributes);
+                    echo '</pre>';
+                    echo __FILE__ . ' : ' . __LINE__;
+                    die(__FILE__ . ' : ' . __LINE__);
+                } else {
+                    $id_attr = 0;
+                    $prd_arr['id_product_attribute'] = $id_attr;
+                    $price_amount = Product::getPriceStatic(
+                        (int) $product->id,
+                        $omni_tax_include
+                    );
+                    $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
+                    if (empty($existing)) {
+                        $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include);
+                    }
+                }
+            }
+        }
+    }
+
+    public function hookActionObjectSpecificPriceAddAfter($params)
+    {
+        echo '<pre>';
+        print_r($params['object']);
+        echo '</pre>';
+        echo __FILE__ . ' : ' . __LINE__;
+        die(__FILE__ . ' : ' . __LINE__);
+    }
+
+    public function hookActionObjectSpecificPriceUpdateAfter($params)
+    {
+        echo '<pre>';
+        print_r($params['object']);
+        echo '</pre>';
+        echo __FILE__ . ' : ' . __LINE__;
+        die(__FILE__ . ' : ' . __LINE__);
+    }
+
     /**
      * Call back function for the  hook DisplayProductPriceBlock
      */
@@ -917,7 +980,7 @@ class Omniversepricing extends Module
         $country_id = $this->context->country->id;
         $customer = $this->context->customer;
 
-        if ($prd_obj->has_discount) {
+        if (isset($prd_obj->has_discount) && $prd_obj->has_discount) {
             $promo = 1;
         }
         if ($stable_v && version_compare($stable_v, '1.0.2', '>')) {
@@ -1041,5 +1104,14 @@ class Omniversepricing extends Module
         ]);
         $output = $this->context->smarty->fetch($this->local_path . 'views/templates/front/omni_front.tpl');
         echo $output;
+    }
+
+    private function omniGetProductAttributesInfo($id_product, $shop_only = false)
+    {
+        return Db::getInstance()->executeS('
+        SELECT pa.id_product_attribute, pa.price
+        FROM `' . _DB_PREFIX_ . 'product_attribute` pa' .
+        ($shop_only ? Shop::addSqlAssociation('product_attribute', 'pa') : '') . '
+        WHERE pa.`id_product` = ' . (int) $id_product);
     }
 }
