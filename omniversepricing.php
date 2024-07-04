@@ -737,11 +737,18 @@ class Omniversepricing extends Module
                     $omni_tax_include = false;
                 }
                 if (isset($attributes) && !empty($attributes)) {
-                    echo '<pre>';
-                    print_r($attributes);
-                    echo '</pre>';
-                    echo __FILE__ . ' : ' . __LINE__;
-                    die(__FILE__ . ' : ' . __LINE__);
+                    foreach ($attributes as $attribute) {
+                        $id_attr = $attribute['id_product_attribute'];
+                        $prd_arr['id_product_attribute'] = $id_attr;
+                        $price_amount = Product::getPriceStatic(
+                            (int) $product->id,
+                            $omni_tax_include
+                        );
+                        $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
+                        if (empty($existing)) {
+                            $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include);
+                        }
+                    }
                 } else {
                     $id_attr = 0;
                     $prd_arr['id_product_attribute'] = $id_attr;
@@ -760,20 +767,90 @@ class Omniversepricing extends Module
 
     public function hookActionObjectSpecificPriceAddAfter($params)
     {
-        echo '<pre>';
-        print_r($params['object']);
-        echo '</pre>';
-        echo __FILE__ . ' : ' . __LINE__;
-        die(__FILE__ . ' : ' . __LINE__);
+        $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
+        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC', 'manual');
+
+        if (!$omni_stop) {
+            if ($history_func == 'w_change') {
+                $product = new Product($params['object']->id_product);
+                $attributes = $this->omniGetProductAttributesInfo($product->id);
+                $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
+                if ($omni_tax_include) {
+                    $omni_tax_include = true;
+                } else {
+                    $omni_tax_include = false;
+                }
+                if (isset($attributes) && !empty($attributes)) {
+                    foreach ($attributes as $attribute) {
+                        $id_attr = $attribute['id_product_attribute'];
+                        $prd_arr['id_product_attribute'] = $id_attr;
+                        $price_amount = Product::getPriceStatic(
+                            (int) $product->id,
+                            $omni_tax_include
+                        );
+                        $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
+                        if (empty($existing)) {
+                            $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include, $params['object']);
+                        }
+                    }
+                } else {
+                    $id_attr = 0;
+                    $prd_arr['id_product_attribute'] = $id_attr;
+                    $price_amount = Product::getPriceStatic(
+                        (int) $product->id,
+                        $omni_tax_include
+                    );
+                    $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
+                    if (empty($existing)) {
+                        $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include, $params['object']);
+                    }
+                }
+            }
+        }
     }
 
     public function hookActionObjectSpecificPriceUpdateAfter($params)
     {
-        echo '<pre>';
-        print_r($params['object']);
-        echo '</pre>';
-        echo __FILE__ . ' : ' . __LINE__;
-        die(__FILE__ . ' : ' . __LINE__);
+        $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
+        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC', 'manual');
+
+        if (!$omni_stop) {
+            if ($history_func == 'w_change') {
+                $product = new Product($params['object']->id_product);
+                $attributes = $this->omniGetProductAttributesInfo($product->id);
+                $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
+                if ($omni_tax_include) {
+                    $omni_tax_include = true;
+                } else {
+                    $omni_tax_include = false;
+                }
+                if (isset($attributes) && !empty($attributes)) {
+                    foreach ($attributes as $attribute) {
+                        $id_attr = $attribute['id_product_attribute'];
+                        $prd_arr['id_product_attribute'] = $id_attr;
+                        $price_amount = Product::getPriceStatic(
+                            (int) $product->id,
+                            $omni_tax_include
+                        );
+                        $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
+                        if (empty($existing)) {
+                            $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include, $params['object']);
+                        }
+                    }
+                } else {
+                    $id_attr = 0;
+                    $prd_arr['id_product_attribute'] = $id_attr;
+                    $price_amount = Product::getPriceStatic(
+                        (int) $product->id,
+                        $omni_tax_include
+                    );
+                    $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
+                    if (empty($existing)) {
+                        $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include, $params['object']);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -967,7 +1044,7 @@ class Omniversepricing extends Module
     /**
      * Insert the minimum price to the table
      */
-    private function omniversepricing_insert_data($prd, $prd_obj, $price, $with_tax = false)
+    private function omniversepricing_insert_data($prd, $prd_obj, $price, $with_tax = false, $specific_price = null)
     {
         $stable_v = Configuration::get('OMNIVERSEPRICING_STABLE_VERSION');
         $lang_id = $this->context->language->id;
@@ -984,22 +1061,31 @@ class Omniversepricing extends Module
             $promo = 1;
         }
         if ($stable_v && version_compare($stable_v, '1.0.2', '>')) {
-            if ($customer instanceof Customer && $customer->isLogged()) {
-                $groups = $customer->getGroups();
-                if ($prd_obj->has_discount) {
-                    $id_group = 0;
-                } else {
-                    if (isset($prd_obj->specific_price['id_group'])) {
-                        $id_group = $prd_obj->specific_price['id_group'];
-                    } else {
-                        $id_group = 0;
-                    }
-                }
-            } elseif ($customer instanceof Customer && $customer->isLogged(true)) {
-                $id_group = (int) Configuration::get('PS_GUEST_GROUP');
+            if ($specific_price != null) {
+                $curr_id = $specific_price->id_currency;
+                $country_id = $specific_price->id_country;
+                $customer = $specific_price->id_customer;
+                $id_group = $specific_price->id_group;
+                $promo = 1;
             } else {
-                $id_group = (int) Configuration::get('PS_UNIDENTIFIED_GROUP');
+                if ($customer instanceof Customer && $customer->isLogged()) {
+                    $groups = $customer->getGroups();
+                    if ($prd_obj->has_discount) {
+                        $id_group = 0;
+                    } else {
+                        if (isset($prd_obj->specific_price['id_group'])) {
+                            $id_group = $prd_obj->specific_price['id_group'];
+                        } else {
+                            $id_group = 0;
+                        }
+                    }
+                } elseif ($customer instanceof Customer && $customer->isLogged(true)) {
+                    $id_group = (int) Configuration::get('PS_GUEST_GROUP');
+                } else {
+                    $id_group = (int) Configuration::get('PS_UNIDENTIFIED_GROUP');
+                }
             }
+
             $result = Db::getInstance()->insert('omniversepricing_products', [
                 'product_id' => (int) $prd_id,
                 'id_product_attribute' => $id_attr,
