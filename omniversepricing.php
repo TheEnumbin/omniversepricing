@@ -1046,6 +1046,9 @@ class Omniversepricing extends Module
      */
     private function omniversepricing_insert_data($prd, $prd_obj, $price, $with_tax = false, $specific_price = null)
     {
+        if ($price == 0) {
+            return;
+        }
         $stable_v = Configuration::get('OMNIVERSEPRICING_STABLE_VERSION');
         $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;

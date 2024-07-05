@@ -225,7 +225,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             $omni_tax_include,
             $id_attribute
         );
-        if($price_amount === null) {
+        if($price_amount === null || $price_amount == 0) {
             return '';
         }
         if (isset($specific_prices) && !empty($specific_prices)) {
