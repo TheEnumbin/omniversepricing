@@ -1029,7 +1029,7 @@ class Omniversepricing extends Module
             } else {
                 $id_group = (int) Configuration::get('PS_UNIDENTIFIED_GROUP');
             }
-            $group_q = ' AND oc.`id_group` IN (' . $id_group . ')';
+            $group_q = ' AND oc.`id_group` IN (0,' . $id_group . ')';
         }
         $results = Db::getInstance()->executeS(
             'SELECT *
@@ -1068,24 +1068,12 @@ class Omniversepricing extends Module
                 $id_group = $specific_price->id_group;
                 $promo = 1;
             } else {
-                if ($customer instanceof Customer && $customer->isLogged()) {
-                    $groups = $customer->getGroups();
-                    if ($prd_obj->has_discount) {
-                        $id_group = 0;
-                    } else {
-                        if (isset($prd_obj->specific_price['id_group'])) {
-                            $id_group = $prd_obj->specific_price['id_group'];
-                        } else {
-                            $id_group = 0;
-                        }
-                    }
-                } elseif ($customer instanceof Customer && $customer->isLogged(true)) {
-                    $id_group = (int) Configuration::get('PS_GUEST_GROUP');
+                if (isset($prd_obj->specificPrice['id_group'])) {
+                    $id_group = $prd_obj->specificPrice['id_group'];
                 } else {
-                    $id_group = (int) Configuration::get('PS_UNIDENTIFIED_GROUP');
+                    $id_group = 0;
                 }
             }
-
             $result = Db::getInstance()->insert('omniversepricing_products', [
                 'product_id' => (int) $prd_id,
                 'id_product_attribute' => $id_attr,
