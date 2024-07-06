@@ -617,6 +617,7 @@ class Omniversepricing extends Module
                     }';
 
         file_put_contents(_PS_MODULE_DIR_ . $this->name . '/views/css/front_generated.css', $gen_css);
+        $this->_clearCache('*');
     }
 
     public function getProductCount($shopId)

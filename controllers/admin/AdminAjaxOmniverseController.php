@@ -20,8 +20,11 @@
 if (!defined('_PS_VERSION_')) {
     exit;
 }
+require_once dirname(__FILE__) . '/../../includes/db_helper_trait.php';
+
 class AdminAjaxOmniverseController extends ModuleAdminController
 {
+    use DatabaseHelper_Trait;
     public function ajaxProcessOmniverseChangeLang()
     {
         $lang_id = Tools::getValue('langid');
