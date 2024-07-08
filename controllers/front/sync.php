@@ -26,8 +26,11 @@
 if (!defined('_PS_VERSION_')) {
     exit;
 }
+require_once dirname(__FILE__) . '/../../includes/db_helper_trait.php';
+
 class OmniversepricingSyncModuleFrontController extends ModuleFrontController
 {
+    use DatabaseHelper_Trait;
     public function initContent()
     {
         $date_cron = Configuration::get('OMNIVERSEPRICING_CRON_DATE', '');
