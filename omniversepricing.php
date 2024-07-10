@@ -45,11 +45,6 @@ class Omniversepricing extends Module
         $this->displayName = $this->l('OmniversePricing');
         $this->description = $this->l('This is the module you need to make your PrestaShop Pricing Compatible for EU Omnibus Directive');
         $this->ps_versions_compliancy = ['min' => '1.7', 'max' => _PS_VERSION_];
-
-        $this->registerHook('actionProductUpdate');
-        $this->registerHook('actionObjectSpecificPriceAddAfter');
-        $this->registerHook('actionObjectSpecificPriceUpdateAfter');
-
     }
 
     /**
@@ -93,6 +88,9 @@ class Omniversepricing extends Module
 
         return parent::install()
         && $this->registerHook('header')
+        && $this->registerHook('actionProductUpdate')
+        && $this->registerHook('actionObjectSpecificPriceAddAfter')
+        && $this->registerHook('actionObjectSpecificPriceUpdateAfter')
         && $this->registerHook('displayBackOfficeHeader')
         && $this->registerHook('displayAdminProductsExtra')
         && $this->registerHook('displayOmniverseNotice')

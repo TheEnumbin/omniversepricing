@@ -41,6 +41,7 @@ trait DatabaseHelper_Trait
     {
         $specific_prices = SpecificPrice::getByProductId($product['id_product'], $id_attribute);
         $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
+        $omni_tax_include_q = 0;
         $q = '';
         $context = Context::getContext();
         $shop_id = $context->shop->id;
@@ -48,8 +49,10 @@ trait DatabaseHelper_Trait
 
         if ($omni_tax_include) {
             $omni_tax_include = true;
+            $omni_tax_include_q = 1;
         } else {
             $omni_tax_include = false;
+            $omni_tax_include_q = 0;
         }
         $price_amount = Product::getPriceStatic(
             (int) $product['id_product'],
@@ -100,7 +103,7 @@ trait DatabaseHelper_Trait
                     if ($q != '') {
                         $q .= ',';
                     }
-                    $q .= "\n" . '(' . $product['id_product'] . ',' . $specific_price['id_product_attribute'] . ',' . $specific_price['id_country'] . ',' . $specific_price['id_currency'] . ',' . $specific_price['id_group'] . ',' . $price_amount . ',1,"' . date('Y-m-d') . '",' . $shop_id . ',' . $lang_id . ')';
+                    $q .= "\n" . '(' . $product['id_product'] . ',' . $specific_price['id_product_attribute'] . ',' . $specific_price['id_country'] . ',' . $specific_price['id_currency'] . ',' . $specific_price['id_group'] . ',' . $price_amount . ',1,"' . date('Y-m-d') . '",' . $shop_id . ',' . $lang_id . ',' . $omni_tax_include_q . ')';
                 }
             }
         }
@@ -117,7 +120,7 @@ trait DatabaseHelper_Trait
                 if ($q != '') {
                     $q .= ',';
                 }
-                $q .= "\n" . '(' . $product['id_product'] . ',' . $id_attribute . ',0,0,0,' . $price_amount . ',0,"' . date('Y-m-d') . '",' . $shop_id . ',' . $lang_id . ')';
+                $q .= "\n" . '(' . $product['id_product'] . ',' . $id_attribute . ',0,0,0,' . $price_amount . ',0,"' . date('Y-m-d') . '",' . $shop_id . ',' . $lang_id . ',' . $omni_tax_include_q . ')';
             }
         }
         if ($q != '') {

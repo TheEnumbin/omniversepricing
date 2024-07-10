@@ -175,7 +175,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                 $insert_q = rtrim($insert_q, ',' . "\n");
 
                 if ($insert_q != '') {
-                    $insert_q = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`) VALUES $insert_q";
+                    $insert_q = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`, `with_tax`) VALUES $insert_q";
                     $insertion = Db::getInstance()->execute($insert_q);
                 }
             }

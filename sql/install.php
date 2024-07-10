@@ -40,6 +40,7 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'omniversepricing_produc
     `date` datetime,
     `shop_id` int(11),
     `lang_id` int(11),
+    `with_tax` int(11),
     PRIMARY KEY  (`id_omniversepricing`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
