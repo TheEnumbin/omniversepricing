@@ -35,7 +35,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.0.13';
+        $this->version = '1.1.0';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
@@ -620,10 +620,11 @@ class Omniversepricing extends Module
 
     public function getProductCount($shopId)
     {
-        $sql = 'SELECT COUNT(*) FROM '._DB_PREFIX_.'product p
-            INNER JOIN '._DB_PREFIX_.'product_shop ps ON p.id_product = ps.id_product
-            WHERE ps.id_shop = '.(int)$shopId.' AND p.active = 1';
+        $sql = 'SELECT COUNT(*) FROM ' . _DB_PREFIX_ . 'product p
+            INNER JOIN ' . _DB_PREFIX_ . 'product_shop ps ON p.id_product = ps.id_product
+            WHERE ps.id_shop = ' . (int) $shopId . ' AND p.active = 1';
         $count = Db::getInstance()->getValue($sql);
+
         return $count;
     }
 

@@ -27,7 +27,7 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-function upgrade_module_1_0_14($object, $install = false)
+function upgrade_module_1_1_0($object, $install = false)
 {
     $sql = [];
     $sql[] = 'ALTER TABLE `' . _DB_PREFIX_ . 'omniversepricing_products` ADD `with_tax` INT NOT NULL AFTER `lang_id`; ';
