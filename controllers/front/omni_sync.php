@@ -24,14 +24,13 @@
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
  */
 
-// if (!defined('_PS_VERSION_')) {
-//     define('_PS_VERSION_', '8.1.0'); // Define the PrestaShop version if not already defined
-// }
+if (!defined('_PS_VERSION_')) {
+    define('_PS_VERSION_', '8.1.0'); // Define the PrestaShop version if not already defined
+}
 
 // Bootstrap the PrestaShop context
 require_once dirname(__FILE__) . '/../../../../config/config.inc.php';
 require_once dirname(__FILE__) . '/../../../../init.php';
-die(__FILE__ . ' : ' . __LINE__);
 // Include your custom trait if needed
 require_once dirname(__FILE__) . '/../../includes/db_helper_trait.php';
 
