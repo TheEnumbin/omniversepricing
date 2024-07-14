@@ -134,7 +134,16 @@ class Omniversepricing extends Module
             $html .= $this->postProcess();
         }
 
-        return $html . $this->renderForm();
+        $advertise = $this->advertise_template();
+
+        return $html . $this->renderForm() . $advertise;
+    }
+
+    protected function advertise_template()
+    {
+        // Fetch and render the template file
+        $this->context->smarty->assign('module_dir', $this->_path);
+        return $this->context->smarty->fetch($this->local_path . 'views/templates/admin/advertise_template.tpl');
     }
 
     /**
