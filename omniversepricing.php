@@ -59,6 +59,8 @@ class Omniversepricing extends Module
         Configuration::updateValue('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
         Configuration::updateValue('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
         Configuration::updateValue('OMNIVERSEPRICING_PRECENT_INDICATOR', true);
+        Configuration::updateValue('OMNIVERSEPRICING_SYNC_START', 1);
+        Configuration::updateValue('OMNIVERSEPRICING_SYNC_END', 20);
         Configuration::updateValue('OMNIVERSEPRICING_STOP_RECORD', false);
         Configuration::updateValue('OMNIVERSEPRICING_AUTO_DELETE_OLD', false);
         Configuration::updateValue('OMNIVERSEPRICING_NOTICE_STYLE', 'mixed');
@@ -113,6 +115,8 @@ class Omniversepricing extends Module
         Configuration::deleteByName('OMNIVERSEPRICING_SHOW_IF_CURRENT');
         Configuration::deleteByName('OMNIVERSEPRICING_PRICE_WITH_TAX');
         Configuration::deleteByName('OMNIVERSEPRICING_PRECENT_INDICATOR');
+        Configuration::deleteByName('OMNIVERSEPRICING_SYNC_START');
+        Configuration::deleteByName('OMNIVERSEPRICING_SYNC_END');
         Configuration::deleteByName('OMNIVERSEPRICING_STOP_RECORD');
         Configuration::deleteByName('OMNIVERSEPRICING_AUTO_DELETE_OLD');
         Configuration::deleteByName('OMNIVERSEPRICING_POSITION');
@@ -488,6 +492,22 @@ class Omniversepricing extends Module
                         'tab' => 'action_tab',
                     ],
                     [
+                        'col' => 3,
+                        'type' => 'text',
+                        'desc' => $this->l('Put the product id to start sync from.'),
+                        'name' => 'OMNIVERSEPRICING_SYNC_START',
+                        'label' => $this->l('Sync Start'),
+                        'tab' => 'action_tab',
+                    ],
+                    [
+                        'col' => 3,
+                        'type' => 'text',
+                        'desc' => $this->l('Put the product id to end sync at. (Put same Product Id as "Sync Start" to sync a single product)'),
+                        'name' => 'OMNIVERSEPRICING_SYNC_END',
+                        'label' => $this->l('Sync End'),
+                        'tab' => 'action_tab',
+                    ],
+                    [
                         'type' => 'html',
                         'label' => $this->l('Sync Products Now'),
                         'name' => 'OMNIVERSEPRICING_SYNC_PRODUCTS',
@@ -526,6 +546,8 @@ class Omniversepricing extends Module
             'OMNIVERSEPRICING_PRICE_WITH_TAX' => Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false),
             'OMNIVERSEPRICING_PRECENT_INDICATOR' => Configuration::get('OMNIVERSEPRICING_PRECENT_INDICATOR', false),
             'OMNIVERSEPRICING_STOP_RECORD' => Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false),
+            'OMNIVERSEPRICING_SYNC_START' => Configuration::get('OMNIVERSEPRICING_SYNC_START', 1),
+            'OMNIVERSEPRICING_SYNC_END' => Configuration::get('OMNIVERSEPRICING_SYNC_END', 20),
             'OMNIVERSEPRICING_AUTO_DELETE_OLD' => Configuration::get('OMNIVERSEPRICING_AUTO_DELETE_OLD', false),
             'OMNIVERSEPRICING_POSITION' => Configuration::get('OMNIVERSEPRICING_POSITION', 'after_price'),
             'OMNIVERSEPRICING_BACK_COLOR' => Configuration::get('OMNIVERSEPRICING_BACK_COLOR', '#b3a700'),
