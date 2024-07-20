@@ -112,11 +112,15 @@ $(document).ready(function () {
 
 
     $(document).on('click', '#omni_sync_bt', function () {
-        console.log($(".omni-sync-loader"));
+        // console.log($(".omni-sync-loader"));
+        let $start = $("#omni_sync_start").val();
         $(".omni-sync-loader").show();
         $(this).html("Syncing 0/" + omniversepricing_total_products + " products")
-        call_sync_ajax(0);
-
+        if ($start == '') {
+            call_sync_ajax(0);
+        } else {
+            console.log($start)
+        }
     });
 
     function call_sync_ajax(start) {
