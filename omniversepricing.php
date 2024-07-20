@@ -497,6 +497,7 @@ class Omniversepricing extends Module
                         'desc' => $this->l('Put the product id to start sync from.'),
                         'name' => 'OMNIVERSEPRICING_SYNC_START',
                         'label' => $this->l('Sync Start'),
+                        'id' => 'omni_sync_start',
                         'tab' => 'action_tab',
                     ],
                     [
@@ -505,6 +506,7 @@ class Omniversepricing extends Module
                         'desc' => $this->l('Put the product id to end sync at. (Put same Product Id as "Sync Start" to sync a single product)'),
                         'name' => 'OMNIVERSEPRICING_SYNC_END',
                         'label' => $this->l('Sync End'),
+                        'id' => 'omni_sync_end',
                         'tab' => 'action_tab',
                     ],
                     [
