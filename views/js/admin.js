@@ -114,18 +114,26 @@ $(document).ready(function () {
     $(document).on('click', '#omni_sync_bt', function () {
         // console.log($(".omni-sync-loader"));
         let $start = $("#omni_sync_start").val();
+        let $end = $("#omni_sync_end").val();
         $(".omni-sync-loader").show();
-        $(this).html("Syncing 0/" + omniversepricing_total_products + " products")
         if ($start == '') {
-            call_sync_ajax(0);
+            if ($end == '') {
+                call_sync_ajax(0, '', omniversepricing_total_products);
+            } else {
+                call_sync_ajax(0, $end, $end);
+            }
         } else {
             $start = $start - 1;
-            call_sync_ajax($start);
+            if ($end == '') {
+                call_sync_ajax($start, '', omniversepricing_total_products - $start);
+            } else {
+                call_sync_ajax($start, $end, ($end - $start));
+            }
         }
     });
 
-    function call_sync_ajax(start) {
-        let $end = $("#omni_sync_end").val();
+    function call_sync_ajax(start, $end, sync_count) {
+        $('#omni_sync_bt').html("Syncing " + start + "/" + sync_count + " products")
         $.ajax({
             type: 'POST',
             url: omniversepricing_ajax_url,
@@ -140,11 +148,10 @@ $(document).ready(function () {
             success: function (data) {
                 var response = JSON.parse(data);
                 if (response.start != 0) {
-                    call_sync_ajax(response.start)
-                    $('#omni_sync_bt').html("Syncing " + response.start + "/" + omniversepricing_total_products + " products")
+                    call_sync_ajax(response.start, $end, sync_count)
                 } else {
                     $(".omni-sync-loader").hide();
-                    $('#omni_sync_bt').html("Sync completed " + omniversepricing_total_products + " products")
+                    $('#omni_sync_bt').html("Sync completed " + sync_count + " products")
                 }
             }
         });
