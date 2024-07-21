@@ -147,11 +147,25 @@ class AdminAjaxOmniverseController extends ModuleAdminController
     public function ajaxProcessOmniDataSync()
     {
         $start = Tools::getValue('start');
+        $final_end = Tools::getValue('end');
+        $end = 5;
+        if ($final_end != '') {
+            if ($final_end <= $start) {
+                $response = [
+                    'success' => 1,
+                    'start' => 0,
+                ];
+                $response = json_encode($response);
+                echo $response;
+                exit;
+            } else {
+                $end = (int) $final_end - (int) $start;
+            }
+        }
         $context = Context::getContext();
         $lang_id = $context->language->id;
         $shop_id = $context->shop->id;
         $languages = Language::getLanguages(false);
-        $end = 5;
         $not_found = true;
         $synced_ids = [];
         foreach ($languages as $lang) {

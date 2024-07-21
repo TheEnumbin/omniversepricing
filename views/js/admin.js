@@ -119,12 +119,13 @@ $(document).ready(function () {
         if ($start == '') {
             call_sync_ajax(0);
         } else {
-            console.log($start)
+            $start = $start - 1;
+            call_sync_ajax($start);
         }
     });
 
     function call_sync_ajax(start) {
-        console.log(start)
+        let $end = $("#omni_sync_end").val();
         $.ajax({
             type: 'POST',
             url: omniversepricing_ajax_url,
@@ -133,6 +134,7 @@ $(document).ready(function () {
                 controller: 'AdminAjaxOmniverse',
                 action: 'OmniDataSync',
                 start: start,
+                end: $end,
                 ajax: true
             },
             success: function (data) {
