@@ -456,6 +456,13 @@ class Omniversepricing extends Module
                         'tab' => 'action_tab',
                     ],
                     [
+                        'type' => 'html',
+                        'label' => '',
+                        'name' => 'OMNIVERSEPRICING_FEAT_DESCRIPTION',
+                        'html_content' => '<div>This feature is important for <strong>Italian Progressive Sale Rule</strong>. It will stop recording price history during campaigns that changes price frequently.</div>',
+                        'tab' => 'action_tab',
+                    ],
+                    [
                         'type' => 'switch',
                         'label' => $this->l('Reset Price History'),
                         'name' => 'OMNIVERSEPRICING_RESET_HISTORY',
