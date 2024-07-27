@@ -35,7 +35,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.1.0';
+        $this->version = '1.1.1';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
