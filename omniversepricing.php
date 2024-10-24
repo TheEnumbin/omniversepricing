@@ -385,6 +385,10 @@ class Omniversepricing extends Module
                                     'name' => $this->l('Before Old Price'),
                                 ],
                                 [
+                                    'id' => 'price',
+                                    'name' => $this->l('Price (Only work with some theme)'),
+                                ],
+                                [
                                     'id' => 'footer_product',
                                     'name' => $this->l('Footer Product'),
                                 ],
