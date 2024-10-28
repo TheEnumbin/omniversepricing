@@ -432,7 +432,15 @@ class Omniversepricing extends Module
                         'desc' => $this->l('Put your font size like "12px"'),
                         'name' => 'OMNIVERSEPRICING_FONT_SIZE',
                         'label' => $this->l('Font Size'),
-                        'tab' => 'content_tab',
+                        'tab' => 'design_tab',
+                    ],
+                    [
+                        'col' => 3,
+                        'type' => 'text',
+                        'desc' => $this->l('Put your font weight like "600"'),
+                        'name' => 'OMNIVERSEPRICING_FONT_WEIGHT',
+                        'label' => $this->l('Font Weight'),
+                        'tab' => 'design_tab',
                     ],
                     [
                         'col' => 3,
@@ -440,7 +448,7 @@ class Omniversepricing extends Module
                         'desc' => $this->l('Put your padding like "6px"'),
                         'name' => 'OMNIVERSEPRICING_PADDING',
                         'label' => $this->l('Padding'),
-                        'tab' => 'content_tab',
+                        'tab' => 'design_tab',
                     ],
                     [
                         'type' => 'switch',
@@ -567,6 +575,7 @@ class Omniversepricing extends Module
             'OMNIVERSEPRICING_BACK_COLOR' => Configuration::get('OMNIVERSEPRICING_BACK_COLOR', '#b3a700'),
             'OMNIVERSEPRICING_FONT_COLOR' => Configuration::get('OMNIVERSEPRICING_FONT_COLOR', '#ffffff'),
             'OMNIVERSEPRICING_FONT_SIZE' => Configuration::get('OMNIVERSEPRICING_FONT_SIZE', '12px'),
+            'OMNIVERSEPRICING_FONT_WEIGHT' => Configuration::get('OMNIVERSEPRICING_FONT_WEIGHT', '400'),
             'OMNIVERSEPRICING_PADDING' => Configuration::get('OMNIVERSEPRICING_PADDING', '6px'),
             'OMNIVERSEPRICING_DELETE_OLD' => false,
             'OMNIVERSEPRICING_RESET_HISTORY' => false,
@@ -651,10 +660,12 @@ class Omniversepricing extends Module
         $omniversepricing_back_color = Configuration::get('OMNIVERSEPRICING_BACK_COLOR', '#b3a700');
         $omniversepricing_font_color = Configuration::get('OMNIVERSEPRICING_FONT_COLOR', '#ffffff');
         $omniversepricing_font_size = Configuration::get('OMNIVERSEPRICING_FONT_SIZE', '12px');
+        $omniversepricing_font_weight = Configuration::get('OMNIVERSEPRICING_FONT_WEIGHT', '400');
         $omniversepricing_padding = Configuration::get('OMNIVERSEPRICING_PADDING', '6px');
         $gen_css = '.omniversepricing-notice{
                         padding: ' . $omniversepricing_padding . ' !important;
                         font-size: ' . $omniversepricing_font_size . ' !important;
+                        font-weight: ' . $omniversepricing_font_weight . ' !important;
                         color: ' . $omniversepricing_font_color . ' !important;
                         background: ' . $omniversepricing_back_color . ' !important;
                     }';
