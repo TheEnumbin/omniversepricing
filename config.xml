@@ -2,7 +2,7 @@
 <module>
     <name>omniversepricing</name>
     <displayName><![CDATA[OmniversePricing]]></displayName>
-    <version><![CDATA[1.1.1]]></version>
+    <version><![CDATA[1.1.2]]></version>
     <description><![CDATA[This is the module you need to make your PrestaShop Pricing Compatible for EU Omnibus Directive]]></description>
     <author><![CDATA[TheEnumbin]]></author>
     <tab><![CDATA[pricing_promotion]]></tab>
