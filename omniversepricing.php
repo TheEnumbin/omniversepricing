@@ -35,7 +35,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.1.1';
+        $this->version = '1.1.2';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
@@ -90,7 +90,7 @@ class Omniversepricing extends Module
         include _PS_MODULE_DIR_ . $this->name . '/sql/install.php';
 
         return parent::install()
-        && $this->registerHook('header')
+        && $this->registerHook('displayHeader')
         && $this->registerHook('actionProductUpdate')
         && $this->registerHook('actionObjectSpecificPriceAddAfter')
         && $this->registerHook('actionObjectSpecificPriceUpdateAfter')
@@ -758,7 +758,7 @@ class Omniversepricing extends Module
     /**
      * Add the CSS & JavaScript files you want to be added on the FO.
      */
-    public function hookHeader()
+    public function hookDisplayHeader()
     {
         $this->context->controller->addCSS($this->_path . '/views/css/front_generated.css');
         $this->context->controller->addCSS($this->_path . '/views/css/front.css');
