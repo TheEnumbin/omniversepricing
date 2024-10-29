@@ -393,10 +393,6 @@ class Omniversepricing extends Module
                                     'name' => $this->l('Footer Product'),
                                 ],
                                 [
-                                    'id' => 'product_bts',
-                                    'name' => $this->l('After Product Buttons'),
-                                ],
-                                [
                                     'id' => 'with_custom_hook',
                                     'name' => $this->l('With Custom Hook'),
                                 ],
@@ -608,27 +604,18 @@ class Omniversepricing extends Module
                     if (!$this->isRegisteredInHook('displayFooterProduct')) {
                         $this->registerHook('displayFooterProduct');
                     }
-                    $this->unregisterHook('displayProductButtons');
-                    $this->unregisterHook('displayProductPriceBlock');
-                } elseif (Tools::getValue($key) == 'product_bts') {
-                    if (!$this->isRegisteredInHook('displayProductButtons')) {
-                        $this->registerHook('displayProductButtons');
-                    }
-                    $this->unregisterHook('displayFooterProduct');
                     $this->unregisterHook('displayProductPriceBlock');
                 } elseif (Tools::getValue($key) == 'with_custom_hook') {
                     if (!$this->isRegisteredInHook('displayOmniverseNotice')) {
                         $this->registerHook('displayOmniverseNotice');
                     }
                     $this->unregisterHook('displayFooterProduct');
-                    $this->unregisterHook('displayProductButtons');
                     $this->unregisterHook('displayProductPriceBlock');
                 } else {
                     if (!$this->isRegisteredInHook('displayProductPriceBlock')) {
                         $this->registerHook('displayProductPriceBlock');
                     }
                     $this->unregisterHook('displayFooterProduct');
-                    $this->unregisterHook('displayProductButtons');
                 }
             } elseif ($key == 'OMNIVERSEPRICING_TEXT') {
                 $languages = Language::getLanguages(false);
@@ -960,18 +947,6 @@ class Omniversepricing extends Module
         $product = $params['product'];
         $omniversepricing_price = $this->omniversepricing_init($product);
 
-        if ($omniversepricing_price) {
-            $this->omniversepricing_show_notice($omniversepricing_price);
-        }
-    }
-
-    /**
-     * Call back function for the  hook DisplayProductButtons
-     */
-    public function hookDisplayProductButtons($params)
-    {
-        $product = $params['product'];
-        $omniversepricing_price = $this->omniversepricing_init($product);
         if ($omniversepricing_price) {
             $this->omniversepricing_show_notice($omniversepricing_price);
         }
