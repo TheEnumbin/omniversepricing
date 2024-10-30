@@ -181,6 +181,9 @@ class Omniversepricing extends Module
     protected function getConfigForm()
     {
         $cron_url = $this->context->link->getModuleLink('omniversepricing', 'sync');
+        $this->context->smarty->assign('local_path', $this->_path);
+        $this->context->smarty->assign('sync_txt', $this->l('Sync Now!!!'));
+        $this->context->smarty->assign('cron_url', $cron_url);
         $tabs = [
             'general' => $this->l('General'),
             'content_tab' => $this->l('Content'),
@@ -406,7 +409,7 @@ class Omniversepricing extends Module
                         'type' => 'html',
                         'label' => $this->l('Use This Hook to Show Notice'),
                         'name' => 'OMNIVERSEPRICING_CUSTOM_HOOK',
-                        'html_content' => "<div class=\"omni-custom-hook\">{hook h='displayOmniverseNotice' product=\$product}</div>",
+                        'html_content' => $this->context->smarty->fetch($this->local_path . 'views/templates/admin/hook_html.tpl'),
                         'tab' => 'content_tab',
                         'desc' => $this->l('This will work when you select the Notice Position to With Custom Hook'),
                     ],
@@ -468,7 +471,7 @@ class Omniversepricing extends Module
                         'type' => 'html',
                         'label' => '',
                         'name' => 'OMNIVERSEPRICING_FEAT_DESCRIPTION',
-                        'html_content' => '<div>This feature is important for <strong>Italian Progressive Sale Rule</strong>. It will stop recording price history during campaigns that changes price frequently.</div>',
+                        'html_content' => $this->context->smarty->fetch($this->local_path . 'views/templates/admin/feature_desctiption.tpl'),
                         'tab' => 'action_tab',
                     ],
                     [
@@ -529,7 +532,7 @@ class Omniversepricing extends Module
                         'type' => 'html',
                         'label' => $this->l('Sync Products Now'),
                         'name' => 'OMNIVERSEPRICING_SYNC_PRODUCTS',
-                        'html_content' => '<div><button id="omni_sync_bt" class="btn btn-default" type="button">' . $this->l('Sync Now!!!') . '<img class="omni-sync-loader" src="' . $this->_path . 'views/img/loader.gif" alt="this slowpoke moves"  width="25" /></button></div>',
+                        'html_content' => $this->context->smarty->fetch($this->local_path . 'views/templates/admin/sync_bt.tpl'),
                         'tab' => 'action_tab',
                         'desc' => $this->l('This will run sync only for this shop. For other stores you need to go to that shop context.'),
                     ],
@@ -537,7 +540,7 @@ class Omniversepricing extends Module
                         'type' => 'html',
                         'label' => $this->l('Cron URL'),
                         'name' => 'OMNIVERSEPRICING_CRON_URL',
-                        'html_content' => '<div class="input-group"><div class="form-control-plaintext"><a class="d-block" href="#">' . $cron_url . '</a></div></div>',
+                        'html_content' => $this->context->smarty->fetch($this->local_path . 'views/templates/admin/cron_url.tpl'),
                         'tab' => 'action_tab',
                         'desc' => $this->l('This url will run Cron job for this shop. Change shop context to get cron url for separate shops.'),
                     ],
