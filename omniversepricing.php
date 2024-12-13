@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 2007-2022 PrestaShop
  *
@@ -660,8 +661,40 @@ class Omniversepricing extends Module
                         background: ' . $omniversepricing_back_color . ' !important;
                     }';
 
-        file_put_contents(_PS_MODULE_DIR_ . $this->name . '/views/css/front_generated.css', $gen_css);
+        $this->generateCustomCSS($gen_css);
         $this->_clearCache('*');
+    }
+
+    public function generateCustomCSS($css_content)
+    {
+        $base_path = _PS_MODULE_DIR_ . $this->name . '/views/css/';
+        $file_name = 'front_generated.css';
+
+        // Sanitize CSS content (optional; customize as needed)
+        $sanitized_css = $this->sanitizeCssContent($css_content);
+
+        // Validate the directory and file path
+        $css_path = realpath($base_path . $file_name);
+        if (strpos($css_path, realpath($base_path)) !== 0) {
+            throw new Exception('Invalid file path.');
+        }
+
+        // Save the CSS file
+        return file_put_contents($css_path, $sanitized_css) !== false;
+    }
+
+    /**
+     * Sanitize the CSS content
+     *
+     * @param string $css_content
+     * @return string
+     */
+    private function sanitizeCssContent($css_content)
+    {
+        // Example: Remove <script> tags or disallowed content (customize as needed)
+        $css_content = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $css_content);
+
+        return $css_content;
     }
 
     public function getProductCount($shopId)
