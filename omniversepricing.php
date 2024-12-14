@@ -665,15 +665,28 @@ class Omniversepricing extends Module
         $this->_clearCache('*');
     }
 
+    /**
+     * Generate the custom CSS securely using allowlist
+     *
+     * @param string $css_content The raw CSS content to save
+     * @return bool
+     * @throws Exception
+     */
     public function generateCustomCSS($css_content)
     {
         $base_path = _PS_MODULE_DIR_ . $this->name . '/views/css/';
         $file_name = 'front_generated.css';
 
-        // Sanitize CSS content (optional; customize as needed)
+        // Validate the directory path using an allowlist
+        $allowed_files = ['front_generated.css']; // Define allowed filenames
+        if (!in_array($file_name, $allowed_files, true)) {
+            throw new Exception('Invalid file name.');
+        }
+
+        // Validate and sanitize the CSS content
         $sanitized_css = $this->sanitizeCssContent($css_content);
 
-        // Validate the directory and file path
+        // Ensure the file path is within the allowed directory
         $css_path = realpath($base_path . $file_name);
         if (strpos($css_path, realpath($base_path)) !== 0) {
             throw new Exception('Invalid file path.');
@@ -684,15 +697,41 @@ class Omniversepricing extends Module
     }
 
     /**
-     * Sanitize the CSS content
+     * Sanitize and validate the CSS content using an allowlist
      *
      * @param string $css_content
      * @return string
+     * @throws Exception
      */
     private function sanitizeCssContent($css_content)
     {
-        // Example: Remove <script> tags or disallowed content (customize as needed)
-        $css_content = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $css_content);
+        // Define an allowlist of valid CSS patterns (example: CSS properties and values)
+        $allowed_patterns = [
+            '/^[a-zA-Z\-]+:\s?[#a-zA-Z0-9\-.\(\),%\s]+;$/m', // CSS declarations (e.g., "color: #fff;")
+            '/^[\s]*}$/m',                                   // Closing braces
+            '/^[a-zA-Z0-9\-_\s,]*{$/m',                     // Selectors (e.g., "body {")
+        ];
+
+        // Split CSS content into lines and validate each line
+        $lines = explode("\n", $css_content);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue; // Skip empty lines
+            }
+
+            $is_valid = false;
+            foreach ($allowed_patterns as $pattern) {
+                if (preg_match($pattern, $line)) {
+                    $is_valid = true;
+                    break;
+                }
+            }
+
+            if (!$is_valid) {
+                throw new Exception('Invalid CSS content detected.');
+            }
+        }
 
         return $css_content;
     }
