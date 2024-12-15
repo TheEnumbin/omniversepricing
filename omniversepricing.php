@@ -36,7 +36,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.1.2';
+        $this->version = '1.1.3';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
@@ -697,41 +697,15 @@ class Omniversepricing extends Module
     }
 
     /**
-     * Sanitize and validate the CSS content using an allowlist
+     * Sanitize the CSS content
      *
      * @param string $css_content
      * @return string
-     * @throws Exception
      */
     private function sanitizeCssContent($css_content)
     {
-        // Define an allowlist of valid CSS patterns (example: CSS properties and values)
-        $allowed_patterns = [
-            '/^[a-zA-Z\-]+:\s?[#a-zA-Z0-9\-.\(\),%\s]+;$/m', // CSS declarations (e.g., "color: #fff;")
-            '/^[\s]*}$/m',                                   // Closing braces
-            '/^[a-zA-Z0-9\-_\s,]*{$/m',                     // Selectors (e.g., "body {")
-        ];
-
-        // Split CSS content into lines and validate each line
-        $lines = explode("\n", $css_content);
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line === '') {
-                continue; // Skip empty lines
-            }
-
-            $is_valid = false;
-            foreach ($allowed_patterns as $pattern) {
-                if (preg_match($pattern, $line)) {
-                    $is_valid = true;
-                    break;
-                }
-            }
-
-            if (!$is_valid) {
-                throw new Exception('Invalid CSS content detected.');
-            }
-        }
+        // Example: Remove <script> tags or disallowed content (customize as needed)
+        $css_content = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $css_content);
 
         return $css_content;
     }
