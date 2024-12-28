@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 2007-2022 PrestaShop
  *
@@ -158,21 +159,67 @@ trait DatabaseHelper_Trait
         ($shop_only ? Shop::addSqlAssociation('product_attribute', 'pa') : '') . '
         WHERE pa.`id_product` = ' . (int) $id_product);
     }
-private function getCategoryDiscountRules($categoryId)
-{
-    $sql = '
-        SELECT cr.id_cart_rule, cr.name, cr.description, cr.reduction_percent, cr.reduction_amount, cr.date_from, cr.date_to
-        FROM ' . _DB_PREFIX_ . 'cart_rule cr
-        INNER JOIN ' . _DB_PREFIX_ . 'cart_rule_category crc ON cr.id_cart_rule = crc.id_cart_rule
-        WHERE crc.id_category = ' . (int)$categoryId . '
-        AND cr.active = 1
-        AND cr.date_from <= NOW()
-        AND cr.date_to >= NOW()
-    ';
 
-    $discountRules = Db::getInstance()->executeS($sql);
+    private function getCategoryDiscountRules($categoryId)
+    {
+        $sql = '
+            SELECT cr.id_cart_rule, cr.name, cr.description, cr.reduction_percent, cr.reduction_amount, cr.date_from, cr.date_to
+            FROM ' . _DB_PREFIX_ . 'cart_rule cr
+            INNER JOIN ' . _DB_PREFIX_ . 'cart_rule_category crc ON cr.id_cart_rule = crc.id_cart_rule
+            WHERE crc.id_category = ' . (int)$categoryId . '
+            AND cr.active = 1
+            AND cr.date_from <= NOW()
+            AND cr.date_to >= NOW()
+        ';
 
-    return $discountRules;
-}
+        $discountRules = Db::getInstance()->executeS($sql);
 
+        return $discountRules;
+    }
+
+    public function trackProductPriceHistory($productId)
+    {
+        $product = new Product($productId, false, $this->context->language->id);
+
+        // Get base product price
+        $basePrice = $product->price;
+
+        // Get product categories
+        $categories = Product::getProductCategories($productId);
+
+        // Fetch active category discount rules
+        $discountRules = [];
+        foreach ($categories as $categoryId) {
+            $discountRules = array_merge($discountRules, $this->getCategoryDiscountRules($categoryId));
+        }
+
+        // Calculate final price and apply the first applicable discount
+        $finalPrice = $basePrice;
+        $appliedDiscount = null;
+        foreach ($discountRules as $rule) {
+            if ($rule['reduction_percent']) {
+                $discountAmount = $basePrice * ($rule['reduction_percent'] / 100);
+            } elseif ($rule['reduction_amount']) {
+                $discountAmount = $rule['reduction_amount'];
+            } else {
+                continue;
+            }
+
+            // Apply the discount
+            $finalPrice -= $discountAmount;
+
+            // Save the discount details
+            $appliedDiscount = [
+                'rule_id' => $rule['id_cart_rule'],
+                'rule_name' => $rule['name'],
+                'discount_amount' => $discountAmount,
+            ];
+
+            // Stop after applying one discount (modify logic if needed)
+            break;
+        }
+
+        // Save price history
+        $this->savePriceHistory($productId, $basePrice, $finalPrice, $appliedDiscount);
+    }
 }
