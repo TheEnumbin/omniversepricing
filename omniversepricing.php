@@ -512,6 +512,26 @@ class Omniversepricing extends Module
                         'tab' => 'action_tab',
                     ],
                     [
+                        'type' => 'select',
+                        'label' => $this->l('Which price to keep?'),
+                        'name' => 'OMNIVERSEPRICING_SYNC_PRICE_TYPE',
+                        'options' => [
+                            'query' => [
+                                [
+                                    'id' => 'current',
+                                    'name' => $this->l('Current sale price'),
+                                ],
+                                [
+                                    'id' => 'old_price',
+                                    'name' => $this->l('Old price'),
+                                ],
+                            ],
+                            'id' => 'id',
+                            'name' => 'name',
+                        ],
+                        'tab' => 'action_tab',
+                    ],
+                    [
                         'col' => 3,
                         'type' => 'text',
                         'desc' => $this->l('Put the product id to start sync from.'),
