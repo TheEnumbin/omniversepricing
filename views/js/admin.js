@@ -115,6 +115,9 @@ $(document).ready(function () {
         // console.log($(".omni-sync-loader"));
         let $start = $("#omni_sync_start").val();
         let $end = $("#omni_sync_end").val();
+        let $omni_sync_type = $("#omni_sync_type").val();
+        console.log($omni_sync_type);
+
         $(".omni-sync-loader").show();
         if ($start == '') {
             if ($end == '') {

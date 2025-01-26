@@ -529,6 +529,7 @@ class Omniversepricing extends Module
                             'id' => 'id',
                             'name' => 'name',
                         ],
+                        'id' => 'omni_sync_type',
                         'tab' => 'action_tab',
                     ],
                     [
@@ -543,7 +544,7 @@ class Omniversepricing extends Module
                     [
                         'col' => 3,
                         'type' => 'text',
-                        'desc' => $this->l('Put the product id to end sync at. (Put same Product Id as "Sync Start" to sync a single product)'),
+                        'desc' => $this->l('Put the product id to end sync at. Keep it empty to sync all the products (Put same Product Id as "Sync Start" to sync a single product)'),
                         'name' => 'OMNIVERSEPRICING_SYNC_END',
                         'label' => $this->l('Sync End'),
                         'id' => 'omni_sync_end',
@@ -599,6 +600,7 @@ class Omniversepricing extends Module
             'OMNIVERSEPRICING_PADDING' => Configuration::get('OMNIVERSEPRICING_PADDING', '6px'),
             'OMNIVERSEPRICING_DELETE_OLD' => false,
             'OMNIVERSEPRICING_RESET_HISTORY' => false,
+            'OMNIVERSEPRICING_SYNC_PRICE_TYPE' => 'current',
         ];
 
         $languages = Language::getLanguages(false);
