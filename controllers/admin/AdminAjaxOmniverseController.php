@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -148,6 +149,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
     {
         $start = Tools::getValue('start');
         $final_end = Tools::getValue('end');
+        $price_type = Tools::getValue('price_type');
         $end = 5;
         if ($final_end != '') {
             if ($final_end <= $start) {
@@ -180,10 +182,10 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                     $attributes = $this->getProductAttributesInfo($product['id_product']);
                     if (isset($attributes) && !empty($attributes)) {
                         foreach ($attributes as $attribute) {
-                            $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $attribute['id_product_attribute'], $attribute['price']);
+                            $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $attribute['id_product_attribute'], $attribute['price'], $price_type);
                         }
                     } else {
-                        $insert_q .= $this->create_insert_query($product, $lang['id_lang']);
+                        $insert_q .= $this->create_insert_query($product, $lang['id_lang'], false, false, $price_type);
                     }
                 }
                 $insert_q = rtrim($insert_q, ',' . "\n");

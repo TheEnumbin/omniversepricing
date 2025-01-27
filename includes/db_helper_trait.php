@@ -56,7 +56,7 @@ trait DatabaseHelper_Trait
         return $results;
     }
 
-    private function create_insert_query($product, $lang_id, $id_attribute = false, $attr_price = false)
+    private function create_insert_query($product, $lang_id, $id_attribute = false, $attr_price = false, $price_type = 'current')
     {
         $specific_prices = SpecificPrice::getByProductId($product['id_product'], $id_attribute);
         $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
@@ -65,7 +65,11 @@ trait DatabaseHelper_Trait
         $context = Context::getContext();
         $shop_id = $context->shop->id;
         $need_default = true;
+        $use_reduct = true;
 
+        if ($price_type == 'old_price') {
+            $use_reduct = false;
+        }
         if ($omni_tax_include) {
             $omni_tax_include = true;
             $omni_tax_include_q = 1;
@@ -76,8 +80,13 @@ trait DatabaseHelper_Trait
         $price_amount = Product::getPriceStatic(
             (int) $product['id_product'],
             $omni_tax_include,
-            $id_attribute
+            $id_attribute,
+            6,
+            null,
+            false,
+            $use_reduct
         );
+
         if ($price_amount === null || $price_amount == 0) {
             return '';
         }

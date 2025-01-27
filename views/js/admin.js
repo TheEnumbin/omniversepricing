@@ -145,7 +145,7 @@ $(document).ready(function () {
                 action: 'OmniDataSync',
                 start: start,
                 end: $end,
-                price_type: $price_type,
+                price_type: price_type,
                 ajax: true
             },
             success: function (data) {
