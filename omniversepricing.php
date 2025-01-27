@@ -529,7 +529,7 @@ class Omniversepricing extends Module
                             'id' => 'id',
                             'name' => 'name',
                         ],
-                        'id' => 'omni_sync_type',
+                        'id' => 'omni_price_type',
                         'tab' => 'action_tab',
                     ],
                     [

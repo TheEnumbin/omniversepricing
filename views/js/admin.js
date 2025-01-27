@@ -115,27 +115,26 @@ $(document).ready(function () {
         // console.log($(".omni-sync-loader"));
         let $start = $("#omni_sync_start").val();
         let $end = $("#omni_sync_end").val();
-        let $omni_sync_type = $("#omni_sync_type").val();
-        console.log($omni_sync_type);
+        let $omni_price_type = $("#omni_price_type").val();
 
         $(".omni-sync-loader").show();
         if ($start == '') {
             if ($end == '') {
-                call_sync_ajax(0, '', omniversepricing_total_products);
+                call_sync_ajax(0, '', omniversepricing_total_products, $omni_price_type);
             } else {
-                call_sync_ajax(0, $end, $end);
+                call_sync_ajax(0, $end, $end, $omni_price_type);
             }
         } else {
             $start = $start - 1;
             if ($end == '') {
-                call_sync_ajax($start, '', omniversepricing_total_products - $start);
+                call_sync_ajax($start, '', omniversepricing_total_products - $start, $omni_price_type);
             } else {
-                call_sync_ajax($start, $end, ($end - $start));
+                call_sync_ajax($start, $end, ($end - $start), $omni_price_type);
             }
         }
     });
 
-    function call_sync_ajax(start, $end, sync_count) {
+    function call_sync_ajax(start, $end, sync_count, price_type) {
         $('#omni_sync_bt').html("Syncing " + start + "/" + sync_count + " products")
         $.ajax({
             type: 'POST',
@@ -146,6 +145,7 @@ $(document).ready(function () {
                 action: 'OmniDataSync',
                 start: start,
                 end: $end,
+                price_type: $price_type,
                 ajax: true
             },
             success: function (data) {
