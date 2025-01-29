@@ -109,14 +109,12 @@ $(document).ready(function () {
             }
         });
     });
-
-
+    var stop_sync = 1;
     $(document).on('click', '#omni_sync_bt', function () {
-        // console.log($(".omni-sync-loader"));
         let $start = $("#omni_sync_start").val();
         let $end = $("#omni_sync_end").val();
         let $omni_price_type = $("#omni_price_type").val();
-
+        stop_sync = 0
         $(".omni-sync-loader").show();
         $("#omni_sync_stop").removeClass("hidden");
         if ($start == '') {
@@ -135,6 +133,10 @@ $(document).ready(function () {
         }
     });
 
+    $(document).on('click', '#omni_sync_stop', function () {
+        stop_sync = 1
+    });
+
     function call_sync_ajax(start, $end, sync_count, price_type) {
         $('#omni_sync_bt').html("Syncing " + start + "/" + sync_count + " products")
         $.ajax({
@@ -151,12 +153,18 @@ $(document).ready(function () {
             },
             success: function (data) {
                 var response = JSON.parse(data);
-                if (response.start != 0) {
-                    call_sync_ajax(response.start, $end, sync_count)
+                if (!stop_sync) {
+                    if (response.start != 0) {
+                        call_sync_ajax(response.start, $end, sync_count)
+                    } else {
+                        $(".omni-sync-loader").hide();
+                        $("#omni_sync_stop").addClass("hidden");
+                        $('#omni_sync_bt').html("Sync completed " + sync_count + " products")
+                    }
                 } else {
                     $(".omni-sync-loader").hide();
                     $("#omni_sync_stop").addClass("hidden");
-                    $('#omni_sync_bt').html("Sync completed " + sync_count + " products")
+                    $('#omni_sync_bt').html("Sync Stopped at " + response.start)
                 }
             }
         });
