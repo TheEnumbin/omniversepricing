@@ -175,7 +175,7 @@ trait DatabaseHelper_Trait
             SELECT cr.id_cart_rule, cr.name, cr.description, cr.reduction_percent, cr.reduction_amount, cr.date_from, cr.date_to
             FROM ' . _DB_PREFIX_ . 'cart_rule cr
             INNER JOIN ' . _DB_PREFIX_ . 'cart_rule_category crc ON cr.id_cart_rule = crc.id_cart_rule
-            WHERE crc.id_category = ' . (int)$categoryId . '
+            WHERE crc.id_category = ' . (int) $categoryId . '
             AND cr.active = 1
             AND cr.date_from <= NOW()
             AND cr.date_to >= NOW()

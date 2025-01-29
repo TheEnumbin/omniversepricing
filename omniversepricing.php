@@ -727,7 +727,6 @@ class Omniversepricing extends Module
      */
     private function sanitizeCssContent($css_content)
     {
-        // Example: Remove <script> tags or disallowed content (customize as needed)
         $css_content = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $css_content);
 
         return $css_content;

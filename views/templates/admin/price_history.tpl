@@ -18,14 +18,15 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author    PrestaShop SA <contact@prestashop.com>
-*  @copyright 2007-2024 PrestaShop SA
+*  @copyright 2007-2025 PrestaShop SA
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
 <div class="omniversepricing-wrapper">
     <div class="omniversepricing-sec omniversepricing-header">
         <input type="hidden" id="prd_id" name="prd_id" value="{$omniverse_prd_id}">
-        <select class="omniversepricing-lang-changer" name="omniversepricing_lang_changer" id="omniversepricing_lang_changer">
+        <select class="omniversepricing-lang-changer" name="omniversepricing_lang_changer"
+            id="omniversepricing_lang_changer">
             {foreach from=$omniverse_langs item=omniverse_lang}
                 {if $omniverse_lang.id_lang == $omniverse_curr_lang}
                     <option selected="selected" value="{$omniverse_lang.id_lang}">{$omniverse_lang.name}</option>
@@ -36,7 +37,9 @@
         </select>
     </div>
     <div class="omniversepricing-sec omniversepricing-price-history">
-        <div><h2>Omniverse Pricing Section</h3></div>
+        <div>
+            <h2>Omniverse Pricing Section</h3>
+        </div>
         <table id="omniversepricing_history_table">
             <tr>
                 <th>Date</th>
@@ -49,7 +52,8 @@
                     <td>{$omniverse_price.date}</td>
                     <td>{$omniverse_price.price}</td>
                     <td>{$omniverse_price.promotext}</td>
-                    <td><button  class="omniversepricing_history_delete btn btn-danger" type="button" value="{$omniverse_price.id}">Delete</button></td>
+                    <td><button class="omniversepricing_history_delete btn btn-danger" type="button"
+                            value="{$omniverse_price.id}">Delete</button></td>
                 </tr>
             {/foreach}
         </table>
