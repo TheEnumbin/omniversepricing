@@ -36,7 +36,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.1.3';
+        $this->version = '1.1.4';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
@@ -184,6 +184,7 @@ class Omniversepricing extends Module
         $cron_url = $this->context->link->getModuleLink('omniversepricing', 'sync');
         $this->context->smarty->assign('local_path', $this->_path);
         $this->context->smarty->assign('sync_txt', $this->l('Sync Now!!!'));
+        $this->context->smarty->assign('stop_sync', $this->l('Stop Sync!!!'));
         $this->context->smarty->assign('cron_url', $cron_url);
         $tabs = [
             'general' => $this->l('General'),

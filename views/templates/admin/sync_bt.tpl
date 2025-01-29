@@ -27,4 +27,7 @@
         {$sync_txt}
         <img class="omni-sync-loader" src="{$local_path}views/img/loader.gif" alt="this slowpoke moves" width="25" />
     </button>
+    <button id="omni_sync_stop" class="btn btn-danger hidden ml-1" type="button">
+        {$stop_sync}
+    </button>
 </div>

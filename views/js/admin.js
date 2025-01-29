@@ -118,6 +118,7 @@ $(document).ready(function () {
         let $omni_price_type = $("#omni_price_type").val();
 
         $(".omni-sync-loader").show();
+        $("#omni_sync_stop").removeClass("hidden");
         if ($start == '') {
             if ($end == '') {
                 call_sync_ajax(0, '', omniversepricing_total_products, $omni_price_type);
@@ -154,6 +155,7 @@ $(document).ready(function () {
                     call_sync_ajax(response.start, $end, sync_count)
                 } else {
                     $(".omni-sync-loader").hide();
+                    $("#omni_sync_stop").addClass("hidden");
                     $('#omni_sync_bt').html("Sync completed " + sync_count + " products")
                 }
             }
