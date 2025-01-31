@@ -155,7 +155,7 @@ $(document).ready(function () {
                 var response = JSON.parse(data);
                 if (!stop_sync) {
                     if (response.start != 0) {
-                        call_sync_ajax(response.start, $end, sync_count)
+                        call_sync_ajax(response.start, $end, sync_count, price_type)
                     } else {
                         $(".omni-sync-loader").hide();
                         $("#omni_sync_stop").addClass("hidden");
