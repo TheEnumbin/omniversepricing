@@ -1062,7 +1062,7 @@ class Omniversepricing extends Module
         $omniverse_price = $this->omniversepricing_get_price($product_obj->id, $price_amount, $product['id_product_attribute']);
         $priceFormatter = new PriceFormatter();
         if ($omniverse_price) {
-            $omniversepricinge_formatted_price = $priceFormatter->format($omniverse_price);
+            $omniversepricinge_formatted_price = $priceFormatter->convertAndFormat($omniverse_price, Currency::getCurrencyInstance((int) $this->context->cookie->id_currency));
             if ($omniverse_price > $price_amount) {
                 $omniversepricinge_percentage_amount = ceil((($omniverse_price - $price_amount) / $omniverse_price) * 100);
 
@@ -1089,7 +1089,7 @@ class Omniversepricing extends Module
             $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
             if ($omni_if_current) {
                 $omniversepricinge_percentage = '0%';
-                $return_arr['omni_price'] = $priceFormatter->format($price_amount);
+                $return_arr['omni_price'] = $priceFormatter->format($price_amount, Currency::getCurrencyInstance((int) $this->context->cookie->id_currency));
                 $return_arr['omni_percent'] = $omniversepricinge_percentage;
                 return $return_arr;
             }
