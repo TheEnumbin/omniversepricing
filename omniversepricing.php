@@ -36,7 +36,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.1.4';
+        $this->version = '1.1.5';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
@@ -795,7 +795,7 @@ class Omniversepricing extends Module
         foreach ($results as $result) {
             $omniverse_prices[$result['id_omniversepricing']]['id'] = $result['id_omniversepricing'];
             $omniverse_prices[$result['id_omniversepricing']]['date'] = $result['date'];
-            $omniverse_prices[$result['id_omniversepricing']]['price'] = $priceFormatter->format($result['price']);
+            $omniverse_prices[$result['id_omniversepricing']]['price'] = $priceFormatter->convertAndFormat($result['price']);
             $omniverse_prices[$result['id_omniversepricing']]['promotext'] = 'Normal Price';
             if ($result['promo']) {
                 $omniverse_prices[$result['id_omniversepricing']]['promotext'] = 'Promotional Price';
@@ -1062,7 +1062,7 @@ class Omniversepricing extends Module
         $omniverse_price = $this->omniversepricing_get_price($product_obj->id, $price_amount, $product['id_product_attribute']);
         $priceFormatter = new PriceFormatter();
         if ($omniverse_price) {
-            $omniversepricinge_formatted_price = $priceFormatter->convertAndFormat($omniverse_price, Currency::getCurrencyInstance((int) $this->context->cookie->id_currency));
+            $omniversepricinge_formatted_price = $priceFormatter->convertAndFormat($omniverse_price);
             if ($omniverse_price > $price_amount) {
                 $omniversepricinge_percentage_amount = ceil((($omniverse_price - $price_amount) / $omniverse_price) * 100);
 
@@ -1089,7 +1089,7 @@ class Omniversepricing extends Module
             $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
             if ($omni_if_current) {
                 $omniversepricinge_percentage = '0%';
-                $return_arr['omni_price'] = $priceFormatter->format($price_amount, Currency::getCurrencyInstance((int) $this->context->cookie->id_currency));
+                $return_arr['omni_price'] = $priceFormatter->convertAndFormat($price_amount);
                 $return_arr['omni_percent'] = $omniversepricinge_percentage;
                 return $return_arr;
             }
