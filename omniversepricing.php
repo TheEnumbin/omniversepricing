@@ -92,6 +92,7 @@ class Omniversepricing extends Module
 
         return parent::install()
         && $this->registerHook('displayHeader')
+        && $this->registerHook('displayFooter')
         && $this->registerHook('actionProductUpdate')
         && $this->registerHook('actionObjectSpecificPriceAddAfter')
         && $this->registerHook('actionObjectSpecificPriceUpdateAfter')
@@ -376,6 +377,25 @@ class Omniversepricing extends Module
                         'tab' => 'general',
                     ],
                     [
+                        'type' => 'switch',
+                        'label' => $this->l('Enable Chart'),
+                        'desc' => $this->l('Show Chart Table'),
+                        'name' => 'OMNIVERSEPRICING_SHOW_CHART',
+                        'values' => [
+                            [
+                                'id' => 'enable',
+                                'value' => true,
+                                'label' => $this->l('Enable'),
+                            ],
+                            [
+                                'id' => 'disable',
+                                'value' => false,
+                                'label' => $this->l('Disable'),
+                            ],
+                        ],
+                        'tab' => 'general',
+                    ],
+                    [
                         'type' => 'select',
                         'label' => $this->l('Select Notice Position'),
                         'name' => 'OMNIVERSEPRICING_POSITION',
@@ -589,6 +609,7 @@ class Omniversepricing extends Module
             'OMNIVERSEPRICING_SHOW_IF_CURRENT' => Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true),
             'OMNIVERSEPRICING_PRICE_WITH_TAX' => Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false),
             'OMNIVERSEPRICING_PRECENT_INDICATOR' => Configuration::get('OMNIVERSEPRICING_PRECENT_INDICATOR', false),
+            'OMNIVERSEPRICING_SHOW_CHART' => Configuration::get('OMNIVERSEPRICING_SHOW_CHART', false),
             'OMNIVERSEPRICING_STOP_RECORD' => Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false),
             'OMNIVERSEPRICING_SYNC_START' => Configuration::get('OMNIVERSEPRICING_SYNC_START', 1),
             'OMNIVERSEPRICING_SYNC_END' => Configuration::get('OMNIVERSEPRICING_SYNC_END', 20),
@@ -811,6 +832,16 @@ class Omniversepricing extends Module
         $output = $this->context->smarty->fetch($this->local_path . 'views/templates/admin/price_history.tpl');
 
         return $output;
+    }
+
+    public function hookDisplayFooter()
+    {
+        $show_chart = Configuration::get('OMNIVERSEPRICING_SHOW_CHART', false);
+
+        if ($show_chart == 'enable') {
+            $output = $this->context->smarty->fetch($this->local_path . 'views/templates/front/omni_chart.tpl');
+            echo $output;
+        }
     }
 
     /**
