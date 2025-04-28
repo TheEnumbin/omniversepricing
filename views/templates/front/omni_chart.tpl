@@ -22,5 +22,9 @@
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
-<div class="omni-chart-wrapper">
+<div id="priceChartModal" class="omni-chart-wrapper">
+    <div class="omni-modal-content">
+        <span class="omni-chart-close" id="closePriceChart">&times;</span>
+        <canvas id="priceHistoryChart"></canvas>
+    </div>
 </div>
