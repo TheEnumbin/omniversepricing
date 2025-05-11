@@ -851,6 +851,7 @@ class Omniversepricing extends Module
     {
         $this->context->controller->addCSS($this->_path . '/views/css/front_generated.css');
         $this->context->controller->addCSS($this->_path . '/views/css/front.css');
+        $this->context->controller->addJS($this->_path . '/views/js/front.js');
     }
 
     public function hookDisplayOmniverseNotice($params)
