@@ -5,55 +5,44 @@ $(document).ready(function () {
     $('#openPriceChart').on('click', function () {
         $('#priceChartModal').fadeIn();
 
-        // Example: Generate fake 30 days price data
-        var labels = [];
-        var prices = [];
-        var today = new Date();
-
-        for (var i = 29; i >= 0; i--) {
-            var d = new Date(today);
-            d.setDate(today.getDate() - i);
-            labels.push(d.toISOString().split('T')[0]); // Format YYYY-MM-DD
-            prices.push((Math.random() * (120 - 80) + 80).toFixed(2)); // Random price between 80-120
-        }
-
-        if (priceChart) {
-            priceChart.destroy(); // Destroy previous instance
-        }
-
-        priceChart = new Chart(ctx, {
-            type: 'line',
+        $.ajax({
+            url: price_history_ajax_url, // Defined by PrestaShop, see below
+            type: 'POST',
+            dataType: 'json',
             data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Price (Last 30 Days)',
-                    data: prices,
-                    borderColor: 'red',
-                    backgroundColor: 'rgba(255,0,0,0.2)',
-                    tension: 0.3,
-                    fill: true,
-                    pointRadius: 3,
-                    pointBackgroundColor: 'red'
-                }]
+                ajax: true,
+                action: 'GetPriceHistory',
+                id_product: id_product_for_chart // define this earlier in your JS
             },
-            options: {
-                responsive: true,
-                scales: {
-                    x: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
+            success: function (response) {
+                if (priceChart) priceChart.destroy();
+
+                priceChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: response.labels,
+                        datasets: [{
+                            label: 'Price (Last 30 Days)',
+                            data: response.prices,
+                            borderColor: 'red',
+                            backgroundColor: 'rgba(255,0,0,0.2)',
+                            tension: 0.3,
+                            fill: true,
+                            pointRadius: 3,
+                            pointBackgroundColor: 'red'
+                        }]
                     },
-                    y: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: 'Price'
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: { title: { display: true, text: 'Date' } },
+                            y: { title: { display: true, text: 'Price' } }
                         }
                     }
-                }
+                });
+            },
+            error: function (err) {
+                alert('Failed to load price data.');
             }
         });
     });
