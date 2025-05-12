@@ -10,8 +10,9 @@ $(document).ready(function () {
             type: 'POST',
             dataType: 'json',
             data: {
-                ajax: true,
+                controller: 'AdminAjaxOmniverse',
                 action: 'GetPriceHistory',
+                ajax: true,
                 id_product: id_product_for_chart // define this earlier in your JS
             },
             success: function (response) {
