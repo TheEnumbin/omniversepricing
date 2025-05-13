@@ -224,4 +224,10 @@ class AdminAjaxOmniverseController extends ModuleAdminController
 
         exit;
     }
+
+    public function ajaxProcessGetPriceHistory()
+    {
+
+    }
+
 }
