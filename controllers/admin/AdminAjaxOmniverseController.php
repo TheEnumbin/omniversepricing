@@ -227,7 +227,58 @@ class AdminAjaxOmniverseController extends ModuleAdminController
 
     public function ajaxProcessGetPriceHistory()
     {
+        $stable_v = Configuration::get('OMNIVERSEPRICING_STABLE_VERSION');
+        $lang_id = $this->context->language->id;
+        $shop_id = $this->context->shop->id;
+        $attr_q = '';
+        $curre_q = '';
+        $countr_q = '';
+        $group_q = '';
+        $inner_q = '';
+        if ($id_attr) {
+            $attr_q = ' AND oc.`id_product_attribute` = ' . (int) $id_attr;
+        }
 
+        if ($stable_v && version_compare($stable_v, '1.0.2', '>')) {
+            $curr_id = $this->context->currency->id;
+            $curre_q = ' oc2.`id_currency` = ' . (int) $curr_id;
+            $country_id = $this->context->country->id;
+            $countr_q = ' OR oc2.`id_country` = ' . (int) $country_id;
+            $customer = $this->context->customer;
+            if ($customer instanceof Customer && $customer->isLogged()) {
+                $groups = $customer->getGroups();
+                $id_group = implode(', ', $groups);
+            } elseif ($customer instanceof Customer && $customer->isLogged(true)) {
+                $id_group = (int) Configuration::get('PS_GUEST_GROUP');
+            } else {
+                $id_group = (int) Configuration::get('PS_UNIDENTIFIED_GROUP');
+            }
+
+            $group_q = ' OR oc2.`id_group` IN (' . $id_group . ')';
+
+            $inner_q = 'IN (SELECT oc2.id_omniversepricing FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc2 
+                       WHERE ' . $curre_q . $countr_q . $group_q . ')';
+        }
+        $date = date('Y-m-d');
+        $date_range = date('Y-m-d', strtotime('-31 days'));
+        $q_1 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
+        WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+        AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q . ' AND oc.id_omniversepricing ' . $inner_q;
+        $q_2 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
+        WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+        AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q . ' AND oc.`id_currency` = 0 AND oc.`id_country` = 0';
+        $result = Db::getInstance()->executeS($q_1 . ' UNION ' . $q_2);
+        if (isset($result)) {
+            if (isset($result[0][$this->name . '_price']) && $result[0][$this->name . '_price'] != null) {
+                return $result[0][$this->name . '_price'];
+            } else {
+                if (isset($result[1][$this->name . '_price']) && $result[1][$this->name . '_price'] != null) {
+                    return $result[1][$this->name . '_price'];
+                }
+            }
+        }
+
+        return false;
     }
 
 }
