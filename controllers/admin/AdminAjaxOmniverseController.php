@@ -261,7 +261,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         }
         $date = date('Y-m-d');
         $date_range = date('Y-m-d', strtotime('-31 days'));
-        $q_1 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
+        $q_1 = 'SELECT oc.price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
         WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q . ' AND oc.id_omniversepricing ' . $inner_q;
         $q_2 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
@@ -269,13 +269,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q . ' AND oc.`id_currency` = 0 AND oc.`id_country` = 0';
         $result = Db::getInstance()->executeS($q_1 . ' UNION ' . $q_2);
         if (isset($result)) {
-            if (isset($result[0][$this->name . '_price']) && $result[0][$this->name . '_price'] != null) {
-                return $result[0][$this->name . '_price'];
-            } else {
-                if (isset($result[1][$this->name . '_price']) && $result[1][$this->name . '_price'] != null) {
-                    return $result[1][$this->name . '_price'];
-                }
-            }
+            return $result;
         }
 
         return false;
