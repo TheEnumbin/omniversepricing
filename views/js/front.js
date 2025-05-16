@@ -15,9 +15,9 @@ $(document).ready(function () {
                 ajax: true,
                 id_product: id_product_for_chart // define this earlier in your JS
             },
-            success: function (response) {
+            success: function (data) {
                 if (priceChart) priceChart.destroy();
-
+                var response = JSON.parse(data);
                 priceChart = new Chart(ctx, {
                     type: 'line',
                     data: {

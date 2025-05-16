@@ -269,7 +269,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q . ' AND oc.`id_currency` = 0 AND oc.`id_country` = 0';
         $result = Db::getInstance()->executeS($q_1 . ' UNION ' . $q_2);
         if (isset($result)) {
-            return $result;
+            return json_encode($result);
         }
 
         return false;
