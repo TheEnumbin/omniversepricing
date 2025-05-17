@@ -1,9 +1,11 @@
 $(document).ready(function () {
     var ctx = document.getElementById('priceHistoryChart').getContext('2d');
     var priceChart;
-
+    console.log("hello")
     $('#openPriceChart').on('click', function () {
         $('#priceChartModal').fadeIn();
+
+        console.log("hello")
 
         $.ajax({
             url: price_history_ajax_url, // Defined by PrestaShop, see below
