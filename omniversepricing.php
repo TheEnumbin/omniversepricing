@@ -838,7 +838,7 @@ class Omniversepricing extends Module
     {
         $show_chart = Configuration::get('OMNIVERSEPRICING_SHOW_CHART', false);
 
-        if ($show_chart == 'enable') {
+        if ($show_chart == true) {
             $output = $this->context->smarty->fetch($this->local_path . 'views/templates/front/omni_chart.tpl');
             echo $output;
         }
