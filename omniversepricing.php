@@ -864,7 +864,7 @@ class Omniversepricing extends Module
             if (!$product->has_discount && $show_on == 'discounted') {
                 return;
             }
-            $this->omniversepricing_show_notice($omniversepricing_price);
+            $this->omniversepricing_show_notice($omniversepricing_price, $product['id_product']);
         }
     }
 
@@ -1019,7 +1019,7 @@ class Omniversepricing extends Module
                     if (!$product->has_discount && $show_on == 'discounted') {
                         return;
                     }
-                    $this->omniversepricing_show_notice($omniversepricing_price);
+                    $this->omniversepricing_show_notice($omniversepricing_price, $product['id_product']);
                 }
             }
         } else {
@@ -1036,7 +1036,7 @@ class Omniversepricing extends Module
                     if (!$product->has_discount && $show_on == 'discounted') {
                         return;
                     }
-                    $this->omniversepricing_show_notice($omniversepricing_price);
+                    $this->omniversepricing_show_notice($omniversepricing_price, $product['id_product']);
                 }
             }
         }
