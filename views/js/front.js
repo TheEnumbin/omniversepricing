@@ -8,16 +8,17 @@ $(document).ready(function () {
         $('#priceChartModal').fadeIn();
 
         console.log("hello")
+        var $id_product_for_chart = $(this).data('prd_id');
 
         $.ajax({
-            url: price_history_ajax_url, // Defined by PrestaShop, see below
+            url: omniversepricing_ajax_url,
             type: 'POST',
             dataType: 'json',
             data: {
                 controller: 'AdminAjaxOmniverse',
                 action: 'GetPriceHistory',
                 ajax: true,
-                id_product: id_product_for_chart // define this earlier in your JS
+                id_product: $id_product_for_chart
             },
             success: function (data) {
                 if (priceChart) priceChart.destroy();
@@ -47,7 +48,7 @@ $(document).ready(function () {
                 });
             },
             error: function (err) {
-                alert('Failed to load price data.');
+                // alert('Failed to load price data.');
             }
         });
     });

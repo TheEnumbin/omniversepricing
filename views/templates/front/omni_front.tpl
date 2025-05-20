@@ -29,4 +29,4 @@
 {else}
     <span class="omniversepricing-notice">{$omniversepricing_text}</span>
 {/if}
-<button data-prd_id="" id="openPriceChart">View Price History</button>
+<button data-prd_id="{$omni_prd_id}" id="openPriceChart">View Price History</button>

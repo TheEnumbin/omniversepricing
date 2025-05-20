@@ -852,6 +852,9 @@ class Omniversepricing extends Module
         $this->context->controller->addCSS($this->_path . '/views/css/front_generated.css');
         $this->context->controller->addCSS($this->_path . '/views/css/front.css');
         $this->context->controller->addJS($this->_path . '/views/js/front.js');
+        Media::addJsDef([
+            'omniversepricing_ajax_url' => $this->context->link->getAdminLink('AdminAjaxOmniverse'),
+        ]);
     }
 
     public function hookDisplayOmniverseNotice($params)
@@ -1051,7 +1054,7 @@ class Omniversepricing extends Module
         $omniversepricing_price = $this->omniversepricing_init($product);
 
         if ($omniversepricing_price) {
-            $this->omniversepricing_show_notice($omniversepricing_price);
+            $this->omniversepricing_show_notice($omniversepricing_price, $product['id_product']);
         }
     }
 
@@ -1298,7 +1301,7 @@ class Omniversepricing extends Module
     /**
      * Shows the notice
      */
-    private function omniversepricing_show_notice($price_data)
+    private function omniversepricing_show_notice($price_data, $product_id = 0)
     {
         $lang_id = $this->context->language->id;
         $omniversepricing_text = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang_id, 'Lowest price within 30 days before promotion.');
@@ -1313,6 +1316,7 @@ class Omniversepricing extends Module
             'omniversepricing_text' => $omniversepricing_text,
             'omniversepricing_text_style' => $omniversepricing_text_style,
             'omniversepricing_price' => $price,
+            'omni_prd_id' => $product_id,
         ]);
         $output = $this->context->smarty->fetch($this->local_path . 'views/templates/front/omni_front.tpl');
         echo $output;
