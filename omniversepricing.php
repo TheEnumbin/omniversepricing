@@ -853,7 +853,7 @@ class Omniversepricing extends Module
         $this->context->controller->addCSS($this->_path . '/views/css/front.css');
         $this->context->controller->addJS($this->_path . '/views/js/front.js');
         Media::addJsDef([
-            'omniversepricing_ajax_url' => $this->context->link->getAdminLink('AdminAjaxOmniverse'),
+            'omniversepricing_ajax_front_url' => $this->context->link->getModuleLink($this->name, 'frontajax', [], true),
         ]);
     }
 

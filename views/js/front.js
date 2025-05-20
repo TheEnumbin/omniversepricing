@@ -9,14 +9,11 @@ $(document).ready(function () {
 
         console.log("hello")
         var $id_product_for_chart = $(this).data('prd_id');
-
         $.ajax({
-            url: omniversepricing_ajax_url,
+            url: omniversepricing_ajax_front_url,
             type: 'POST',
             dataType: 'json',
             data: {
-                controller: 'AdminAjaxOmniverse',
-                action: 'GetPriceHistory',
                 ajax: true,
                 id_product: $id_product_for_chart
             },
