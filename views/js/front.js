@@ -7,15 +7,16 @@ $(document).ready(function () {
     $('#openPriceChart').on('click', function () {
         $('#priceChartModal').fadeIn();
 
-        console.log("hello")
         var $id_product_for_chart = $(this).data('prd_id');
+        var $attr_id = $(this).data('attr_id');
         $.ajax({
             url: omniversepricing_ajax_front_url,
             type: 'POST',
             dataType: 'json',
             data: {
                 ajax: true,
-                id_product: $id_product_for_chart
+                id_product: $id_product_for_chart,
+                attr_id: $attr_id
             },
             success: function (data) {
                 if (priceChart) priceChart.destroy();

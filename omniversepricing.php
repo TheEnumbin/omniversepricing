@@ -1022,7 +1022,7 @@ class Omniversepricing extends Module
                     if (!$product->has_discount && $show_on == 'discounted') {
                         return;
                     }
-                    $this->omniversepricing_show_notice($omniversepricing_price, $product['id_product']);
+                    $this->omniversepricing_show_notice($omniversepricing_price, $product['id_product'], $product['id_product_attribute']);
                 }
             }
         } else {
@@ -1039,7 +1039,7 @@ class Omniversepricing extends Module
                     if (!$product->has_discount && $show_on == 'discounted') {
                         return;
                     }
-                    $this->omniversepricing_show_notice($omniversepricing_price, $product['id_product']);
+                    $this->omniversepricing_show_notice($omniversepricing_price, $product['id_product'], $product['id_product_attribute']);
                 }
             }
         }
@@ -1054,7 +1054,7 @@ class Omniversepricing extends Module
         $omniversepricing_price = $this->omniversepricing_init($product);
 
         if ($omniversepricing_price) {
-            $this->omniversepricing_show_notice($omniversepricing_price, $product['id_product']);
+            $this->omniversepricing_show_notice($omniversepricing_price, $product['id_product'], $product['id_product_attribute']);
         }
     }
 
@@ -1301,7 +1301,7 @@ class Omniversepricing extends Module
     /**
      * Shows the notice
      */
-    private function omniversepricing_show_notice($price_data, $product_id = 0)
+    private function omniversepricing_show_notice($price_data, $product_id = 0, $attr_id = 0)
     {
         $lang_id = $this->context->language->id;
         $omniversepricing_text = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang_id, 'Lowest price within 30 days before promotion.');
@@ -1317,6 +1317,7 @@ class Omniversepricing extends Module
             'omniversepricing_text_style' => $omniversepricing_text_style,
             'omniversepricing_price' => $price,
             'omni_prd_id' => $product_id,
+            'omni_prd_attr_id' => $attr_id,
         ]);
         $output = $this->context->smarty->fetch($this->local_path . 'views/templates/front/omni_front.tpl');
         echo $output;

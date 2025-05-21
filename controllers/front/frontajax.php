@@ -34,22 +34,35 @@ class OmniversepricingFrontajaxModuleFrontController extends ModuleFrontControll
      */
     public function postProcess()
     {
+        $is_ajax = $_POST['ajax'];
+        $id_product = $_POST['id_product'];
+        $attr_id = $_POST['attr_id'];
+        $lang_id = $this->context->language->id;
+        $shop_id = $this->context->shop->id;
+        $attr_q = '';
+        $curre_q = '';
+        $countr_q = '';
+        $group_q = '';
+        $inner_q = '';
+        if ($attr_id) {
+            $attr_q = ' AND oc.`id_product_attribute` = ' . (int) $attr_id;
+        }
+        $date = date('Y-m-d');
+        $date_range = date('Y-m-d', strtotime('-31 days'));
+        $q_1 = 'SELECT oc.price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
+        WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+        AND oc.`product_id` = ' . (int) $id_product . ' AND oc.date > "' . $date_range . '"' . $attr_q . ' AND oc.id_omniversepricing ' . $inner_q;
+        $q_2 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
+        WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+        AND oc.`product_id` = ' . (int) $id_product . ' AND oc.date > "' . $date_range . '" ' . $attr_q . ' AND oc.`id_currency` = 0 AND oc.`id_country` = 0';
+        $result = Db::getInstance()->executeS($q_1 . ' UNION ' . $q_2);
         echo '<pre>';
-        print_r($_GET);
-        echo '</pre>';
-        echo __FILE__ . ' : ' . __LINE__;
-        echo '<pre>';
-        print_r($_POST);
+        print_r($result);
         echo '</pre>';
         echo __FILE__ . ' : ' . __LINE__;
         die(__FILE__ . ' : ' . __LINE__);
-    }
-
-    /**
-     * @see FrontController::initContent()
-     */
-    public function initContent()
-    {
-        parent::initContent();
+        if (isset($result)) {
+            return json_encode($result);
+        }
     }
 }
