@@ -48,11 +48,11 @@ class OmniversepricingFrontajaxModuleFrontController extends ModuleFrontControll
             $attr_q = ' AND oc.`id_product_attribute` = ' . (int) $attr_id;
         }
         $date = date('Y-m-d');
-        $date_range = date('Y-m-d', strtotime('-31 days'));
+        $date_range = date('Y-m-d', strtotime('-365 days'));
         $q_1 = 'SELECT oc.price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
         WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id_product . ' AND oc.date > "' . $date_range . '"' . $attr_q . ' AND oc.id_omniversepricing ' . $inner_q;
-        $q_2 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
+        $q_2 = 'SELECT oc.price as omniversepricing_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
         WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id_product . ' AND oc.date > "' . $date_range . '" ' . $attr_q . ' AND oc.`id_currency` = 0 AND oc.`id_country` = 0';
         $result = Db::getInstance()->executeS($q_1 . ' UNION ' . $q_2);
