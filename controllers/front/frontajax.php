@@ -56,11 +56,7 @@ class OmniversepricingFrontajaxModuleFrontController extends ModuleFrontControll
         WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id_product . ' AND oc.date > "' . $date_range . '" ' . $attr_q . ' AND oc.`id_currency` = 0 AND oc.`id_country` = 0';
         $result = Db::getInstance()->executeS($q_1 . ' UNION ' . $q_2);
-        echo '<pre>';
-        print_r($result);
-        echo '</pre>';
-        echo __FILE__ . ' : ' . __LINE__;
-        die(__FILE__ . ' : ' . __LINE__);
+
         if (isset($result)) {
             return json_encode($result);
         }
