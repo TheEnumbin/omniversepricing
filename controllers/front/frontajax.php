@@ -44,6 +44,7 @@ class OmniversepricingFrontajaxModuleFrontController extends ModuleFrontControll
         $countr_q = '';
         $group_q = '';
         $inner_q = '';
+
         if ($attr_id) {
             $attr_q = ' AND oc.`id_product_attribute` = ' . (int) $attr_id;
         }
@@ -61,6 +62,7 @@ class OmniversepricingFrontajaxModuleFrontController extends ModuleFrontControll
         foreach ($result as $row) {
             $returnarr[] = $row['price'];
         }
+
         if (isset($result)) {
             return json_encode($returnarr);
         }
