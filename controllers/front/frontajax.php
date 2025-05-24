@@ -63,8 +63,9 @@ class OmniversepricingFrontajaxModuleFrontController extends ModuleFrontControll
             $returnarr[] = $row['price'];
         }
 
-        if (isset($result)) {
-            return json_encode($returnarr);
+        if (isset($returnarr) && !empty($returnarr)) {
+            echo json_encode($returnarr);
         }
+        exit;
     }
 }

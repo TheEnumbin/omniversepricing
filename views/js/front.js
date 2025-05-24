@@ -2,7 +2,7 @@ $(document).ready(function () {
     console.log("hello")
     var ctx = document.getElementById('priceHistoryChart').getContext('2d');
     console.log(ctx)
-    // var priceChart;
+    var priceChart;
 
     $('#openPriceChart').on('click', function () {
         $('#priceChartModal').fadeIn();
@@ -18,9 +18,9 @@ $(document).ready(function () {
                 id_product: $id_product_for_chart,
                 attr_id: $attr_id
             },
-            success: function (data) {
+            success: function (response) {
                 if (priceChart) priceChart.destroy();
-                var response = JSON.parse(data);
+                console.log(response)
                 priceChart = new Chart(ctx, {
                     type: 'line',
                     data: {
