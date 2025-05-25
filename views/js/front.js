@@ -20,7 +20,6 @@ $(document).ready(function () {
             },
             success: function (response) {
                 if (priceChart) priceChart.destroy();
-                console.log(response)
                 priceChart = new Chart(ctx, {
                     type: 'line',
                     data: {
