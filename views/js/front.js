@@ -19,11 +19,12 @@ $(document).ready(function () {
                 attr_id: $attr_id
             },
             success: function (response) {
-                if (priceChart) priceChart.destroy();
+                // if (priceChart) priceChart.destroy();
+                console.log(response)
                 priceChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: response.labels,
+                        // labels: response.labels,
                         datasets: [{
                             label: 'Price (Last 30 Days)',
                             data: response.prices,
