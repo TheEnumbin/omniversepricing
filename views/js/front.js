@@ -19,36 +19,53 @@ $(document).ready(function () {
                 attr_id: $attr_id
             },
             success: function (response) {
-                // if (priceChart) priceChart.destroy();
-                console.log(response)
-                priceChart = new Chart(ctx, {
+                const labels = response.map(item => item.date);
+                const prices = response.map(item => item.price);
+
+                // Show modal
+                $('#priceChartModal').fadeIn();
+
+                // Destroy previous chart instance if exists
+                if (window.priceChartInstance) {
+                    window.priceChartInstance.destroy();
+                }
+
+                window.priceChartInstance = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        // labels: response.labels,
+                        labels: labels,
                         datasets: [{
                             label: 'Price (Last 30 Days)',
-                            data: response.prices,
-                            borderColor: 'red',
-                            backgroundColor: 'rgba(255,0,0,0.2)',
-                            tension: 0.3,
-                            fill: true,
-                            pointRadius: 3,
-                            pointBackgroundColor: 'red'
+                            data: prices,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
                         }]
                     },
                     options: {
-                        responsive: false,
+                        responsive: true,
                         scales: {
-                            x: { title: { display: true, text: 'Date' } },
-                            y: { title: { display: true, text: 'Price' } }
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Date'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Price'
+                                },
+                                beginAtZero: false
+                            }
                         }
                     }
                 });
-                console.log(priceChart)
             },
-            error: function (err) {
-                console.log("hello")
-                // alert('Failed to load price data.');
+            error: function () {
+                alert('Error loading price data.');
             }
         });
     });

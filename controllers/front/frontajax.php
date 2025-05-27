@@ -66,8 +66,14 @@ class OmniversepricingFrontajaxModuleFrontController extends ModuleFrontControll
         }
 
         if (isset($returnarr) && !empty($returnarr)) {
-            echo json_encode($returnarr);
+            // echo json_encode($returnarr);
         }
+
+        echo json_encode([
+            ['date' => '2025-04-25', 'price' => 125],
+            ['date' => '2025-04-26', 'price' => 124],
+            ['date' => '2025-04-27', 'price' => 122],
+        ]);
         exit;
     }
 }
