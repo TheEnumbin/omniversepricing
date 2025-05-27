@@ -37,15 +37,17 @@ $(document).ready(function () {
                         }]
                     },
                     options: {
-                        responsive: true,
+                        responsive: false,
                         scales: {
                             x: { title: { display: true, text: 'Date' } },
                             y: { title: { display: true, text: 'Price' } }
                         }
                     }
                 });
+                console.log(priceChart)
             },
             error: function (err) {
+                console.log("hello")
                 // alert('Failed to load price data.');
             }
         });
