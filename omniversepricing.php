@@ -58,6 +58,9 @@ class Omniversepricing extends Module
         Configuration::updateValue('OMNIVERSEPRICING_PRO_INSTALLED', true);
         Configuration::updateValue('OMNIVERSEPRICING_STABLE_VERSION', $this->version);
         Configuration::updateValue('OMNIVERSEPRICING_TEXT', 'Lowest price within 30 days before promotion {{omni_price}} ({{omni_percent}})');
+        Configuration::updateValue('OMNIVERSEPRICING_CHART_LABEL', 'Price (Last 30 Days)');
+        Configuration::updateValue('OMNIVERSEPRICING_CHART_DATE_LABEL', 'Date');
+        Configuration::updateValue('OMNIVERSEPRICING_CHART_PRICE_LABEL', 'Price');
         Configuration::updateValue('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
         Configuration::updateValue('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
         Configuration::updateValue('OMNIVERSEPRICING_PRECENT_INDICATOR', true);
@@ -76,6 +79,9 @@ class Omniversepricing extends Module
 
         foreach ($languages as $lang) {
             Configuration::updateValue('OMNIVERSEPRICING_TEXT_' . $lang['id_lang'], 'Lowest price within 30 days before promotion {{omni_price}} ({{omni_percent}})');
+            Configuration::updateValue('OMNIVERSEPRICING_CHART_LABEL_' . $lang['id_lang'], 'Price (Last 30 Days)');
+            Configuration::updateValue('OMNIVERSEPRICING_CHART_DATE_LABEL_' . $lang['id_lang'], 'Date');
+            Configuration::updateValue('OMNIVERSEPRICING_CHART_PRICE_LABEL_' . $lang['id_lang'], 'Price');
         }
         $tab = new Tab();
         $tab->active = 1;
@@ -115,6 +121,9 @@ class Omniversepricing extends Module
         }
 
         Configuration::deleteByName('OMNIVERSEPRICING_TEXT');
+        Configuration::deleteByName('OMNIVERSEPRICING_CHART_LABEL');
+        Configuration::deleteByName('OMNIVERSEPRICING_CHART_DATE_LABEL');
+        Configuration::deleteByName('OMNIVERSEPRICING_CHART_PRICE_LABEL');
         Configuration::deleteByName('OMNIVERSEPRICING_SHOW_IF_CURRENT');
         Configuration::deleteByName('OMNIVERSEPRICING_PRICE_WITH_TAX');
         Configuration::deleteByName('OMNIVERSEPRICING_PRECENT_INDICATOR');
@@ -589,25 +598,38 @@ class Omniversepricing extends Module
                         'tab' => 'chart_tab',
                     ],
                     [
+                        'type' => 'text',
+                        'label' => $this->l('Chart Label'),
+                        'name' => 'OMNIVERSEPRICING_CHART_LABEL',
+                        'lang' => true,
+                        'tab' => 'chart_tab',
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->l('Chart Date Label'),
+                        'name' => 'OMNIVERSEPRICING_CHART_DATE_LABEL',
+                        'lang' => true,
+                        'tab' => 'chart_tab',
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->l('Chart Price Label'),
+                        'name' => 'OMNIVERSEPRICING_CHART_PRICE_LABEL',
+                        'lang' => true,
+                        'tab' => 'chart_tab',
+                    ],
+                    [
                         'type' => 'color',
                         'label' => $this->l('Chart Line Color'),
                         'name' => 'OMNIVERSEPRICING_CHART_LINE_COLOR',
+                        'tab' => 'chart_tab',
                     ],
                     [
                         'type' => 'color',
                         'label' => $this->l('Chart Background Color'),
                         'name' => 'OMNIVERSEPRICING_CHART_BG_COLOR',
+                        'tab' => 'chart_tab',
                     ],
-                    [
-                        'type' => 'text',
-                        'label' => $this->l('Chart Label'),
-                        'name' => 'OMNIVERSEPRICING_CHART_LABEL',
-                    ],
-                    [
-                        'type' => 'text',
-                        'label' => $this->l('Chart Title'),
-                        'name' => 'OMNIVERSEPRICING_CHART_TITLE',
-                    ]
                 ],
                 'tabs' => $tabs,
                 'submit' => [
@@ -650,6 +672,9 @@ class Omniversepricing extends Module
 
         foreach ($languages as $lang) {
             $ret_arr['OMNIVERSEPRICING_TEXT'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang['id_lang'], 'Lowest price within 30 days before promotion');
+            $ret_arr['OMNIVERSEPRICING_CHART_LABEL'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_CHART_LABEL_' . $lang['id_lang'], 'Price (Last 30 Days)');
+            $ret_arr['OMNIVERSEPRICING_CHART_DATE_LABEL'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_CHART_DATE_LABEL_' . $lang['id_lang'], 'Date');
+            $ret_arr['OMNIVERSEPRICING_CHART_PRICE_LABEL'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_CHART_PRICE_LABEL_' . $lang['id_lang'], 'Price');
         }
 
         return $ret_arr;
