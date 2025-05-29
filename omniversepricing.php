@@ -192,6 +192,7 @@ class Omniversepricing extends Module
             'content_tab' => $this->l('Content'),
             'design_tab' => $this->l('Design'),
             'action_tab' => $this->l('Action'),
+            'chart_tab' => $this->l('Chart'),
         ];
 
         return [
@@ -372,25 +373,6 @@ class Omniversepricing extends Module
                                 'id' => 'excluding',
                                 'value' => false,
                                 'label' => $this->l('No'),
-                            ],
-                        ],
-                        'tab' => 'general',
-                    ],
-                    [
-                        'type' => 'switch',
-                        'label' => $this->l('Enable Chart'),
-                        'desc' => $this->l('Show Chart Table'),
-                        'name' => 'OMNIVERSEPRICING_SHOW_CHART',
-                        'values' => [
-                            [
-                                'id' => 'enable',
-                                'value' => true,
-                                'label' => $this->l('Enable'),
-                            ],
-                            [
-                                'id' => 'disable',
-                                'value' => false,
-                                'label' => $this->l('Disable'),
                             ],
                         ],
                         'tab' => 'general',
@@ -587,6 +569,45 @@ class Omniversepricing extends Module
                         'tab' => 'action_tab',
                         'desc' => $this->l('This url will run Cron job for this shop. Change shop context to get cron url for separate shops.'),
                     ],
+                    [
+                        'type' => 'switch',
+                        'label' => $this->l('Enable Chart'),
+                        'desc' => $this->l('Show Chart Table'),
+                        'name' => 'OMNIVERSEPRICING_SHOW_CHART',
+                        'values' => [
+                            [
+                                'id' => 'enable',
+                                'value' => true,
+                                'label' => $this->l('Enable'),
+                            ],
+                            [
+                                'id' => 'disable',
+                                'value' => false,
+                                'label' => $this->l('Disable'),
+                            ],
+                        ],
+                        'tab' => 'chart_tab',
+                    ],
+                    [
+                        'type' => 'color',
+                        'label' => $this->l('Chart Line Color'),
+                        'name' => 'OMNIVERSEPRICING_CHART_LINE_COLOR',
+                    ],
+                    [
+                        'type' => 'color',
+                        'label' => $this->l('Chart Background Color'),
+                        'name' => 'OMNIVERSEPRICING_CHART_BG_COLOR',
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->l('Chart Label'),
+                        'name' => 'OMNIVERSEPRICING_CHART_LABEL',
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->l('Chart Title'),
+                        'name' => 'OMNIVERSEPRICING_CHART_TITLE',
+                    ]
                 ],
                 'tabs' => $tabs,
                 'submit' => [
@@ -852,7 +873,7 @@ class Omniversepricing extends Module
         $this->context->controller->addCSS($this->_path . '/views/css/front_generated.css');
         $this->context->controller->addCSS($this->_path . '/views/css/front.css');
         $this->context->controller->addJS($this->_path . '/views/js/front.js');
-        $this->context->controller->addJS($this->_path . '/views/js/chart2.js');
+        $this->context->controller->addJS($this->_path . '/views/js/chart.js');
         Media::addJsDef([
             'omniversepricing_ajax_front_url' => $this->context->link->getModuleLink($this->name, 'frontajax', [], true),
         ]);

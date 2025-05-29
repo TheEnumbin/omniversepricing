@@ -70,7 +70,9 @@ $(document).ready(function () {
         });
     });
 
-    $('#closePriceChart').on('click', function () {
-        $('#priceChartModal').fadeOut();
+    $('.omni-close, .omni-modal').on('click', function (e) {
+        if ($(e.target).is('.omni-close') || $(e.target).is('.omni-modal')) {
+            $('#priceChartModal').fadeOut();
+        }
     });
 });
