@@ -71,6 +71,8 @@ class Omniversepricing extends Module
         Configuration::updateValue('OMNIVERSEPRICING_NOTICE_STYLE', 'mixed');
         Configuration::updateValue('OMNIVERSEPRICING_HISTORY_FUNC', 'manual');
         Configuration::updateValue('OMNIVERSEPRICING_POSITION', 'after_price');
+        Configuration::updateValue('OMNIVERSEPRICING_CHART_BG_COLOR', '#ffffff');
+        Configuration::updateValue('OMNIVERSEPRICING_CHART_LINE_COLOR', '#4bc0c0');
         Configuration::updateValue('OMNIVERSEPRICING_BACK_COLOR', '#b3a700');
         Configuration::updateValue('OMNIVERSEPRICING_FONT_COLOR', '#ffffff');
         Configuration::updateValue('OMNIVERSEPRICING_DELETE_DATE', $date);
@@ -132,6 +134,8 @@ class Omniversepricing extends Module
         Configuration::deleteByName('OMNIVERSEPRICING_STOP_RECORD');
         Configuration::deleteByName('OMNIVERSEPRICING_AUTO_DELETE_OLD');
         Configuration::deleteByName('OMNIVERSEPRICING_POSITION');
+        Configuration::deleteByName('OMNIVERSEPRICING_CHART_LINE_COLOR');
+        Configuration::deleteByName('OMNIVERSEPRICING_CHART_BG_COLOR');
         Configuration::deleteByName('OMNIVERSEPRICING_BACK_COLOR');
         Configuration::deleteByName('OMNIVERSEPRICING_FONT_COLOR');
         Configuration::deleteByName('OMNIVERSEPRICING_HISTORY_FUNC');
@@ -658,6 +662,8 @@ class Omniversepricing extends Module
             'OMNIVERSEPRICING_SYNC_END' => Configuration::get('OMNIVERSEPRICING_SYNC_END', 20),
             'OMNIVERSEPRICING_AUTO_DELETE_OLD' => Configuration::get('OMNIVERSEPRICING_AUTO_DELETE_OLD', false),
             'OMNIVERSEPRICING_POSITION' => Configuration::get('OMNIVERSEPRICING_POSITION', 'after_price'),
+            'OMNIVERSEPRICING_CHART_LINE_COLOR' => Configuration::get('OMNIVERSEPRICING_CHART_LINE_COLOR', '#4bc0c0'),
+            'OMNIVERSEPRICING_CHART_BG_COLOR' => Configuration::get('OMNIVERSEPRICING_CHART_BG_COLOR', '#ffffff'),
             'OMNIVERSEPRICING_BACK_COLOR' => Configuration::get('OMNIVERSEPRICING_BACK_COLOR', '#b3a700'),
             'OMNIVERSEPRICING_FONT_COLOR' => Configuration::get('OMNIVERSEPRICING_FONT_COLOR', '#ffffff'),
             'OMNIVERSEPRICING_FONT_SIZE' => Configuration::get('OMNIVERSEPRICING_FONT_SIZE', '12px'),
