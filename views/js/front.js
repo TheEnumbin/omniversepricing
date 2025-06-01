@@ -29,16 +29,17 @@ $(document).ready(function () {
                 if (window.priceChartInstance) {
                     window.priceChartInstance.destroy();
                 }
-
+                console.log(chart_line_color)
+                console.log(chart_bg_color)
                 window.priceChartInstance = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: labels,
                         datasets: [{
-                            label: 'Price (Last 30 Days)',
+                            label: omni_chart_label,
                             data: prices,
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: chart_line_color,
+                            backgroundColor: chart_bg_color,
                             tension: 0.4,
                             pointRadius: 4,
                             pointHoverRadius: 6
@@ -50,13 +51,13 @@ $(document).ready(function () {
                             x: {
                                 title: {
                                     display: true,
-                                    text: 'Date'
+                                    text: omni_date_label
                                 }
                             },
                             y: {
                                 title: {
                                     display: true,
-                                    text: 'Price'
+                                    text: omni_price_label
                                 },
                                 beginAtZero: false
                             }

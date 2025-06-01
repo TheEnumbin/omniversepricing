@@ -36,7 +36,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.1.5';
+        $this->version = '1.2.0';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
@@ -908,10 +908,15 @@ class Omniversepricing extends Module
         $chart_label = Configuration::get('OMNIVERSEPRICING_CHART_LABEL');
         $date_label = Configuration::get('OMNIVERSEPRICING_CHART_DATE_LABEL');
         $price_label = Configuration::get('OMNIVERSEPRICING_CHART_PRICE_LABEL');
-
+        $chart_bg_color = Configuration::get('OMNIVERSEPRICING_CHART_BG_COLOR');
+        $chart_line_color = Configuration::get('OMNIVERSEPRICING_CHART_LINE_COLOR');
         Media::addJsDef([
             'omniversepricing_ajax_front_url' => $this->context->link->getModuleLink($this->name, 'frontajax', [], true),
-            'omniversepricing_ajax_front_url' => $this->context->link->getModuleLink($this->name, 'frontajax', [], true),
+            'omni_chart_label' => $chart_label,
+            'omni_date_label' => $date_label,
+            'omni_price_label' => $price_label,
+            'chart_bg_color' => $chart_bg_color,
+            'chart_line_color' => $chart_line_color,
         ]);
     }
 
