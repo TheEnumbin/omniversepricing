@@ -905,7 +905,12 @@ class Omniversepricing extends Module
         $this->context->controller->addCSS($this->_path . '/views/css/front.css');
         $this->context->controller->addJS($this->_path . '/views/js/front.js');
         $this->context->controller->addJS($this->_path . '/views/js/chart.js');
+        $chart_label = Configuration::get('OMNIVERSEPRICING_CHART_LABEL');
+        $date_label = Configuration::get('OMNIVERSEPRICING_CHART_DATE_LABEL');
+        $price_label = Configuration::get('OMNIVERSEPRICING_CHART_PRICE_LABEL');
+
         Media::addJsDef([
+            'omniversepricing_ajax_front_url' => $this->context->link->getModuleLink($this->name, 'frontajax', [], true),
             'omniversepricing_ajax_front_url' => $this->context->link->getModuleLink($this->name, 'frontajax', [], true),
         ]);
     }
