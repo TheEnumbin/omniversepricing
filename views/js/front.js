@@ -29,8 +29,6 @@ $(document).ready(function () {
                 if (window.priceChartInstance) {
                     window.priceChartInstance.destroy();
                 }
-                console.log(chart_line_color)
-                console.log(chart_bg_color)
                 window.priceChartInstance = new Chart(ctx, {
                     type: 'line',
                     data: {
