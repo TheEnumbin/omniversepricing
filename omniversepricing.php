@@ -59,6 +59,7 @@ class Omniversepricing extends Module
         Configuration::updateValue('OMNIVERSEPRICING_STABLE_VERSION', $this->version);
         Configuration::updateValue('OMNIVERSEPRICING_TEXT', 'Lowest price within 30 days before promotion {{omni_price}} ({{omni_percent}})');
         Configuration::updateValue('OMNIVERSEPRICING_CHART_LABEL', 'Price (Last 30 Days)');
+        Configuration::updateValue('OMNIVERSEPRICING_CHART_LINK_TEXT', 'View History Chart');
         Configuration::updateValue('OMNIVERSEPRICING_CHART_DATE_LABEL', 'Date');
         Configuration::updateValue('OMNIVERSEPRICING_CHART_PRICE_LABEL', 'Price');
         Configuration::updateValue('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
@@ -603,6 +604,13 @@ class Omniversepricing extends Module
                     ],
                     [
                         'type' => 'text',
+                        'label' => $this->l('Chart Link Text'),
+                        'name' => 'OMNIVERSEPRICING_CHART_LINK_TEXT',
+                        'lang' => true,
+                        'tab' => 'chart_tab',
+                    ],
+                    [
+                        'type' => 'text',
                         'label' => $this->l('Chart Label'),
                         'name' => 'OMNIVERSEPRICING_CHART_LABEL',
                         'lang' => true,
@@ -678,6 +686,7 @@ class Omniversepricing extends Module
 
         foreach ($languages as $lang) {
             $ret_arr['OMNIVERSEPRICING_TEXT'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang['id_lang'], 'Lowest price within 30 days before promotion');
+            $ret_arr['OMNIVERSEPRICING_CHART_LINK_TEXT'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_CHART_LINK_TEXT_' . $lang['id_lang'], 'View Price History');
             $ret_arr['OMNIVERSEPRICING_CHART_LABEL'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_CHART_LABEL_' . $lang['id_lang'], 'Price (Last 30 Days)');
             $ret_arr['OMNIVERSEPRICING_CHART_DATE_LABEL'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_CHART_DATE_LABEL_' . $lang['id_lang'], 'Date');
             $ret_arr['OMNIVERSEPRICING_CHART_PRICE_LABEL'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_CHART_PRICE_LABEL_' . $lang['id_lang'], 'Price');
@@ -905,6 +914,7 @@ class Omniversepricing extends Module
         $this->context->controller->addCSS($this->_path . '/views/css/front.css');
         $this->context->controller->addJS($this->_path . '/views/js/front.js');
         $this->context->controller->addJS($this->_path . '/views/js/chart.js');
+        $chart_link_text = Configuration::get('OMNIVERSEPRICING_CHART_LINK_TEXT');
         $chart_label = Configuration::get('OMNIVERSEPRICING_CHART_LABEL');
         $date_label = Configuration::get('OMNIVERSEPRICING_CHART_DATE_LABEL');
         $price_label = Configuration::get('OMNIVERSEPRICING_CHART_PRICE_LABEL');
@@ -1367,6 +1377,7 @@ class Omniversepricing extends Module
     private function omniversepricing_show_notice($price_data, $product_id = 0, $attr_id = 0)
     {
         $lang_id = $this->context->language->id;
+        $controller = Tools::getValue('controller');
         $omniversepricing_text = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang_id, 'Lowest price within 30 days before promotion.');
         $omniversepricing_text_style = Configuration::get('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after');
         $price = $price_data['omni_price'];
@@ -1381,6 +1392,7 @@ class Omniversepricing extends Module
             'omniversepricing_price' => $price,
             'omni_prd_id' => $product_id,
             'omni_prd_attr_id' => $attr_id,
+            'omni_controller' => $controller,
         ]);
         $output = $this->context->smarty->fetch($this->local_path . 'views/templates/front/omni_front.tpl');
         echo $output;
