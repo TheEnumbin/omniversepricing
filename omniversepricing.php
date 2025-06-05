@@ -914,7 +914,6 @@ class Omniversepricing extends Module
         $this->context->controller->addCSS($this->_path . '/views/css/front.css');
         $this->context->controller->addJS($this->_path . '/views/js/front.js');
         $this->context->controller->addJS($this->_path . '/views/js/chart.js');
-        $chart_link_text = Configuration::get('OMNIVERSEPRICING_CHART_LINK_TEXT');
         $chart_label = Configuration::get('OMNIVERSEPRICING_CHART_LABEL');
         $date_label = Configuration::get('OMNIVERSEPRICING_CHART_DATE_LABEL');
         $price_label = Configuration::get('OMNIVERSEPRICING_CHART_PRICE_LABEL');
@@ -1386,8 +1385,10 @@ class Omniversepricing extends Module
             $omniversepricing_text = str_replace('{{omni_price}}', $price, $omniversepricing_text);
             $omniversepricing_text = str_replace('{{omni_percent}}', $omni_percentage, $omniversepricing_text);
         }
+        $chart_link_text = Configuration::get('OMNIVERSEPRICING_CHART_LINK_TEXT', 'View Price Chart');
         $this->context->smarty->assign([
             'omniversepricing_text' => $omniversepricing_text,
+            'chart_link_text' => $chart_link_text,
             'omniversepricing_text_style' => $omniversepricing_text_style,
             'omniversepricing_price' => $price,
             'omni_prd_id' => $product_id,
