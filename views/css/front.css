@@ -87,6 +87,10 @@ td {
     cursor: pointer;
 }
 
+#openPriceChart {
+    color: #4bc0c0;
+}
+
 #priceHistoryChart {
     width: 100%;
     height: 400px;

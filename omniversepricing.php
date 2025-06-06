@@ -73,6 +73,7 @@ class Omniversepricing extends Module
         Configuration::updateValue('OMNIVERSEPRICING_HISTORY_FUNC', 'manual');
         Configuration::updateValue('OMNIVERSEPRICING_POSITION', 'after_price');
         Configuration::updateValue('OMNIVERSEPRICING_CHART_BG_COLOR', '#ffffff');
+        Configuration::updateValue('OMNIVERSEPRICING_CHART_LINK_COLOR', '#4bc0c0');
         Configuration::updateValue('OMNIVERSEPRICING_CHART_LINE_COLOR', '#4bc0c0');
         Configuration::updateValue('OMNIVERSEPRICING_BACK_COLOR', '#b3a700');
         Configuration::updateValue('OMNIVERSEPRICING_FONT_COLOR', '#ffffff');
@@ -135,6 +136,7 @@ class Omniversepricing extends Module
         Configuration::deleteByName('OMNIVERSEPRICING_STOP_RECORD');
         Configuration::deleteByName('OMNIVERSEPRICING_AUTO_DELETE_OLD');
         Configuration::deleteByName('OMNIVERSEPRICING_POSITION');
+        Configuration::deleteByName('OMNIVERSEPRICING_CHART_LINK_COLOR');
         Configuration::deleteByName('OMNIVERSEPRICING_CHART_LINE_COLOR');
         Configuration::deleteByName('OMNIVERSEPRICING_CHART_BG_COLOR');
         Configuration::deleteByName('OMNIVERSEPRICING_BACK_COLOR');
@@ -632,6 +634,12 @@ class Omniversepricing extends Module
                     ],
                     [
                         'type' => 'color',
+                        'label' => $this->l('Chart Link Color'),
+                        'name' => 'OMNIVERSEPRICING_CHART_LINK_COLOR',
+                        'tab' => 'chart_tab',
+                    ],
+                    [
+                        'type' => 'color',
                         'label' => $this->l('Chart Line Color'),
                         'name' => 'OMNIVERSEPRICING_CHART_LINE_COLOR',
                         'tab' => 'chart_tab',
@@ -670,6 +678,7 @@ class Omniversepricing extends Module
             'OMNIVERSEPRICING_SYNC_END' => Configuration::get('OMNIVERSEPRICING_SYNC_END', 20),
             'OMNIVERSEPRICING_AUTO_DELETE_OLD' => Configuration::get('OMNIVERSEPRICING_AUTO_DELETE_OLD', false),
             'OMNIVERSEPRICING_POSITION' => Configuration::get('OMNIVERSEPRICING_POSITION', 'after_price'),
+            'OMNIVERSEPRICING_CHART_LINK_COLOR' => Configuration::get('OMNIVERSEPRICING_CHART_LINK_COLOR', '#4bc0c0'),
             'OMNIVERSEPRICING_CHART_LINE_COLOR' => Configuration::get('OMNIVERSEPRICING_CHART_LINE_COLOR', '#4bc0c0'),
             'OMNIVERSEPRICING_CHART_BG_COLOR' => Configuration::get('OMNIVERSEPRICING_CHART_BG_COLOR', '#ffffff'),
             'OMNIVERSEPRICING_BACK_COLOR' => Configuration::get('OMNIVERSEPRICING_BACK_COLOR', '#b3a700'),
@@ -755,6 +764,7 @@ class Omniversepricing extends Module
 
         $omniversepricing_back_color = Configuration::get('OMNIVERSEPRICING_BACK_COLOR', '#b3a700');
         $omniversepricing_font_color = Configuration::get('OMNIVERSEPRICING_FONT_COLOR', '#ffffff');
+        $chart_link_color = Configuration::get('OMNIVERSEPRICING_CHART_LINK_COLOR');
         $omniversepricing_font_size = Configuration::get('OMNIVERSEPRICING_FONT_SIZE', '12px');
         $omniversepricing_font_weight = Configuration::get('OMNIVERSEPRICING_FONT_WEIGHT', '400');
         $omniversepricing_padding = Configuration::get('OMNIVERSEPRICING_PADDING', '6px');
