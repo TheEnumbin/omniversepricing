@@ -87,8 +87,18 @@ td {
     cursor: pointer;
 }
 
-#openPriceChart {
-    color: #4bc0c0;
+.omni-chart-link {
+    color: #007bff;
+    /* Standard link blue */
+    text-decoration: underline;
+    font-size: 14px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.omni-chart-link:hover {
+    color: #0056b3;
+    text-decoration: none;
 }
 
 #priceHistoryChart {
