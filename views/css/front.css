@@ -87,19 +87,17 @@ td {
     cursor: pointer;
 }
 
-.omni-chart-link {
-    color: #007bff;
-    /* Standard link blue */
-    text-decoration: underline;
+a.omni-chart-link {
+    color: #24b9d7;
     font-size: 14px;
     cursor: pointer;
     transition: color 0.2s ease;
 }
 
-.omni-chart-link:hover {
-    color: #0056b3;
-    text-decoration: none;
+a.omni-chart-link:hover {
+    text-decoration: underline;
 }
+
 
 #priceHistoryChart {
     width: 100%;
