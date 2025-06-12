@@ -29,7 +29,7 @@
 {else}
     <span class="omniversepricing-notice">{$omniversepricing_text}</span>
 {/if}
-{if $omni_controller == 'product'}
+{if $omni_controller == 'product' && $omniversepricing_show_chart}
     <a href="javascript:void(0)" class="omni-chart-link" data-attr_id="{$omni_prd_attr_id}" data-prd_id="{$omni_prd_id}"
         id="openPriceChart">{$chart_link_text}</a>
 {/if}

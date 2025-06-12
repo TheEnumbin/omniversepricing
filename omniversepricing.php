@@ -908,8 +908,9 @@ class Omniversepricing extends Module
     public function hookDisplayFooter()
     {
         $show_chart = Configuration::get('OMNIVERSEPRICING_SHOW_CHART', false);
+        $controller = Tools::getValue('controller');
 
-        if ($show_chart == true) {
+        if ($show_chart == true && $controller == 'product') {
             $output = $this->context->smarty->fetch($this->local_path . 'views/templates/front/omni_chart.tpl');
             echo $output;
         }
@@ -1389,6 +1390,7 @@ class Omniversepricing extends Module
         $controller = Tools::getValue('controller');
         $omniversepricing_text = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang_id, 'Lowest price within 30 days before promotion.');
         $omniversepricing_text_style = Configuration::get('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after');
+        $show_chart = Configuration::get('OMNIVERSEPRICING_SHOW_CHART', false);
         $price = $price_data['omni_price'];
         $omni_percentage = $price_data['omni_percent'];
         if ($omniversepricing_text_style == 'mixed') {
@@ -1398,6 +1400,7 @@ class Omniversepricing extends Module
         $chart_link_text = Configuration::get('OMNIVERSEPRICING_CHART_LINK_TEXT', 'View Price Chart');
         $this->context->smarty->assign([
             'omniversepricing_text' => $omniversepricing_text,
+            'omniversepricing_show_chart' => $show_chart,
             'chart_link_text' => $chart_link_text,
             'omniversepricing_text_style' => $omniversepricing_text_style,
             'omniversepricing_price' => $price,
