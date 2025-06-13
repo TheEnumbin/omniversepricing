@@ -692,15 +692,6 @@ class Omniversepricing extends Module
         ];
 
         $languages = Language::getLanguages(false);
-        echo '<pre>';
-        print_r($_GET);
-        echo '</pre>';
-        echo __FILE__ . ' : ' . __LINE__;
-        echo '<pre>';
-        print_r($_POST);
-        echo '</pre>';
-        echo __FILE__ . ' : ' . __LINE__;
-        die(__FILE__ . ' : ' . __LINE__);
 
         foreach ($languages as $lang) {
             $ret_arr['OMNIVERSEPRICING_TEXT'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang['id_lang'], 'Lowest price within 30 days before promotion');
@@ -744,7 +735,7 @@ class Omniversepricing extends Module
                     }
                     $this->unregisterHook('displayFooterProduct');
                 }
-            } elseif ($key == 'OMNIVERSEPRICING_TEXT') {
+            } elseif (in_array($key, ['OMNIVERSEPRICING_TEXT', 'OMNIVERSEPRICING_CHART_LINK_TEXT', 'OMNIVERSEPRICING_CHART_LABEL', 'OMNIVERSEPRICING_CHART_DATE_LABEL', 'OMNIVERSEPRICING_CHART_PRICE_LABEL'])) {
                 $languages = Language::getLanguages(false);
 
                 foreach ($languages as $lang) {
@@ -930,13 +921,14 @@ class Omniversepricing extends Module
      */
     public function hookDisplayHeader()
     {
+        $lang_id = $this->context->language->id;
         $this->context->controller->addCSS($this->_path . '/views/css/front_generated.css');
         $this->context->controller->addCSS($this->_path . '/views/css/front.css');
         $this->context->controller->addJS($this->_path . '/views/js/front.js');
         $this->context->controller->addJS($this->_path . '/views/js/chart.js');
-        $chart_label = Configuration::get('OMNIVERSEPRICING_CHART_LABEL');
-        $date_label = Configuration::get('OMNIVERSEPRICING_CHART_DATE_LABEL');
-        $price_label = Configuration::get('OMNIVERSEPRICING_CHART_PRICE_LABEL');
+        $chart_label = Configuration::get('OMNIVERSEPRICING_CHART_LABEL_' . $lang_id);
+        $date_label = Configuration::get('OMNIVERSEPRICING_CHART_DATE_LABEL_' . $lang_id);
+        $price_label = Configuration::get('OMNIVERSEPRICING_CHART_PRICE_LABEL_' . $lang_id);
         $chart_bg_color = Configuration::get('OMNIVERSEPRICING_CHART_BG_COLOR');
         $chart_line_color = Configuration::get('OMNIVERSEPRICING_CHART_LINE_COLOR');
         Media::addJsDef([
@@ -1406,7 +1398,7 @@ class Omniversepricing extends Module
             $omniversepricing_text = str_replace('{{omni_price}}', $price, $omniversepricing_text);
             $omniversepricing_text = str_replace('{{omni_percent}}', $omni_percentage, $omniversepricing_text);
         }
-        $chart_link_text = Configuration::get('OMNIVERSEPRICING_CHART_LINK_TEXT', 'View Price Chart');
+        $chart_link_text = Configuration::get('OMNIVERSEPRICING_CHART_LINK_TEXT_' . $lang_id, 'View Price Chart');
         $this->context->smarty->assign([
             'omniversepricing_text' => $omniversepricing_text,
             'omniversepricing_show_chart' => $show_chart,
