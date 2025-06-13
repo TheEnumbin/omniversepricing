@@ -692,6 +692,15 @@ class Omniversepricing extends Module
         ];
 
         $languages = Language::getLanguages(false);
+        echo '<pre>';
+        print_r($_GET);
+        echo '</pre>';
+        echo __FILE__ . ' : ' . __LINE__;
+        echo '<pre>';
+        print_r($_POST);
+        echo '</pre>';
+        echo __FILE__ . ' : ' . __LINE__;
+        die(__FILE__ . ' : ' . __LINE__);
 
         foreach ($languages as $lang) {
             $ret_arr['OMNIVERSEPRICING_TEXT'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang['id_lang'], 'Lowest price within 30 days before promotion');
