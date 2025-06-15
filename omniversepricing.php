@@ -948,6 +948,7 @@ class Omniversepricing extends Module
 
         if ($omniversepricing_price) {
             $show_on = Configuration::get('OMNIVERSEPRICING_SHOW_ON', 'discounted');
+
             if (!$product->has_discount && $show_on == 'discounted') {
                 return;
             }
