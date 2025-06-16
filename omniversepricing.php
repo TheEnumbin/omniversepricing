@@ -1337,6 +1337,7 @@ class Omniversepricing extends Module
         $countr_q = '';
         $group_q = '';
         $inner_q = '';
+
         if ($id_attr) {
             $attr_q = ' AND oc.`id_product_attribute` = ' . (int) $id_attr;
         }
