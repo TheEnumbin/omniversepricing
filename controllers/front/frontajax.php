@@ -29,8 +29,6 @@ if (!defined('_PS_VERSION_')) {
 }
 class OmniversepricingFrontajaxModuleFrontController extends ModuleFrontController
 {
-    private $variables = [];
-
     /**
      * @see FrontController::postProcess()
      */
@@ -67,7 +65,7 @@ class OmniversepricingFrontajaxModuleFrontController extends ModuleFrontControll
             $index++;
         }
 
-        if (isset($returnarr) && !empty($returnarr)) {
+        if (!empty($returnarr)) {
             echo json_encode($returnarr);
         }
         exit;
