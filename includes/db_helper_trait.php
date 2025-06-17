@@ -59,7 +59,7 @@ trait DatabaseHelper_Trait
     private function create_insert_query($product, $lang_id, $id_attribute = false, $attr_price = false, $price_type = 'current')
     {
         $specific_prices = SpecificPrice::getByProductId($product['id_product'], $id_attribute);
-        $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
+        $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
         $omni_tax_include_q = 0;
         $q = '';
         $context = Context::getContext();
@@ -107,7 +107,7 @@ trait DatabaseHelper_Trait
                         $price_amount += $attr_price;
                         $specific_price_reduction = $reduction_amount;
                         $address = new Address();
-                        $use_tax = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
+                        $use_tax = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
                         $tax_manager = TaxManagerFactory::getManager($address, Product::getIdTaxRulesGroupByIdProduct((int) $product['id_product'], $context));
                         $product_tax_calculator = $tax_manager->getTaxCalculator();
 
@@ -167,68 +167,5 @@ trait DatabaseHelper_Trait
         FROM `' . _DB_PREFIX_ . 'product_attribute` pa' .
         ($shop_only ? Shop::addSqlAssociation('product_attribute', 'pa') : '') . '
         WHERE pa.`id_product` = ' . (int) $id_product);
-    }
-
-    private function getCategoryDiscountRules($categoryId)
-    {
-        $sql = '
-            SELECT cr.id_cart_rule, cr.name, cr.description, cr.reduction_percent, cr.reduction_amount, cr.date_from, cr.date_to
-            FROM ' . _DB_PREFIX_ . 'cart_rule cr
-            INNER JOIN ' . _DB_PREFIX_ . 'cart_rule_category crc ON cr.id_cart_rule = crc.id_cart_rule
-            WHERE crc.id_category = ' . (int) $categoryId . '
-            AND cr.active = 1
-            AND cr.date_from <= NOW()
-            AND cr.date_to >= NOW()
-        ';
-
-        $discountRules = Db::getInstance()->executeS($sql);
-
-        return $discountRules;
-    }
-
-    public function trackProductPriceHistory($productId)
-    {
-        $product = new Product($productId, false, $this->context->language->id);
-
-        // Get base product price
-        $basePrice = $product->price;
-
-        // Get product categories
-        $categories = Product::getProductCategories($productId);
-
-        // Fetch active category discount rules
-        $discountRules = [];
-        foreach ($categories as $categoryId) {
-            $discountRules = array_merge($discountRules, $this->getCategoryDiscountRules($categoryId));
-        }
-
-        // Calculate final price and apply the first applicable discount
-        $finalPrice = $basePrice;
-        $appliedDiscount = null;
-        foreach ($discountRules as $rule) {
-            if ($rule['reduction_percent']) {
-                $discountAmount = $basePrice * ($rule['reduction_percent'] / 100);
-            } elseif ($rule['reduction_amount']) {
-                $discountAmount = $rule['reduction_amount'];
-            } else {
-                continue;
-            }
-
-            // Apply the discount
-            $finalPrice -= $discountAmount;
-
-            // Save the discount details
-            $appliedDiscount = [
-                'rule_id' => $rule['id_cart_rule'],
-                'rule_name' => $rule['name'],
-                'discount_amount' => $discountAmount,
-            ];
-
-            // Stop after applying one discount (modify logic if needed)
-            break;
-        }
-
-        // Save price history
-        $this->savePriceHistory($productId, $basePrice, $finalPrice, $appliedDiscount);
     }
 }

@@ -179,7 +179,7 @@ class Omniversepricing extends Module
         $helper->table = $this->table;
         $helper->module = $this;
         $helper->default_form_language = $this->context->language->id;
-        $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG', 0);
+        $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG');
         $helper->identifier = $this->identifier;
         $helper->submit_action = 'submitOmniversepricingModule';
         $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false) . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
@@ -665,27 +665,27 @@ class Omniversepricing extends Module
     protected function getConfigFormValues()
     {
         $ret_arr = [
-            'OMNIVERSEPRICING_SHOW_ON' => Configuration::get('OMNIVERSEPRICING_SHOW_ON', 'discounted'),
-            'OMNIVERSEPRICING_NOTICE_PAGE' => Configuration::get('OMNIVERSEPRICING_NOTICE_PAGE', 'single'),
-            'OMNIVERSEPRICING_NOTICE_STYLE' => Configuration::get('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after'),
-            'OMNIVERSEPRICING_HISTORY_FUNC' => Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC', 'manual'),
-            'OMNIVERSEPRICING_SHOW_IF_CURRENT' => Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true),
-            'OMNIVERSEPRICING_PRICE_WITH_TAX' => Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false),
-            'OMNIVERSEPRICING_PRECENT_INDICATOR' => Configuration::get('OMNIVERSEPRICING_PRECENT_INDICATOR', false),
-            'OMNIVERSEPRICING_SHOW_CHART' => Configuration::get('OMNIVERSEPRICING_SHOW_CHART', false),
-            'OMNIVERSEPRICING_STOP_RECORD' => Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false),
-            'OMNIVERSEPRICING_SYNC_START' => Configuration::get('OMNIVERSEPRICING_SYNC_START', 1),
-            'OMNIVERSEPRICING_SYNC_END' => Configuration::get('OMNIVERSEPRICING_SYNC_END', 20),
-            'OMNIVERSEPRICING_AUTO_DELETE_OLD' => Configuration::get('OMNIVERSEPRICING_AUTO_DELETE_OLD', false),
-            'OMNIVERSEPRICING_POSITION' => Configuration::get('OMNIVERSEPRICING_POSITION', 'after_price'),
-            'OMNIVERSEPRICING_CHART_LINK_COLOR' => Configuration::get('OMNIVERSEPRICING_CHART_LINK_COLOR', '#4bc0c0'),
-            'OMNIVERSEPRICING_CHART_LINE_COLOR' => Configuration::get('OMNIVERSEPRICING_CHART_LINE_COLOR', '#4bc0c0'),
-            'OMNIVERSEPRICING_CHART_BG_COLOR' => Configuration::get('OMNIVERSEPRICING_CHART_BG_COLOR', '#ffffff'),
-            'OMNIVERSEPRICING_BACK_COLOR' => Configuration::get('OMNIVERSEPRICING_BACK_COLOR', '#b3a700'),
-            'OMNIVERSEPRICING_FONT_COLOR' => Configuration::get('OMNIVERSEPRICING_FONT_COLOR', '#ffffff'),
-            'OMNIVERSEPRICING_FONT_SIZE' => Configuration::get('OMNIVERSEPRICING_FONT_SIZE', '12px'),
-            'OMNIVERSEPRICING_FONT_WEIGHT' => Configuration::get('OMNIVERSEPRICING_FONT_WEIGHT', '400'),
-            'OMNIVERSEPRICING_PADDING' => Configuration::get('OMNIVERSEPRICING_PADDING', '6px'),
+            'OMNIVERSEPRICING_SHOW_ON' => Configuration::get('OMNIVERSEPRICING_SHOW_ON'),
+            'OMNIVERSEPRICING_NOTICE_PAGE' => Configuration::get('OMNIVERSEPRICING_NOTICE_PAGE'),
+            'OMNIVERSEPRICING_NOTICE_STYLE' => Configuration::get('OMNIVERSEPRICING_NOTICE_STYLE'),
+            'OMNIVERSEPRICING_HISTORY_FUNC' => Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC'),
+            'OMNIVERSEPRICING_SHOW_IF_CURRENT' => Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT'),
+            'OMNIVERSEPRICING_PRICE_WITH_TAX' => Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX'),
+            'OMNIVERSEPRICING_PRECENT_INDICATOR' => Configuration::get('OMNIVERSEPRICING_PRECENT_INDICATOR'),
+            'OMNIVERSEPRICING_SHOW_CHART' => Configuration::get('OMNIVERSEPRICING_SHOW_CHART'),
+            'OMNIVERSEPRICING_STOP_RECORD' => Configuration::get('OMNIVERSEPRICING_STOP_RECORD'),
+            'OMNIVERSEPRICING_SYNC_START' => Configuration::get('OMNIVERSEPRICING_SYNC_START'),
+            'OMNIVERSEPRICING_SYNC_END' => Configuration::get('OMNIVERSEPRICING_SYNC_END'),
+            'OMNIVERSEPRICING_AUTO_DELETE_OLD' => Configuration::get('OMNIVERSEPRICING_AUTO_DELETE_OLD'),
+            'OMNIVERSEPRICING_POSITION' => Configuration::get('OMNIVERSEPRICING_POSITION'),
+            'OMNIVERSEPRICING_CHART_LINK_COLOR' => Configuration::get('OMNIVERSEPRICING_CHART_LINK_COLOR'),
+            'OMNIVERSEPRICING_CHART_LINE_COLOR' => Configuration::get('OMNIVERSEPRICING_CHART_LINE_COLOR'),
+            'OMNIVERSEPRICING_CHART_BG_COLOR' => Configuration::get('OMNIVERSEPRICING_CHART_BG_COLOR'),
+            'OMNIVERSEPRICING_BACK_COLOR' => Configuration::get('OMNIVERSEPRICING_BACK_COLOR'),
+            'OMNIVERSEPRICING_FONT_COLOR' => Configuration::get('OMNIVERSEPRICING_FONT_COLOR'),
+            'OMNIVERSEPRICING_FONT_SIZE' => Configuration::get('OMNIVERSEPRICING_FONT_SIZE'),
+            'OMNIVERSEPRICING_FONT_WEIGHT' => Configuration::get('OMNIVERSEPRICING_FONT_WEIGHT'),
+            'OMNIVERSEPRICING_PADDING' => Configuration::get('OMNIVERSEPRICING_PADDING'),
             'OMNIVERSEPRICING_DELETE_OLD' => false,
             'OMNIVERSEPRICING_RESET_HISTORY' => false,
             'OMNIVERSEPRICING_SYNC_PRICE_TYPE' => 'current',
@@ -694,11 +694,11 @@ class Omniversepricing extends Module
         $languages = Language::getLanguages(false);
 
         foreach ($languages as $lang) {
-            $ret_arr['OMNIVERSEPRICING_TEXT'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang['id_lang'], 'Lowest price within 30 days before promotion');
-            $ret_arr['OMNIVERSEPRICING_CHART_LINK_TEXT'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_CHART_LINK_TEXT_' . $lang['id_lang'], 'View Price History');
-            $ret_arr['OMNIVERSEPRICING_CHART_LABEL'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_CHART_LABEL_' . $lang['id_lang'], 'Price (Last 30 Days)');
-            $ret_arr['OMNIVERSEPRICING_CHART_DATE_LABEL'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_CHART_DATE_LABEL_' . $lang['id_lang'], 'Date');
-            $ret_arr['OMNIVERSEPRICING_CHART_PRICE_LABEL'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_CHART_PRICE_LABEL_' . $lang['id_lang'], 'Price');
+            $ret_arr['OMNIVERSEPRICING_TEXT'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang['id_lang']);
+            $ret_arr['OMNIVERSEPRICING_CHART_LINK_TEXT'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_CHART_LINK_TEXT_' . $lang['id_lang']);
+            $ret_arr['OMNIVERSEPRICING_CHART_LABEL'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_CHART_LABEL_' . $lang['id_lang']);
+            $ret_arr['OMNIVERSEPRICING_CHART_DATE_LABEL'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_CHART_DATE_LABEL_' . $lang['id_lang']);
+            $ret_arr['OMNIVERSEPRICING_CHART_PRICE_LABEL'][$lang['id_lang']] = Configuration::get('OMNIVERSEPRICING_CHART_PRICE_LABEL_' . $lang['id_lang']);
         }
 
         return $ret_arr;
@@ -709,11 +709,6 @@ class Omniversepricing extends Module
      */
     protected function postProcess()
     {
-        $isdemo = false;
-
-        if ($isdemo) {
-            return $this->displayError($this->l('Changes are not saved because you are in Demo Mode!!!'));
-        }
         $form_values = $this->getConfigFormValues();
 
         foreach (array_keys($form_values) as $key) {
@@ -762,12 +757,12 @@ class Omniversepricing extends Module
             Configuration::updateValue($key, Tools::getValue($key));
         }
 
-        $omniversepricing_back_color = Configuration::get('OMNIVERSEPRICING_BACK_COLOR', '#b3a700');
-        $omniversepricing_font_color = Configuration::get('OMNIVERSEPRICING_FONT_COLOR', '#ffffff');
+        $omniversepricing_back_color = Configuration::get('OMNIVERSEPRICING_BACK_COLOR');
+        $omniversepricing_font_color = Configuration::get('OMNIVERSEPRICING_FONT_COLOR');
         $chart_link_color = Configuration::get('OMNIVERSEPRICING_CHART_LINK_COLOR');
-        $omniversepricing_font_size = Configuration::get('OMNIVERSEPRICING_FONT_SIZE', '12px');
-        $omniversepricing_font_weight = Configuration::get('OMNIVERSEPRICING_FONT_WEIGHT', '400');
-        $omniversepricing_padding = Configuration::get('OMNIVERSEPRICING_PADDING', '6px');
+        $omniversepricing_font_size = Configuration::get('OMNIVERSEPRICING_FONT_SIZE');
+        $omniversepricing_font_weight = Configuration::get('OMNIVERSEPRICING_FONT_WEIGHT');
+        $omniversepricing_padding = Configuration::get('OMNIVERSEPRICING_PADDING');
         $gen_css = '.omniversepricing-notice{
                         padding: ' . $omniversepricing_padding . ' !important;
                         font-size: ' . $omniversepricing_font_size . ' !important;
@@ -849,7 +844,7 @@ class Omniversepricing extends Module
             'omniversepricing_lang_id' => $lang_id,
             'omniversepricing_total_products' => $this->getProductCount($shop_id),
         ]);
-        $omni_auto_del = Configuration::get('OMNIVERSEPRICING_AUTO_DELETE_OLD', false);
+        $omni_auto_del = Configuration::get('OMNIVERSEPRICING_AUTO_DELETE_OLD');
 
         if ($omni_auto_del) {
             $date = date('Y-m-d');
@@ -907,7 +902,7 @@ class Omniversepricing extends Module
 
     public function hookDisplayFooter()
     {
-        $show_chart = Configuration::get('OMNIVERSEPRICING_SHOW_CHART', false);
+        $show_chart = Configuration::get('OMNIVERSEPRICING_SHOW_CHART');
         $controller = Tools::getValue('controller');
 
         if ($show_chart == true && $controller == 'product') {
@@ -947,7 +942,7 @@ class Omniversepricing extends Module
         $omniversepricing_price = $this->omniversepricing_init($product);
 
         if ($omniversepricing_price) {
-            $show_on = Configuration::get('OMNIVERSEPRICING_SHOW_ON', 'discounted');
+            $show_on = Configuration::get('OMNIVERSEPRICING_SHOW_ON');
 
             if (!$product->has_discount && $show_on == 'discounted') {
                 return;
@@ -958,13 +953,13 @@ class Omniversepricing extends Module
 
     public function hookActionProductUpdate($params)
     {
-        $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
-        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC', 'manual');
+        $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD');
+        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
         if (!$omni_stop) {
             if ($history_func == 'w_change') {
                 $product = new Product($params['id_product']);
                 $attributes = $this->omniGetProductAttributesInfo($product->id);
-                $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
+                $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
                 if ($omni_tax_include) {
                     $omni_tax_include = true;
                 } else {
@@ -1001,14 +996,14 @@ class Omniversepricing extends Module
 
     public function hookActionObjectSpecificPriceAddAfter($params)
     {
-        $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
-        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC', 'manual');
+        $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD');
+        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
 
         if (!$omni_stop) {
             if ($history_func == 'w_change') {
                 $product = new Product($params['object']->id_product);
                 $attributes = $this->omniGetProductAttributesInfo($product->id);
-                $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
+                $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
                 if ($omni_tax_include) {
                     $omni_tax_include = true;
                 } else {
@@ -1045,14 +1040,14 @@ class Omniversepricing extends Module
 
     public function hookActionObjectSpecificPriceUpdateAfter($params)
     {
-        $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
-        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC', 'manual');
+        $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD');
+        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
 
         if (!$omni_stop) {
             if ($history_func == 'w_change') {
                 $product = new Product($params['object']->id_product);
                 $attributes = $this->omniGetProductAttributesInfo($product->id);
-                $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
+                $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
                 if ($omni_tax_include) {
                     $omni_tax_include = true;
                 } else {
@@ -1093,17 +1088,17 @@ class Omniversepricing extends Module
     public function hookDisplayProductPriceBlock($params)
     {
         $controller = Tools::getValue('controller');
-        $notice_page = Configuration::get('OMNIVERSEPRICING_NOTICE_PAGE', 'single');
+        $notice_page = Configuration::get('OMNIVERSEPRICING_NOTICE_PAGE');
 
         if ($controller == 'product') {
-            $omniversepricing_pos = Configuration::get('OMNIVERSEPRICING_POSITION', 'after_price');
+            $omniversepricing_pos = Configuration::get('OMNIVERSEPRICING_POSITION');
 
             if ($params['type'] == $omniversepricing_pos) {
                 $product = $params['product'];
                 $omniversepricing_price = $this->omniversepricing_init($product);
 
                 if ($omniversepricing_price) {
-                    $show_on = Configuration::get('OMNIVERSEPRICING_SHOW_ON', 'discounted');
+                    $show_on = Configuration::get('OMNIVERSEPRICING_SHOW_ON');
                     if (!$product->has_discount && $show_on == 'discounted') {
                         return;
                     }
@@ -1119,7 +1114,7 @@ class Omniversepricing extends Module
                 $omniversepricing_price = $this->omniversepricing_init($product);
 
                 if ($omniversepricing_price) {
-                    $show_on = Configuration::get('OMNIVERSEPRICING_SHOW_ON', 'discounted');
+                    $show_on = Configuration::get('OMNIVERSEPRICING_SHOW_ON');
 
                     if (!$product->has_discount && $show_on == 'discounted') {
                         return;
@@ -1149,10 +1144,10 @@ class Omniversepricing extends Module
     private function omniversepricing_init($product)
     {
         $controller = Tools::getValue('controller');
-        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC', 'manual');
-        $notice_page = Configuration::get('OMNIVERSEPRICING_NOTICE_PAGE', 'single');
-        $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX', false);
-        $percent_indicator = Configuration::get('OMNIVERSEPRICING_PRECENT_INDICATOR', false);
+        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
+        $notice_page = Configuration::get('OMNIVERSEPRICING_NOTICE_PAGE');
+        $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
+        $percent_indicator = Configuration::get('OMNIVERSEPRICING_PRECENT_INDICATOR');
         $product_obj = new Product($product['id_product'], true, $this->context->language->id);
 
         if ($notice_page == 'single' && $controller != 'product') {
@@ -1171,7 +1166,7 @@ class Omniversepricing extends Module
 
         if ($history_func == 'w_hook') {
             $existing = $this->omniversepricing_check_existance($product_obj->id, $price_amount, $product['id_product_attribute']);
-            $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD', false);
+            $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD');
             if (!$omni_stop) {
                 if (empty($existing)) {
                     $this->omniversepricing_insert_data($product, $product_obj, $price_amount, $omni_tax_include);
@@ -1206,7 +1201,7 @@ class Omniversepricing extends Module
             $return_arr['omni_percent'] = $omniversepricinge_percentage;
             return $return_arr;
         } else {
-            $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT', true);
+            $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT');
             if ($omni_if_current) {
                 $omniversepricinge_percentage = '0%';
                 $return_arr['omni_price'] = $priceFormatter->convertAndFormat($price_amount);
@@ -1391,16 +1386,16 @@ class Omniversepricing extends Module
     {
         $lang_id = $this->context->language->id;
         $controller = Tools::getValue('controller');
-        $omniversepricing_text = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang_id, 'Lowest price within 30 days before promotion.');
-        $omniversepricing_text_style = Configuration::get('OMNIVERSEPRICING_NOTICE_STYLE', 'before_after');
-        $show_chart = Configuration::get('OMNIVERSEPRICING_SHOW_CHART', false);
+        $omniversepricing_text = Configuration::get('OMNIVERSEPRICING_TEXT_' . $lang_id);
+        $omniversepricing_text_style = Configuration::get('OMNIVERSEPRICING_NOTICE_STYLE');
+        $show_chart = Configuration::get('OMNIVERSEPRICING_SHOW_CHART');
         $price = $price_data['omni_price'];
         $omni_percentage = $price_data['omni_percent'];
         if ($omniversepricing_text_style == 'mixed') {
             $omniversepricing_text = str_replace('{{omni_price}}', $price, $omniversepricing_text);
             $omniversepricing_text = str_replace('{{omni_percent}}', $omni_percentage, $omniversepricing_text);
         }
-        $chart_link_text = Configuration::get('OMNIVERSEPRICING_CHART_LINK_TEXT_' . $lang_id, 'View Price Chart');
+        $chart_link_text = Configuration::get('OMNIVERSEPRICING_CHART_LINK_TEXT_' . $lang_id);
         $this->context->smarty->assign([
             'omniversepricing_text' => $omniversepricing_text,
             'omniversepricing_show_chart' => $show_chart,

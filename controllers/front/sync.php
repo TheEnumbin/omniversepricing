@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -33,7 +34,7 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
     use DatabaseHelper_Trait;
     public function initContent()
     {
-        $date_cron = Configuration::get('OMNIVERSEPRICING_CRON_DATE', '');
+        $date_cron = Configuration::get('OMNIVERSEPRICING_CRON_DATE');
         $today = date('j-n-Y');
 
         if ($today != $date_cron) {
@@ -50,7 +51,7 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                     $products = Product::getProducts($lang['id_lang'], $i, 1, 'id_product', 'ASC');
                     $insert_q = '';
 
-                    if (isset($products) && !empty($products)) {
+                    if (!empty($products)) {
                         foreach ($products as $product) {
                             $attributes = $this->getProductAttributesInfo($product['id_product']);
                             if (isset($attributes) && !empty($attributes)) {
