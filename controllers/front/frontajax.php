@@ -1,5 +1,4 @@
 <?php
-
 /**
  * 2007-2020 PrestaShop.
  *
@@ -62,7 +61,7 @@ class OmniversepricingFrontajaxModuleFrontController extends ModuleFrontControll
         foreach ($result as $row) {
             $returnarr[$index]['date'] = $row['date'];
             $returnarr[$index]['price'] = $row['price'];
-            $index++;
+            $index = $index + 1;
         }
 
         if (!empty($returnarr)) {

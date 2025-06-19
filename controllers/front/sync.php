@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -46,7 +45,7 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
             $not_found = true;
             $productsCount = Db::getInstance()->getValue('SELECT COUNT(*) FROM `' . _DB_PREFIX_ . 'product`');
 
-            for ($i = 0; $i <= $productsCount; $i++) {
+            for ($i = 0; $i <= $productsCount; ++$i) {
                 foreach ($languages as $lang) {
                     $products = Product::getProducts($lang['id_lang'], $i, 1, 'id_product', 'ASC');
                     $insert_q = '';

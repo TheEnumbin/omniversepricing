@@ -1,5 +1,4 @@
 <?php
-
 /**
  * 2007-2022 PrestaShop
  *
@@ -88,7 +87,7 @@ class Omniversepricing extends Module
             Configuration::updateValue('OMNIVERSEPRICING_CHART_PRICE_LABEL_' . $lang['id_lang'], 'Price');
         }
         $tab = new Tab();
-        $tab->active = 1;
+        $tab->active = true;
         $tab->class_name = 'AdminAjaxOmniverse';
         $tab->name = [];
 
@@ -1210,7 +1209,6 @@ class Omniversepricing extends Module
             }
             return false;
         }
-        return false;
     }
 
     /**
@@ -1351,9 +1349,7 @@ class Omniversepricing extends Module
             } else {
                 $id_group = (int) Configuration::get('PS_UNIDENTIFIED_GROUP');
             }
-
             $group_q = ' OR oc2.`id_group` IN (' . $id_group . ')';
-
             $inner_q = 'IN (SELECT oc2.id_omniversepricing FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc2 
                        WHERE ' . $curre_q . $countr_q . $group_q . ')';
         }

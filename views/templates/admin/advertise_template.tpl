@@ -1,5 +1,5 @@
 {*
-* 2007-2024 PrestaShop
+* 2007-2025 PrestaShop
 *
 * NOTICE OF LICENSE
 *

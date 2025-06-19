@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -174,7 +173,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             $products = Product::getProducts($lang['id_lang'], $start, $end, 'id_product', 'ASC');
             $insert_q = '';
 
-            if (isset($products) && !empty($products)) {
+            if (!empty($products)) {
                 $not_found = false;
 
                 foreach ($products as $product) {
@@ -206,7 +205,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             echo $response;
             exit;
         } else {
-            array_unique($synced_ids);
+            $synced_ids = array_unique($synced_ids);
             $response = [
                 'success' => 1,
                 'start' => $start + $end,
@@ -216,12 +215,5 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             echo $response;
             exit;
         }
-        $response = [
-            'success' => 0,
-        ];
-        $response = json_encode($response);
-        echo $response;
-
-        exit;
     }
 }
