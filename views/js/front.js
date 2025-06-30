@@ -83,7 +83,8 @@ $(document).ready(function () {
                                     display: true,
                                     text: omni_price_label
                                 },
-                                beginAtZero: false
+                                beginAtZero: false,
+                                suggestedMax: 1000
                             }
                         }
                     }
