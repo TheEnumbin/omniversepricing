@@ -84,7 +84,7 @@ $(document).ready(function () {
                                     text: omni_price_label
                                 },
                                 beginAtZero: false,
-                                suggestedMax: 1000
+                                suggestedMax: Math.max(...prices) * 1.1
                             }
                         }
                     }
