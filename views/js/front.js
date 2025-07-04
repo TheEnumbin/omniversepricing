@@ -64,7 +64,7 @@ $(document).ready(function () {
                             data: prices,
                             borderColor: chart_line_color,
                             backgroundColor: chart_bg_color,
-                            tension: 0.4,
+                            tension: 0,
                             pointRadius: 4,
                             pointHoverRadius: 6
                         }]
