@@ -59,7 +59,7 @@ class OmniversepricingFrontajaxModuleFrontController extends ModuleFrontControll
         $returnarr = [];
         $index = 0;
         foreach ($result as $row) {
-            $returnarr[$index]['date'] = date_format(date_create($row['date']), "Y/m/d");
+            $returnarr[$index]['date'] = date_format(date_create($row['date']), 'Y/m/d');
             $returnarr[$index]['price'] = $row['price'];
             $index = $index + 1;
         }
