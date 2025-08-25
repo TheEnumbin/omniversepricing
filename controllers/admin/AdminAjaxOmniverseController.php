@@ -170,9 +170,14 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $not_found = true;
         $synced_ids = [];
         foreach ($languages as $lang) {
-            $products = Product::getProducts($lang['id_lang'], $start, $end, 'id_product', 'ASC');
+            $products = $this->getProductsByIdRange($lang['id_lang'], $start, $end, 'id_product', 'ASC');
             $insert_q = '';
 
+            echo '<pre>';
+            print_r($products);
+            echo '</pre>';
+            echo __FILE__ . ' : ' . __LINE__;
+            die(__FILE__ . ' : ' . __LINE__);
             if (!empty($products)) {
                 $not_found = false;
 

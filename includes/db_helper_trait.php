@@ -167,4 +167,68 @@ trait DatabaseHelper_Trait
         ($shop_only ? Shop::addSqlAssociation('product_attribute', 'pa') : '') . '
         WHERE pa.`id_product` = ' . (int) $id_product);
     }
+
+    public function getProductsByIdRange(
+        $id_lang,
+        $id_start = null,
+        $id_end = null,
+        $order_by = 'id_product',
+        $order_way = 'ASC',
+        $id_category = false,
+        $only_active = false,
+        Context $context = null
+    ) {
+        if (!$context) {
+            $context = Context::getContext();
+        }
+
+        $front = true;
+        if (!in_array($context->controller->controller_type, ['front', 'modulefront'])) {
+            $front = false;
+        }
+
+        if (!Validate::isOrderBy($order_by) || !Validate::isOrderWay($order_way)) {
+            die(Tools::displayError());
+        }
+
+        if ($order_by == 'id_product' || $order_by == 'price' || $order_by == 'date_add' || $order_by == 'date_upd') {
+            $order_by_prefix = 'p';
+        } elseif ($order_by == 'name') {
+            $order_by_prefix = 'pl';
+        } elseif ($order_by == 'position') {
+            $order_by_prefix = 'c';
+        }
+
+        if (strpos($order_by, '.') > 0) {
+            $order_by = explode('.', $order_by);
+            $order_by_prefix = $order_by[0];
+            $order_by = $order_by[1];
+        }
+
+        $sql = 'SELECT p.*, product_shop.*, pl.*, m.`name` AS manufacturer_name, s.`name` AS supplier_name
+                FROM `' . _DB_PREFIX_ . 'product` p
+                ' . Shop::addSqlAssociation('product', 'p') . '
+                LEFT JOIN `' . _DB_PREFIX_ . 'product_lang` pl ON (p.`id_product` = pl.`id_product` ' . Shop::addSqlRestrictionOnLang('pl') . ')
+                LEFT JOIN `' . _DB_PREFIX_ . 'manufacturer` m ON (m.`id_manufacturer` = p.`id_manufacturer`)
+                LEFT JOIN `' . _DB_PREFIX_ . 'supplier` s ON (s.`id_supplier` = p.`id_supplier`)' .
+                ($id_category ? ' LEFT JOIN `' . _DB_PREFIX_ . 'category_product` c ON (c.`id_product` = p.`id_product`)' : '') . '
+                WHERE pl.`id_lang` = ' . (int) $id_lang .
+                    ($id_category ? ' AND c.`id_category` = ' . (int) $id_category : '') .
+                    ($front ? ' AND product_shop.`visibility` IN ("both", "catalog")' : '') .
+                    ($only_active ? ' AND product_shop.`active` = 1' : '') .
+                    (($id_start !== null && $id_end !== null) 
+                        ? ' AND p.`id_product` BETWEEN ' . (int) $id_start . ' AND ' . (int) $id_end 
+                        : '') . '
+                ORDER BY ' . (isset($order_by_prefix) ? pSQL($order_by_prefix) . '.' : '') . '`' . pSQL($order_by) . '` ' . pSQL($order_way);
+
+        echo '<pre>';
+        print_r($sql);
+        echo '</pre>';
+        echo __FILE__ . ' : ' . __LINE__;
+        die(__FILE__ . ' : ' . __LINE__);
+        $rq = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
+
+
+        return $rq;
+    }
 }
