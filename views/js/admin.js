@@ -124,7 +124,7 @@ $(document).ready(function () {
                 call_sync_ajax(0, $end, $end, $omni_price_type);
             }
         } else {
-            $start = $start - 1;
+            // $start = $start;
             if ($end == '') {
                 call_sync_ajax($start, '', omniversepricing_total_products - $start, $omni_price_type);
             } else {
