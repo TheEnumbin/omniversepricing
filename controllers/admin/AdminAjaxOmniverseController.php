@@ -149,7 +149,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $start = Tools::getValue('start');
         $final_end = Tools::getValue('end');
         $price_type = Tools::getValue('price_type');
-        $end = 5;
+        $end = 2;
         if ($final_end != '') {
             if ($final_end <= $start) {
                 $response = [
@@ -167,6 +167,8 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                     $end = (int) $start + (int) $end;
                 }
             }
+        } else {
+            $end = (int) $start + (int) $end;
         }
         $context = Context::getContext();
         $lang_id = $context->language->id;
@@ -214,7 +216,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             // $next_start = $start + $end;
             $next_start = $end;
 
-            if ($next_start > $final_end) {
+            if ($final_end != '' && $next_start > $final_end) {
                 $next_start = $final_end;
             }
             $response = [
