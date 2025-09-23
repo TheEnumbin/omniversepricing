@@ -160,7 +160,12 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                 echo $response;
                 exit;
             } else {
-                $end = (int) $final_end - (int) $start;
+                // $end = (int) $final_end - (int) $start;
+                if (($final_end - $start) < 5) {
+                    $end = $final_end;
+                } else {
+                    $end = (int) $start + (int) $end;
+                }
             }
         }
         $context = Context::getContext();
@@ -173,32 +178,27 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             $products = $this->getProductsByIdRange($lang['id_lang'], $start, $end, 'id_product', 'ASC');
             $insert_q = '';
 
-            // echo '<pre>';
-            // print_r($products);
-            // echo '</pre>';
-            // echo __FILE__ . ' : ' . __LINE__;
-            // die(__FILE__ . ' : ' . __LINE__);
-            // if (!empty($products)) {
-            //     $not_found = false;
+            if (!empty($products)) {
+                $not_found = false;
 
-            //     foreach ($products as $product) {
-            //         $synced_ids[] = $product['id_product'];
-            //         $attributes = $this->getProductAttributesInfo($product['id_product']);
-            //         if (isset($attributes) && !empty($attributes)) {
-            //             foreach ($attributes as $attribute) {
-            //                 $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $attribute['id_product_attribute'], $attribute['price'], $price_type);
-            //             }
-            //         } else {
-            //             $insert_q .= $this->create_insert_query($product, $lang['id_lang'], false, false, $price_type);
-            //         }
-            //     }
-            //     $insert_q = rtrim($insert_q, ',' . "\n");
+                foreach ($products as $product) {
+                    $synced_ids[] = $product['id_product'];
+                    $attributes = $this->getProductAttributesInfo($product['id_product']);
+                    if (isset($attributes) && !empty($attributes)) {
+                        foreach ($attributes as $attribute) {
+                            $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $attribute['id_product_attribute'], $attribute['price'], $price_type);
+                        }
+                    } else {
+                        $insert_q .= $this->create_insert_query($product, $lang['id_lang'], false, false, $price_type);
+                    }
+                }
+                $insert_q = rtrim($insert_q, ',' . "\n");
 
-            //     if ($insert_q != '') {
-            //         $insert_q = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`, `with_tax`) VALUES $insert_q";
-            //         $insertion = Db::getInstance()->execute($insert_q);
-            //     }
-            // }
+                if ($insert_q != '') {
+                    $insert_q = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`, `with_tax`) VALUES $insert_q";
+                    $insertion = Db::getInstance()->execute($insert_q);
+                }
+            }
         }
 
         if ($not_found) {
@@ -211,7 +211,8 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             exit;
         } else {
             $synced_ids = array_unique($synced_ids);
-            $next_start = $start + $end;
+            // $next_start = $start + $end;
+            $next_start = $end;
 
             if ($next_start > $final_end) {
                 $next_start = $final_end;

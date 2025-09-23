@@ -221,14 +221,8 @@ trait DatabaseHelper_Trait
                         : '') . '
                 ORDER BY ' . (isset($order_by_prefix) ? pSQL($order_by_prefix) . '.' : '') . '`' . pSQL($order_by) . '` ' . pSQL($order_way);
 
-        echo '<pre>';
-        print_r($sql);
-        echo '</pre>';
-        echo __FILE__ . ' : ' . __LINE__;
-        die(__FILE__ . ' : ' . __LINE__);
+        
         $rq = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
-
-
         return $rq;
     }
 }
