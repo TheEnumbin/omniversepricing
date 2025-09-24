@@ -149,7 +149,31 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $start = Tools::getValue('start');
         $final_end = Tools::getValue('end');
         $price_type = Tools::getValue('price_type');
+        $call_type = Tools::getValue('call_type');
         $end = 2;
+
+        if ($call_type == '2') {
+            $next_start = $this->getNextAvailableProductId($start, $final_end);
+
+            if ($next_start == NULL) {
+                $response = [
+                    'success' => 1,
+                    'start' => 0,
+                ];
+                $response = json_encode($response);
+                echo $response;
+                exit;
+            } else {
+                $response = [
+                    'success' => 1,
+                    'start' => $next_start,
+                ];
+                $response = json_encode($response);
+                echo $response;
+                exit;
+            }
+        }
+
         if ($final_end != '') {
             if ($final_end <= $start) {
                 $response = [
@@ -205,8 +229,8 @@ class AdminAjaxOmniverseController extends ModuleAdminController
 
         if ($not_found) {
             $response = [
-                'success' => 1,
-                'start' => 0,
+                'success' => 2,
+                'start' => $start,
             ];
             $response = json_encode($response);
             echo $response;

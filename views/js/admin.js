@@ -119,16 +119,16 @@ $(document).ready(function () {
         $("#omni_sync_stop").removeClass("hidden");
         if ($start == '') {
             if ($end == '') {
-                call_sync_ajax(0, '', omniversepricing_total_products, $omni_price_type);
+                call_sync_ajax(0, '', omniversepricing_total_products, $omni_price_type, 1);
             } else {
-                call_sync_ajax(0, $end, $end, $omni_price_type);
+                call_sync_ajax(0, $end, $end, $omni_price_type, 1);
             }
         } else {
             // $start = $start;
             if ($end == '') {
-                call_sync_ajax($start, '', omniversepricing_total_products - $start, $omni_price_type);
+                call_sync_ajax($start, '', omniversepricing_total_products - $start, $omni_price_type, 1);
             } else {
-                call_sync_ajax($start, $end, ($end - $start), $omni_price_type);
+                call_sync_ajax($start, $end, ($end - $start), $omni_price_type, 1);
             }
         }
     });
@@ -137,7 +137,7 @@ $(document).ready(function () {
         stop_sync = 1
     });
 
-    function call_sync_ajax(start, $end, sync_count, price_type) {
+    function call_sync_ajax(start, $end, sync_count, price_type, call_type = 1) {
         $('#omni_sync_bt').html("Syncing " + start + "/" + sync_count + " products")
         $.ajax({
             type: 'POST',
@@ -149,13 +149,18 @@ $(document).ready(function () {
                 start: start,
                 end: $end,
                 price_type: price_type,
+                call_type: call_type,
                 ajax: true
             },
             success: function (data) {
                 var response = JSON.parse(data);
                 if (!stop_sync) {
                     if (response.start != 0) {
-                        call_sync_ajax(response.start, $end, sync_count, price_type)
+                        if (response.success == 1) {
+                            call_sync_ajax(response.start, $end, sync_count, price_type, 1)
+                        } else {
+                            call_sync_ajax(response.start, $end, sync_count, price_type, 2)
+                        }
                     } else {
                         $(".omni-sync-loader").hide();
                         $("#omni_sync_stop").addClass("hidden");

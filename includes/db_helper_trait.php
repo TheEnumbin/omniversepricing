@@ -225,4 +225,24 @@ trait DatabaseHelper_Trait
         $rq = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
         return $rq;
     }
+
+    public function getNextAvailableProductId($start, $final_end){
+        $only_active = false;
+        $lesser_q = '';
+
+        if ($final_end != '') {
+            $lesser_q = ' AND p.id_product <= ' . (int) $final_end;
+        }
+
+        $sql = '
+            SELECT MIN(p.id_product) AS next_id
+            FROM `' . _DB_PREFIX_ . 'product` p
+            ' . Shop::addSqlAssociation('product', 'p') . '
+            WHERE 1
+            ' . ($only_active ? ' AND product_shop.`active` = 1' : '') . '
+            AND p.id_product > ' . (int) $start . $lesser_q;
+        $next_id = Db::getInstance()->getValue($sql);
+
+        return $next_id;
+    }
 }
