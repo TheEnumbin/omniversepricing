@@ -25,6 +25,7 @@ require_once dirname(__FILE__) . '/../../includes/db_helper_trait.php';
 class AdminAjaxOmniverseController extends ModuleAdminController
 {
     use DatabaseHelper_Trait;
+
     public function ajaxProcessOmniverseChangeLang()
     {
         $lang_id = Tools::getValue('langid');
@@ -155,7 +156,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         if ($call_type == '2') {
             $next_start = $this->getNextAvailableProductId($start, $final_end);
 
-            if ($next_start == NULL) {
+            if ($next_start == null) {
                 $response = [
                     'success' => 1,
                     'start' => 0,

@@ -153,6 +153,7 @@ trait DatabaseHelper_Trait
         if ($q != '') {
             $q .= ',' . "\n";
         }
+
         return $q;
     }
 
@@ -188,7 +189,7 @@ trait DatabaseHelper_Trait
         }
 
         if (!Validate::isOrderBy($order_by) || !Validate::isOrderWay($order_way)) {
-            die(Tools::displayError());
+            return;
         }
 
         if ($order_by == 'id_product' || $order_by == 'price' || $order_by == 'date_add' || $order_by == 'date_upd') {
@@ -216,18 +217,17 @@ trait DatabaseHelper_Trait
                     ($id_category ? ' AND c.`id_category` = ' . (int) $id_category : '') .
                     ($front ? ' AND product_shop.`visibility` IN ("both", "catalog")' : '') .
                     ($only_active ? ' AND product_shop.`active` = 1' : '') .
-                    (($id_start !== null && $id_end !== null) 
-                        ? ' AND p.`id_product` BETWEEN ' . (int) $id_start . ' AND ' . (int) $id_end 
+                    (($id_start !== null && $id_end !== null)
+                        ? ' AND p.`id_product` BETWEEN ' . (int) $id_start . ' AND ' . (int) $id_end
                         : '') . '
                 ORDER BY ' . (isset($order_by_prefix) ? pSQL($order_by_prefix) . '.' : '') . '`' . pSQL($order_by) . '` ' . pSQL($order_way);
-
-        
         $rq = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
+
         return $rq;
     }
 
-    public function getNextAvailableProductId($start, $final_end){
-        $only_active = false;
+    public function getNextAvailableProductId($start, $final_end)
+    {
         $lesser_q = '';
 
         if ($final_end != '') {
@@ -238,8 +238,7 @@ trait DatabaseHelper_Trait
             SELECT MIN(p.id_product) AS next_id
             FROM `' . _DB_PREFIX_ . 'product` p
             ' . Shop::addSqlAssociation('product', 'p') . '
-            WHERE 1
-            ' . ($only_active ? ' AND product_shop.`active` = 1' : '') . '
+            WHERE 1 AND product_shop.`active` = 1' . '
             AND p.id_product > ' . (int) $start . $lesser_q;
         $next_id = Db::getInstance()->getValue($sql);
 
