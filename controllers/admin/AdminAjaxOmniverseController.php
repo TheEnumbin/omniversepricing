@@ -176,7 +176,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         }
 
         if ($final_end != '') {
-            if ($final_end <= $start) {
+            if ($final_end < $start) {
                 $response = [
                     'success' => 1,
                     'start' => 0,
@@ -243,6 +243,14 @@ class AdminAjaxOmniverseController extends ModuleAdminController
 
             if ($final_end != '' && $next_start > $final_end) {
                 $next_start = $final_end;
+            } else if ($next_start == $final_end) {
+                $response = [
+                    'success' => 1,
+                    'start' => 0,
+                ];
+                $response = json_encode($response);
+                echo $response;
+                exit;
             }
             $response = [
                 'success' => 1,
