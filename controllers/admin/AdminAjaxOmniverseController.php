@@ -151,6 +151,8 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $final_end = Tools::getValue('end');
         $price_type = Tools::getValue('price_type');
         $call_type = Tools::getValue('call_type');
+        $synced_ids = Tools::getValue('synced_ids');
+        $synced_ids = json_decode($synced_ids, true);
         $end = 2;
 
         if ($call_type == '2') {
@@ -200,7 +202,6 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $shop_id = $context->shop->id;
         $languages = Language::getLanguages(false);
         $not_found = true;
-        $synced_ids = [];
         foreach ($languages as $lang) {
             $products = $this->getProductsByIdRange($lang['id_lang'], $start, $end, 'id_product', 'ASC');
             $insert_q = '';
@@ -244,10 +245,18 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             if ($final_end != '' && $next_start > $final_end) {
                 $next_start = $final_end;
             } else if ($next_start == $final_end) {
+
                 $response = [
                     'success' => 1,
                     'start' => 0,
                 ];
+                if (isset($synced_ids) && !empty($synced_ids)) {
+                    $resp_extra = [
+                        'synced_ids' => $synced_ids,
+                    ];
+                }
+
+                $response = array_merge($response, $resp_extra);
                 $response = json_encode($response);
                 echo $response;
                 exit;
