@@ -153,7 +153,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $call_type = Tools::getValue('call_type');
         $synced_ids = Tools::getValue('synced_ids');
         $synced_ids = json_decode($synced_ids, true);
-        $end = 2;
+        $end = 5;
 
         if ($call_type == '2') {
             $next_start = $this->getNextAvailableProductId($start, $final_end);
@@ -162,7 +162,14 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                 $response = [
                     'success' => 1,
                     'start' => 0,
+                    'which' => 6,
                 ];
+                if (isset($synced_ids) && !empty($synced_ids)) {
+                    $resp_extra = [
+                        'synced_ids' => $synced_ids,
+                    ];
+                }
+                $response = array_merge($response, $resp_extra);
                 $response = json_encode($response);
                 echo $response;
                 exit;
@@ -170,7 +177,15 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                 $response = [
                     'success' => 1,
                     'start' => $next_start,
+                    'which' => 5,
                 ];
+
+                if (isset($synced_ids) && !empty($synced_ids)) {
+                    $resp_extra = [
+                        'synced_ids' => $synced_ids,
+                    ];
+                }
+                $response = array_merge($response, $resp_extra);
                 $response = json_encode($response);
                 echo $response;
                 exit;
@@ -182,12 +197,12 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                 $response = [
                     'success' => 1,
                     'start' => 0,
+                    'which' => 4,
                 ];
                 $response = json_encode($response);
                 echo $response;
                 exit;
             } else {
-                // $end = (int) $final_end - (int) $start;
                 if (($final_end - $start) < 5) {
                     $end = $final_end;
                 } else {
@@ -210,7 +225,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                 $not_found = false;
 
                 foreach ($products as $product) {
-                    $synced_ids[] = $product['id_product'];
+                    $synced_ids[] = (int) $product['id_product'];
                     $attributes = $this->getProductAttributesInfo($product['id_product']);
                     if (isset($attributes) && !empty($attributes)) {
                         foreach ($attributes as $attribute) {
@@ -233,12 +248,21 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             $response = [
                 'success' => 2,
                 'start' => $start,
+                'which' => 3,
             ];
+
+            if (isset($synced_ids) && !empty($synced_ids)) {
+                $resp_extra = [
+                    'synced_ids' => $synced_ids,
+                ];
+            }
+
+            $response = array_merge($response, $resp_extra);
             $response = json_encode($response);
             echo $response;
             exit;
         } else {
-            $synced_ids = array_unique($synced_ids);
+            $synced_ids = array_values(array_unique($synced_ids));
             // $next_start = $start + $end;
             $next_start = $end;
 
@@ -249,6 +273,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                 $response = [
                     'success' => 1,
                     'start' => 0,
+                    'which' => 2,
                 ];
                 if (isset($synced_ids) && !empty($synced_ids)) {
                     $resp_extra = [
@@ -261,11 +286,14 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                 echo $response;
                 exit;
             }
+
             $response = [
                 'success' => 1,
                 'start' => $next_start,
                 'synced_ids' => $synced_ids,
+                'which' => 1,
             ];
+            
             $response = json_encode($response);
             echo $response;
             exit;
