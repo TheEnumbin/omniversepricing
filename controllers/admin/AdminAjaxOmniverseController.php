@@ -154,7 +154,6 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $synced_ids = Tools::getValue('synced_ids');
         $synced_ids = json_decode($synced_ids, true);
         $end = 5;
-
         if ($call_type == '2') {
             $next_start = $this->getNextAvailableProductId($start, $final_end);
 
@@ -164,6 +163,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                     'start' => 0,
                     'which' => 6,
                 ];
+                $resp_extra = [];
                 if (isset($synced_ids) && !empty($synced_ids)) {
                     $resp_extra = [
                         'synced_ids' => $synced_ids,
@@ -179,7 +179,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                     'start' => $next_start,
                     'which' => 5,
                 ];
-
+                $resp_extra = [];
                 if (isset($synced_ids) && !empty($synced_ids)) {
                     $resp_extra = [
                         'synced_ids' => $synced_ids,
@@ -250,6 +250,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                 'start' => $start,
                 'which' => 3,
             ];
+            $resp_extra = [];
 
             if (isset($synced_ids) && !empty($synced_ids)) {
                 $resp_extra = [
@@ -268,14 +269,14 @@ class AdminAjaxOmniverseController extends ModuleAdminController
 
             if ($final_end != '' && $next_start > $final_end) {
                 $next_start = $final_end;
-            } else if ($next_start == $final_end) {
-
+            } elseif ($next_start == $final_end) {
                 $response = [
                     'success' => 1,
                     'start' => 0,
                     'which' => 2,
                 ];
-                if (isset($synced_ids) && !empty($synced_ids)) {
+                $resp_extra = [];
+                if (!empty($synced_ids)) {
                     $resp_extra = [
                         'synced_ids' => $synced_ids,
                     ];
@@ -293,7 +294,6 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                 'synced_ids' => $synced_ids,
                 'which' => 1,
             ];
-            
             $response = json_encode($response);
             echo $response;
             exit;
