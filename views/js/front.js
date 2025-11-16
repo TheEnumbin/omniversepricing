@@ -25,13 +25,32 @@
 * Don't forget to prefix your containers with your own identifier
 * to avoid any conflicts with others containers.
 */
+
 $(document).ready(function () {
+    // Initial load
+    initMyChart();
+});
+
+// Re-run after variant change (PS 1.7 / 8)
+prestashop.on('updatedProduct', function () {
+    initMyChart();
+});
+
+// Sometimes combinations trigger this one
+prestashop.on('updatedProductCombination', function () {
+    initMyChart();
+});
+
+function initMyChart() {
     var ctx = document.getElementById('priceHistoryChart').getContext('2d');
     console.log(ctx)
     var priceChart;
+    console.log("hello outer")
 
     $('#openPriceChart').on('click', function () {
         $('#priceChartModal').fadeIn();
+
+        console.log("hello")
 
         var $id_product_for_chart = $(this).data('prd_id');
         var $attr_id = $(this).data('attr_id');
@@ -101,4 +120,4 @@ $(document).ready(function () {
             $('#priceChartModal').fadeOut();
         }
     });
-});
+}
