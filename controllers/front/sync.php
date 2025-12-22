@@ -55,17 +55,17 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                             $attributes = $this->getProductAttributesInfo($product['id_product']);
                             if (isset($attributes) && !empty($attributes)) {
                                 foreach ($attributes as $attribute) {
-                                    $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $shop_id, $attribute['id_product_attribute'], $attribute['price']);
+                                    $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $attribute['id_product_attribute'], $attribute['price'], 'current');
                                 }
                             } else {
-                                $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $shop_id);
+                                $insert_q .= $this->create_insert_query($product, $lang['id_lang'], false, false, 'current');
                             }
                         }
 
                         $insert_q = rtrim($insert_q, ',' . "\n");
 
                         if ($insert_q != '') {
-                            $insert_q = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`) VALUES $insert_q";
+                            $insert_q = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`, `with_tax`) VALUES $insert_q";
                             $insertion = Db::getInstance()->execute($insert_q);
                         }
                     }
