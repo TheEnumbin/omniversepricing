@@ -25,3 +25,11 @@
 <div class="input-group">
     <div class="form-control-plaintext"><a class="d-block" href="#">{$cron_url}</a></div>
 </div>
+<div class="alert alert-info" style="margin-top: 10px;">
+    <strong>{l s='Optional Parameters:' mod='omniversepricing'}</strong>
+    <ul style="margin-bottom: 0;">
+        <li><code>price_type=current</code> - {l s='Use current sale price (with discounts applied)' mod='omniversepricing'}</li>
+        <li><code>price_type=old_price</code> - {l s='Use old price (without discounts applied)' mod='omniversepricing'}</li>
+    </ul>
+    <p style="margin-bottom: 0;"><strong>{l s='Example:' mod='omniversepricing'}</strong> {$cron_url}?price_type=old_price</p>
+</div>

@@ -49,6 +49,14 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
         $date_cron = Configuration::get('OMNIVERSEPRICING_CRON_DATE');
         $today = date('j-n-Y');
 
+        // Get price_type from GET parameter, fallback to config, then default to 'current'
+        $price_type = Tools::getValue('price_type', Configuration::get('OMNIVERSEPRICING_SYNC_PRICE_TYPE') ?: 'current');
+
+        // Validate price_type value
+        if (!in_array($price_type, ['current', 'old_price'])) {
+            $price_type = 'current';
+        }
+
         // Reset offset if new day
         if ($today != $date_cron) {
             Configuration::updateValue('OMNIVERSEPRICING_SYNC_OFFSET', 0);
@@ -96,7 +104,7 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                                 $lang['id_lang'],
                                 $attribute['id_product_attribute'],
                                 $attribute['price'],
-                                'current'
+                                $price_type
                             );
                         }
                     } else {
@@ -105,7 +113,7 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                             $lang['id_lang'],
                             false,
                             false,
-                            'current'
+                            $price_type
                         );
                     }
                 }
