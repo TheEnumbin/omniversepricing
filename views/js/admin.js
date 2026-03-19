@@ -8,7 +8,7 @@
 * It is also available through the world-wide-web at this URL:
 * http://opensource.org/licenses/afl-3.0.php
 * If you did not receive a copy of the license and are unable to
-* obtain it through the world-wide-web, please send an email
+* obtain it through the world-wide-web at this URL, please send an email
 * to license@prestashop.com so we can send you a copy immediately.
 *
 * DISCLAIMER
@@ -26,8 +26,10 @@
 * to avoid any conflicts with others containers.
 */
 $(document).ready(function () {
-    $(document).on('change', '#omniversepricing_lang_changer', function () {
-        var $val = $(this).val();
+    // Handle combination selector change
+    $(document).on('change', '#omniversepricing_combination_selector', function () {
+        var $combVal = $(this).val();
+        var $langVal = $('#omniversepricing_lang_changer').val();
         var $prdid = $('#prd_id').val();
         $.ajax({
             type: 'POST',
@@ -37,7 +39,42 @@ $(document).ready(function () {
                 controller: 'AdminAjaxOmniverse',
                 action: 'OmniverseChangeLang',
                 prdid: $prdid,
+                langid: $langVal,
+                id_product_attribute: $combVal,
+                shopid: omniversepricing_shop_id,
+                ajax: true
+            },
+            success: function (data) {
+                var $data = JSON.parse(data);
+                
+                if (typeof $data.success !== 'undefined' && $data.success) {
+                    $('#omniversepricing_history_table').find(".omniversepricing-history-datam").remove();
+                    $.each($data.omniverse_prices, function (key, value) {
+                        $('#omniversepricing_history_table').append('<tr class="omniversepricing-history-datam" id="omniversepricing_history_' + value.id + '">'
+                            + '<td>' + value.date + '</td><td>' + value.price + '</td><td>' + value.promotext + '</td>'
+                            + '<td><button  class="omniversepricing_history_delete btn btn-danger" type="button" value="' + value.id + '">Delete</button></td>'
+                            + '</tr>');
+                    });
+                }
+            }
+        });
+    });
+
+    // Handle language selector change
+    $(document).on('change', '#omniversepricing_lang_changer', function () {
+        var $val = $(this).val();
+        var $prdid = $('#prd_id').val();
+        var $combVal = $('#omniversepricing_combination_selector').val();
+        $.ajax({
+            type: 'POST',
+            url: omniversepricing_ajax_url,
+            dataType: 'html',
+            data: {
+                controller: 'AdminAjaxOmniverse',
+                action: 'OmniverseChangeLang',
+                prdid: $prdid,
                 langid: $val,
+                id_product_attribute: $combVal,
                 shopid: omniversepricing_shop_id,
                 ajax: true
             },
@@ -61,6 +98,7 @@ $(document).ready(function () {
         var $price_type = $('#price_type').val();
         var $promodate = $('#promodate').val();
         var $langid = $('#omniversepricing_lang_changer').find(":selected").val();
+        var $id_product_attribute = $('#omniversepricing_combination_selector').val();
         $.ajax({
             type: 'POST',
             url: omniversepricing_ajax_url,
@@ -74,6 +112,7 @@ $(document).ready(function () {
                 promodate: $promodate,
                 langid: $langid,
                 shopid: omniversepricing_shop_id,
+                id_product_attribute: $id_product_attribute,
                 ajax: true
             },
             success: function (data) {
@@ -167,7 +206,7 @@ $(document).ready(function () {
                             call_sync_ajax(response.start, $end, price_type, 2, JSON.stringify(response.synced_ids))
                         }
                     } else {
-                        
+
                         completed_count = response.synced_ids.length
                         console.log(completed_count)
                         $(".omni-sync-loader").hide();

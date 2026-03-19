@@ -31,11 +31,15 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $lang_id = Tools::getValue('langid');
         $shop_id = Tools::getValue('shopid');
         $prd_id = Tools::getValue('prdid');
+        $id_product_attribute = Tools::getValue('id_product_attribute', 0);
         $omniverse_prices = [];
         $results = Db::getInstance()->executeS(
             'SELECT *
             FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
-            WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . ' AND oc.`product_id` = ' . (int) $prd_id . ' ORDER BY date DESC',
+            WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+            AND oc.`product_id` = ' . (int) $prd_id . '
+            AND oc.`id_product_attribute` = ' . (int) $id_product_attribute . '
+            ORDER BY date DESC',
             true
         );
 
@@ -79,6 +83,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $pricetype = Tools::getValue('pricetype');
         $lang_id = Tools::getValue('langid');
         $shop_id = Tools::getValue('shopid');
+        $id_product_attribute = Tools::getValue('id_product_attribute', 0);
         $promotext = 'Normal Price';
         $promo = 0;
 
@@ -88,7 +93,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         }
         $result = Db::getInstance()->insert('omniversepricing_products', [
             'product_id' => (int) $prd_id,
-            'id_product_attribute' => 0,
+            'id_product_attribute' => (int) $id_product_attribute,
             'price' => $price,
             'promo' => $promo,
             'date' => $promodate,

@@ -25,16 +25,36 @@
 <div class="omniversepricing-wrapper">
     <div class="omniversepricing-sec omniversepricing-header">
         <input type="hidden" id="prd_id" name="prd_id" value="{$omniverse_prd_id}">
-        <select class="omniversepricing-lang-changer" name="omniversepricing_lang_changer"
-            id="omniversepricing_lang_changer">
-            {foreach from=$omniverse_langs item=omniverse_lang}
-                {if $omniverse_lang.id_lang == $omniverse_curr_lang}
-                    <option selected="selected" value="{$omniverse_lang.id_lang}">{$omniverse_lang.name}</option>
-                {else}
-                    <option value="{$omniverse_lang.id_lang}">{$omniverse_lang.name}</option>
-                {/if}
-            {/foreach}
-        </select>
+        {if isset($omniverse_combinations) && count($omniverse_combinations) > 1}
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label for="omniversepricing_combination_selector" style="font-weight: bold;">Combination:</label>
+                <select class="omniversepricing-combination-selector" name="omniversepricing_combination_selector"
+                    id="omniversepricing_combination_selector" style="max-width: 400px;">
+                    {foreach from=$omniverse_combinations item=combination}
+                        {if $combination.id == $omniverse_selected_combination}
+                            <option selected="selected" value="{$combination.id}">{$combination.name}</option>
+                        {else}
+                            <option value="{$combination.id}">{$combination.name}</option>
+                        {/if}
+                    {/foreach}
+                </select>
+            </div>
+        {else}
+            <input type="hidden" id="omniversepricing_combination_selector" name="omniversepricing_combination_selector" value="0">
+        {/if}
+        <div class="form-group" style="margin-bottom: 10px;">
+            <label for="omniversepricing_lang_changer" style="font-weight: bold;">Language:</label>
+            <select class="omniversepricing-lang-changer" name="omniversepricing_lang_changer"
+                id="omniversepricing_lang_changer" style="max-width: 400px;">
+                {foreach from=$omniverse_langs item=omniverse_lang}
+                    {if $omniverse_lang.id_lang == $omniverse_curr_lang}
+                        <option selected="selected" value="{$omniverse_lang.id_lang}">{$omniverse_lang.name}</option>
+                    {else}
+                        <option value="{$omniverse_lang.id_lang}">{$omniverse_lang.name}</option>
+                    {/if}
+                {/foreach}
+            </select>
+        </div>
     </div>
     <div class="omniversepricing-sec omniversepricing-price-history">
         <div>
@@ -61,10 +81,10 @@
     <div class="omniversepricing-sec omniversepricing-custom-section">
         <h3>Add Your Custom Price</h3>
         <div class="omniversepricing-custom-fields">
-            <input class="omniversepricing-custom-field" type="number" id="price_amount" name="price_amount">
-            <input class="omniversepricing-custom-field" type="date" id="promodate" name="promodate">
+            <input class="omniversepricing-custom-field" type="number" id="price_amount" name="price_amount" placeholder="Price Amount">
+            <input class="omniversepricing-custom-field" type="date" id="promodate" name="promodate" placeholder="Date">
             <select class="omniversepricing-custom-field omniversepricing-promo" name="price_type" id="price_type">
-                <option>Select Price Type</option>
+                <option value="">Select Price Type</option>
                 <option value="1">Promotional</option>
                 <option value="0">Normal</option>
             </select>

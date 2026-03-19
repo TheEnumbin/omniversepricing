@@ -869,10 +869,19 @@ class Omniversepricing extends Module
         $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
 
+        // Get product combinations with their names
+        $combinations = $this->getProductCombinations($id_product, $lang_id);
+
+        // Get price history - if combinations exist, show all; otherwise show without combinations
+        $id_product_attribute = Tools::getValue('id_product_attribute', 0);
+
         $results = Db::getInstance()->executeS(
             'SELECT *
             FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
-            WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . ' AND oc.`product_id` = ' . (int) $id_product . ' ORDER BY date DESC',
+            WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+            AND oc.`product_id` = ' . (int) $id_product . '
+            AND oc.`id_product_attribute` = ' . (int) $id_product_attribute . '
+            ORDER BY date DESC',
             true
         );
         $omniverse_prices = [];
@@ -893,10 +902,66 @@ class Omniversepricing extends Module
             'omniverse_prd_id' => $id_product,
             'omniverse_langs' => $languages,
             'omniverse_curr_lang' => $lang_id,
+            'omniverse_combinations' => $combinations,
+            'omniverse_selected_combination' => $id_product_attribute,
         ]);
         $output = $this->context->smarty->fetch($this->local_path . 'views/templates/admin/price_history.tpl');
 
         return $output;
+    }
+
+    /**
+     * Get product combinations with their attribute names
+     *
+     * @param int $id_product
+     * @param int $id_lang
+     * @return array
+     */
+    private function getProductCombinations($id_product, $id_lang)
+    {
+        $combinations = [];
+
+        // Get all product attributes with their group names in a single query
+        $sql = 'SELECT pa.id_product_attribute, pa.id_product,
+                        a.id_attribute, agl.name as group_name, al.name as attribute_name
+                FROM `' . _DB_PREFIX_ . 'product_attribute` pa
+                ' . Shop::addSqlAssociation('product_attribute', 'pa') . '
+                JOIN `' . _DB_PREFIX_ . 'product_attribute_combination` pac ON pa.id_product_attribute = pac.id_product_attribute
+                JOIN `' . _DB_PREFIX_ . 'attribute` a ON pac.id_attribute = a.id_attribute
+                JOIN `' . _DB_PREFIX_ . 'attribute_lang` al ON a.id_attribute = al.id_attribute
+                JOIN `' . _DB_PREFIX_ . 'attribute_group` ag ON a.id_attribute_group = ag.id_attribute_group
+                JOIN `' . _DB_PREFIX_ . 'attribute_group_lang` agl ON ag.id_attribute_group = agl.id_attribute_group
+                WHERE pa.`id_product` = ' . (int) $id_product . '
+                AND al.id_lang = ' . (int) $id_lang . '
+                AND agl.id_lang = ' . (int) $id_lang . '
+                ORDER BY pa.id_product_attribute ASC, ag.position ASC, a.position ASC';
+
+        $results = Db::getInstance()->executeS($sql);
+
+        // Group attributes by combination ID
+        $grouped = [];
+        foreach ($results as $row) {
+            if (!isset($grouped[$row['id_product_attribute']])) {
+                $grouped[$row['id_product_attribute']] = [];
+            }
+            $grouped[$row['id_product_attribute']][] = $row['group_name'] . ': ' . $row['attribute_name'];
+        }
+
+        // Build combinations array
+        foreach ($grouped as $id_product_attribute => $attributes) {
+            $combinations[] = [
+                'id' => $id_product_attribute,
+                'name' => implode(', ', $attributes),
+            ];
+        }
+
+        // Add "Default (no combination)" option at the beginning
+        array_unshift($combinations, [
+            'id' => 0,
+            'name' => 'Default (no combination)',
+        ]);
+
+        return $combinations;
     }
 
     public function hookDisplayFooter()
