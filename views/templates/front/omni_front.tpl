@@ -18,18 +18,18 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author    PrestaShop SA <contact@prestashop.com>
-*  @copyright 2007-2025 PrestaShop SA
+*  @copyright 2007-2026 PrestaShop SA
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
 {if $omniversepricing_text_style == 'before_after'}
-    <span class="omniversepricing-notice">{$omniversepricing_text} {$omniversepricing_price}</span>
+    <span class="omniversepricing-notice">{$omniversepricing_text|escape:'htmlall':'UTF-8'} {$omniversepricing_price|escape:'htmlall':'UTF-8'}</span>
 {elseif $omniversepricing_text_style == 'after_before' }
-    <span class="omniversepricing-notice">{$omniversepricing_price} {$omniversepricing_text}</span>
+    <span class="omniversepricing-notice">{$omniversepricing_price|escape:'htmlall':'UTF-8'} {$omniversepricing_text|escape:'htmlall':'UTF-8'}</span>
 {else}
-    <span class="omniversepricing-notice">{$omniversepricing_text}</span>
+    <span class="omniversepricing-notice">{$omniversepricing_text|escape:'htmlall':'UTF-8'}</span>
 {/if}
 {if $omni_controller == 'product' && $omniversepricing_show_chart}
-    <a href="javascript:void(0)" class="omni-chart-link" data-attr_id="{$omni_prd_attr_id}" data-prd_id="{$omni_prd_id}"
-        id="openPriceChart">{$chart_link_text}</a>
+    <a href="javascript:void(0)" class="omni-chart-link" data-attr_id="{$omni_prd_attr_id|intval}" data-prd_id="{$omni_prd_id|intval}"
+        id="openPriceChart">{$chart_link_text|escape:'htmlall':'UTF-8'}</a>
 {/if}

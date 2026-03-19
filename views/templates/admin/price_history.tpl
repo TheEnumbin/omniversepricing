@@ -18,13 +18,13 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author    PrestaShop SA <contact@prestashop.com>
-*  @copyright 2007-2025 PrestaShop SA
+*  @copyright 2007-2026 PrestaShop SA
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
 <div class="omniversepricing-wrapper">
     <div class="omniversepricing-sec omniversepricing-header">
-        <input type="hidden" id="prd_id" name="prd_id" value="{$omniverse_prd_id}">
+        <input type="hidden" id="prd_id" name="prd_id" value="{$omniverse_prd_id|intval}">
         {if isset($omniverse_combinations) && count($omniverse_combinations) > 1}
             <div class="form-group" style="margin-bottom: 10px;">
                 <label for="omniversepricing_combination_selector" style="font-weight: bold;">Combination:</label>
@@ -32,9 +32,9 @@
                     id="omniversepricing_combination_selector" style="max-width: 400px;">
                     {foreach from=$omniverse_combinations item=combination}
                         {if $combination.id == $omniverse_selected_combination}
-                            <option selected="selected" value="{$combination.id}">{$combination.name}</option>
+                            <option selected="selected" value="{$combination.id|intval}">{$combination.name|escape:'htmlall':'UTF-8'}</option>
                         {else}
-                            <option value="{$combination.id}">{$combination.name}</option>
+                            <option value="{$combination.id|intval}">{$combination.name|escape:'htmlall':'UTF-8'}</option>
                         {/if}
                     {/foreach}
                 </select>
@@ -48,9 +48,9 @@
                 id="omniversepricing_lang_changer" style="max-width: 400px;">
                 {foreach from=$omniverse_langs item=omniverse_lang}
                     {if $omniverse_lang.id_lang == $omniverse_curr_lang}
-                        <option selected="selected" value="{$omniverse_lang.id_lang}">{$omniverse_lang.name}</option>
+                        <option selected="selected" value="{$omniverse_lang.id_lang|intval}">{$omniverse_lang.name|escape:'htmlall':'UTF-8'}</option>
                     {else}
-                        <option value="{$omniverse_lang.id_lang}">{$omniverse_lang.name}</option>
+                        <option value="{$omniverse_lang.id_lang|intval}">{$omniverse_lang.name|escape:'htmlall':'UTF-8'}</option>
                     {/if}
                 {/foreach}
             </select>
@@ -68,12 +68,12 @@
                 <th>Action</th>
             </tr>
             {foreach from=$omniverse_prices item=omniverse_price}
-                <tr class="omniversepricing-history-datam" id="omniversepricing_history_{$omniverse_price.id}">
-                    <td>{$omniverse_price.date}</td>
-                    <td>{$omniverse_price.price}</td>
-                    <td>{$omniverse_price.promotext}</td>
+                <tr class="omniversepricing-history-datam" id="omniversepricing_history_{$omniverse_price.id|intval}">
+                    <td>{$omniverse_price.date|escape:'htmlall':'UTF-8'}</td>
+                    <td>{$omniverse_price.price|escape:'htmlall':'UTF-8'}</td>
+                    <td>{$omniverse_price.promotext|escape:'htmlall':'UTF-8'}</td>
                     <td><button class="omniversepricing_history_delete btn btn-danger" type="button"
-                            value="{$omniverse_price.id}">Delete</button></td>
+                            value="{$omniverse_price.id|intval}">Delete</button></td>
                 </tr>
             {/foreach}
         </table>

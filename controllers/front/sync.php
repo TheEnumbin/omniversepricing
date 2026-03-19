@@ -63,7 +63,7 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
         }
 
         $startTime = time();
-        $offset = (int)Configuration::get('OMNIVERSEPRICING_SYNC_OFFSET', 0);
+        $offset = (int) Configuration::get('OMNIVERSEPRICING_SYNC_OFFSET', 0);
         $context = Context::getContext();
         $languages = Language::getLanguages(false);
 
@@ -160,7 +160,7 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
         foreach ($result as $row) {
             $grouped[$row['id_product']][] = [
                 'id_product_attribute' => $row['id_product_attribute'],
-                'price' => $row['price']
+                'price' => $row['price'],
             ];
         }
 

@@ -18,7 +18,7 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author    PrestaShop SA <contact@prestashop.com>
-*  @copyright 2007-2025 PrestaShop SA
+*  @copyright 2007-2026 PrestaShop SA
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
@@ -27,7 +27,7 @@
     <div class="form-wrapper">
         <a target="_blank"
             href="https://addons.prestashop.com/en/registration-ordering-process/94239-infofields-create-advanced-custom-fields-product-tabs.html">
-            <img src="{$module_dir}views/img/infofield_advertisement.png" alt="Your Image Description"
+            <img src="{$module_dir|escape:'htmlall':'UTF-8'}views/img/infofield_advertisement.png" alt="Your Image Description"
                 style="max-width: 100%; height: auto;">
         </a>
     </div>

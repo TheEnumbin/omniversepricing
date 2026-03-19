@@ -18,16 +18,16 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author    PrestaShop SA <contact@prestashop.com>
-*  @copyright 2007-2025 PrestaShop SA
+*  @copyright 2007-2026 PrestaShop SA
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
 <div>
     <button id="omni_sync_bt" class="btn btn-default" type="button">
-        {$sync_txt}
-        <img class="omni-sync-loader" src="{$local_path}views/img/loader.gif" alt="this slowpoke moves" width="25" />
+        {$sync_txt|escape:'htmlall':'UTF-8'}
+        <img class="omni-sync-loader" src="{$local_path|escape:'htmlall':'UTF-8'}views/img/loader.gif" alt="this slowpoke moves" width="25" />
     </button>
     <button id="omni_sync_stop" class="btn btn-danger hidden ml-1" type="button">
-        {$stop_sync}
+        {$stop_sync|escape:'htmlall':'UTF-8'}
     </button>
 </div>
