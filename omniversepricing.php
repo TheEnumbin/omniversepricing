@@ -68,6 +68,7 @@ class Omniversepricing extends Module
         Configuration::updateValue('OMNIVERSEPRICING_SYNC_END', 20);
         Configuration::updateValue('OMNIVERSEPRICING_STOP_RECORD', false);
         Configuration::updateValue('OMNIVERSEPRICING_AUTO_DELETE_OLD', false);
+        Configuration::updateValue('OMNIVERSEPRICING_DAYS_LIMIT', 30);
         Configuration::updateValue('OMNIVERSEPRICING_NOTICE_STYLE', 'mixed');
         Configuration::updateValue('OMNIVERSEPRICING_HISTORY_FUNC', 'manual');
         Configuration::updateValue('OMNIVERSEPRICING_POSITION', 'after_price');
@@ -134,6 +135,7 @@ class Omniversepricing extends Module
         Configuration::deleteByName('OMNIVERSEPRICING_SYNC_END');
         Configuration::deleteByName('OMNIVERSEPRICING_STOP_RECORD');
         Configuration::deleteByName('OMNIVERSEPRICING_AUTO_DELETE_OLD');
+        Configuration::deleteByName('OMNIVERSEPRICING_DAYS_LIMIT');
         Configuration::deleteByName('OMNIVERSEPRICING_POSITION');
         Configuration::deleteByName('OMNIVERSEPRICING_CHART_LINK_COLOR');
         Configuration::deleteByName('OMNIVERSEPRICING_CHART_LINE_COLOR');
@@ -347,7 +349,7 @@ class Omniversepricing extends Module
                     ],
                     [
                         'type' => 'switch',
-                        'label' => $this->l('Automatically delete 30 days older data'),
+                        'label' => $this->l('Automatically delete old data'),
                         'name' => 'OMNIVERSEPRICING_AUTO_DELETE_OLD',
                         'values' => [
                             [
@@ -361,6 +363,14 @@ class Omniversepricing extends Module
                                 'label' => $this->l('No'),
                             ],
                         ],
+                        'tab' => 'general',
+                    ],
+                    [
+                        'col' => 3,
+                        'type' => 'text',
+                        'desc' => $this->l('Number of days to keep price history. Default is 30 days.'),
+                        'name' => 'OMNIVERSEPRICING_DAYS_LIMIT',
+                        'label' => $this->l('Days Limit'),
                         'tab' => 'general',
                     ],
                     [
@@ -676,6 +686,7 @@ class Omniversepricing extends Module
             'OMNIVERSEPRICING_SYNC_START' => Configuration::get('OMNIVERSEPRICING_SYNC_START'),
             'OMNIVERSEPRICING_SYNC_END' => Configuration::get('OMNIVERSEPRICING_SYNC_END'),
             'OMNIVERSEPRICING_AUTO_DELETE_OLD' => Configuration::get('OMNIVERSEPRICING_AUTO_DELETE_OLD'),
+            'OMNIVERSEPRICING_DAYS_LIMIT' => Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT'),
             'OMNIVERSEPRICING_POSITION' => Configuration::get('OMNIVERSEPRICING_POSITION'),
             'OMNIVERSEPRICING_CHART_LINK_COLOR' => Configuration::get('OMNIVERSEPRICING_CHART_LINK_COLOR'),
             'OMNIVERSEPRICING_CHART_LINE_COLOR' => Configuration::get('OMNIVERSEPRICING_CHART_LINE_COLOR'),
@@ -738,7 +749,8 @@ class Omniversepricing extends Module
             } elseif ($key == 'OMNIVERSEPRICING_DELETE_OLD') {
                 if (Tools::getValue($key)) {
                     $date = date('Y-m-d');
-                    $date_range = date('Y-m-d', strtotime('-31 days'));
+                    $days_limit = (int) Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT', 30);
+                    $date_range = date('Y-m-d', strtotime('-' . ($days_limit + 1) . ' days'));
                     Db::getInstance()->execute(
                         'DELETE FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
                         WHERE oc.date < "' . $date_range . '"'
@@ -847,7 +859,8 @@ class Omniversepricing extends Module
 
         if ($omni_auto_del) {
             $date = date('Y-m-d');
-            $date_range = date('Y-m-d', strtotime('-31 days'));
+            $days_limit = (int) Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT', 30);
+            $date_range = date('Y-m-d', strtotime('-' . ($days_limit + 1) . ' days'));
             $omniversepricing_delete_date = Configuration::get('OMNIVERSEPRICING_DELETE_DATE');
             if ($omniversepricing_delete_date == $date_range) {
                 Db::getInstance()->execute(
@@ -1419,7 +1432,8 @@ class Omniversepricing extends Module
                        WHERE ' . $curre_q . $countr_q . $group_q . ')';
         }
         $date = date('Y-m-d');
-        $date_range = date('Y-m-d', strtotime('-31 days'));
+        $days_limit = (int) Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT', 30);
+        $date_range = date('Y-m-d', strtotime('-' . ($days_limit + 1) . ' days'));
         $q_1 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
         WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q . ' AND oc.id_omniversepricing ' . $inner_q;
