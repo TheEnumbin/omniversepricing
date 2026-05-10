@@ -523,6 +523,25 @@ class Omniversepricing extends Module
                     ],
                     [
                         'type' => 'switch',
+                        'label' => $this->l('Reset Cron Values'),
+                        'desc' => $this->l('Reset sync offset and cron date to restart from the beginning'),
+                        'name' => 'OMNIVERSEPRICING_RESET_CRON',
+                        'values' => [
+                            [
+                                'id' => 'yes',
+                                'value' => true,
+                                'label' => $this->l('Yes'),
+                            ],
+                            [
+                                'id' => 'no',
+                                'value' => false,
+                                'label' => $this->l('No'),
+                            ],
+                        ],
+                        'tab' => 'action_tab',
+                    ],
+                    [
+                        'type' => 'switch',
                         'label' => $this->l('Delete Data Before 30 Days?'),
                         'name' => 'OMNIVERSEPRICING_DELETE_OLD',
                         'values' => [
@@ -698,6 +717,7 @@ class Omniversepricing extends Module
             'OMNIVERSEPRICING_PADDING' => Configuration::get('OMNIVERSEPRICING_PADDING'),
             'OMNIVERSEPRICING_DELETE_OLD' => false,
             'OMNIVERSEPRICING_RESET_HISTORY' => false,
+            'OMNIVERSEPRICING_RESET_CRON' => false,
             'OMNIVERSEPRICING_SYNC_PRICE_TYPE' => 'current',
         ];
 
@@ -762,6 +782,13 @@ class Omniversepricing extends Module
                     Db::getInstance()->execute(
                         'TRUNCATE `' . _DB_PREFIX_ . 'omniversepricing_products`'
                     );
+                }
+            } elseif ($key == 'OMNIVERSEPRICING_RESET_CRON') {
+                if (Tools::getValue($key)) {
+                    $yesterday = date('Y-m-d', strtotime('-1 day'));
+                    Configuration::updateValue('OMNIVERSEPRICING_SYNC_OFFSET', 0);
+                    Configuration::updateValue('OMNIVERSEPRICING_CRON_DATE', $yesterday);
+                    Configuration::updateValue('OMNIVERSEPRICING_LAST_SYNC', 0);
                 }
             }
 
