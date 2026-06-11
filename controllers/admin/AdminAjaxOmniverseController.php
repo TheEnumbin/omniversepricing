@@ -220,7 +220,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $context = Context::getContext();
         $lang_id = $context->language->id;
         $shop_id = $context->shop->id;
-        $languages = Language::getLanguages(false);
+        $languages = Language::getLanguages(true);
         $not_found = true;
         foreach ($languages as $lang) {
             $products = $this->getProductsByIdRange($lang['id_lang'], $start, $end, 'id_product', 'ASC');
@@ -236,6 +236,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                         foreach ($attributes as $attribute) {
                             $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $attribute['id_product_attribute'], $attribute['price'], $price_type);
                         }
+                        die(__FILE__ . ' : ' . __LINE__);
                     } else {
                         $insert_q .= $this->create_insert_query($product, $lang['id_lang'], false, false, $price_type);
                     }
