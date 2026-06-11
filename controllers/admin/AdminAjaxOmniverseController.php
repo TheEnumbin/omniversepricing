@@ -231,14 +231,28 @@ class AdminAjaxOmniverseController extends ModuleAdminController
 
                 foreach ($products as $product) {
                     $synced_ids[] = (int) $product['id_product'];
-                    $attributes = $this->getProductAttributesInfo($product['id_product']);
-                    if (isset($attributes) && !empty($attributes)) {
-                        foreach ($attributes as $attribute) {
-                            $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $attribute['id_product_attribute'], $attribute['price'], $price_type);
+
+                    // STEP 1: Get ALL specific prices for this product ONCE
+                    $all_specific_prices = SpecificPrice::getByProductId($product['id_product']);
+
+                    // STEP 2: Track which attributes have specific prices
+                    $attributes_with_specific_prices = [];
+
+                    // STEP 3: Process all specific prices and create insert queries
+                    if (!empty($all_specific_prices)) {
+                        foreach ($all_specific_prices as $specific_price) {
+                            $attr_id = $specific_price['id_product_attribute'];
+                            if (!isset($attributes_with_specific_prices[$attr_id])) {
+                                $attributes_with_specific_prices[$attr_id] = true;
+                            }
+                            // Create insert query for this specific price
+                            $insert_q .= $this->create_insert_query_for_specific_price($product, $lang['id_lang'], $specific_price, $price_type);
                         }
-                        die(__FILE__ . ' : ' . __LINE__);
-                    } else {
-                        $insert_q .= $this->create_insert_query($product, $lang['id_lang'], false, false, $price_type);
+                    }
+
+                    // STEP 4: Add base default price (id_attribute = 0) only if no specific price exists for base
+                    if (!isset($attributes_with_specific_prices[0])) {
+                        $insert_q .= $this->create_insert_query_for_default_price($product, $lang['id_lang'], 0, false, $price_type);
                     }
                 }
                 $insert_q = rtrim($insert_q, ',' . "\n");
