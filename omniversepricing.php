@@ -1468,6 +1468,7 @@ class Omniversepricing extends Module
         WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q . ' AND oc.`id_currency` = 0 AND oc.`id_country` = 0';
         $result = Db::getInstance()->executeS($q_1 . ' UNION ' . $q_2);
+
         if (isset($result)) {
             if (isset($result[0][$this->name . '_price']) && $result[0][$this->name . '_price'] != null) {
                 return $result[0][$this->name . '_price'];

@@ -63,11 +63,6 @@ trait DatabaseHelper_Trait
         // Also get specific prices for the base product (id_attribute = 0)
         // These apply to all combinations unless overridden
         $base_specific_prices = SpecificPrice::getByProductId($product['id_product']);
-        echo '<pre>';
-        print_r($base_specific_prices);
-        echo '</pre>';
-        echo __FILE__ . ' : ' . __LINE__;
-        die(__FILE__ . ' : ' . __LINE__);
 
         // Merge them, prioritizing attribute-specific prices
         if (!empty($base_specific_prices)) {
@@ -182,14 +177,6 @@ trait DatabaseHelper_Trait
         if ($q != '') {
             $q .= ',' . "\n";
         }
-        echo '<pre>';
-        print_r($id_attribute);
-        echo '</pre>';
-        echo __FILE__ . ' : ' . __LINE__;
-        echo '<pre>';
-        print_r($q);
-        echo '</pre>';
-        echo __FILE__ . ' : ' . __LINE__;
         return $q;
     }
 
