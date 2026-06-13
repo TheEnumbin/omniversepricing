@@ -52,7 +52,7 @@ class OmniversepricingFrontajaxModuleFrontController extends ModuleFrontControll
         $q_1 = 'SELECT oc.date, oc.price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
         WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id_product . ' AND oc.date > "' . $date_range . '"' . $attr_q . ' AND oc.id_omniversepricing ' . $inner_q;
-        $q_2 = 'SELECT oc.date, oc.price as omniversepricing_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
+        $q_2 = 'SELECT oc.date, oc.price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
         WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id_product . ' AND oc.date > "' . $date_range . '" ' . $attr_q . ' AND oc.`id_currency` = 0 AND oc.`id_country` = 0';
         $result = Db::getInstance()->executeS($q_1 . ' UNION ' . $q_2);
@@ -60,7 +60,9 @@ class OmniversepricingFrontajaxModuleFrontController extends ModuleFrontControll
         $index = 0;
         foreach ($result as $row) {
             $returnarr[$index]['date'] = date_format(date_create($row['date']), 'Y/m/d');
-            $returnarr[$index]['price'] = $row['price'];
+            // Convert price from default currency to current currency
+            // Prices are now stored in default currency, so we convert them for display
+            $returnarr[$index]['price'] = Tools::convertPrice($row['price']);
             $index = $index + 1;
         }
 

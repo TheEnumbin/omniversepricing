@@ -144,9 +144,12 @@ trait DatabaseHelper_Trait
                     $price_amount += $attr_price;
                 }
 
-                // Convert to specific currency if set
+                // Convert price BACK to base/default currency before saving
+                // Product::priceCalculation() returns price converted to specific currency if id_currency is set
+                // We need to save in base currency so current exchange rates are used when displaying
+                // Tools::convertPrice($price, $currency, false) converts FROM currency TO default (divides by rate)
                 if ($specific_price['id_currency']) {
-                    $price_amount = Tools::convertPrice($price_amount, $specific_price['id_currency']);
+                    $price_amount = Tools::convertPrice($price_amount, $specific_price['id_currency'], false);
                 }
                 $existing = $this->check_existance($product['id_product'], $lang_id, $price_amount, $specific_price['id_product_attribute'], $specific_price['id_country'], $specific_price['id_currency'], $specific_price['id_group']);
 
@@ -228,9 +231,12 @@ trait DatabaseHelper_Trait
             return '';
         }
 
-        // Convert to specific currency if set
+        // Convert price BACK to base/default currency before saving
+        // Product::priceCalculation() returns price converted to specific currency if id_currency is set
+        // We need to save in base currency so current exchange rates are used when displaying
+        // Tools::convertPrice($price, $currency, false) converts FROM currency TO default (divides by rate)
         if ($specific_price['id_currency']) {
-            $price_amount = Tools::convertPrice($price_amount, $specific_price['id_currency']);
+            $price_amount = Tools::convertPrice($price_amount, $specific_price['id_currency'], false);
         }
 
         // Check if already exists

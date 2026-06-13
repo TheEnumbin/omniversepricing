@@ -1308,7 +1308,7 @@ class Omniversepricing extends Module
             $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT');
             if ($omni_if_current) {
                 $omniversepricinge_percentage = '0%';
-                $return_arr['omni_price'] = $priceFormatter->convertAndFormat($price_amount);
+                $return_arr['omni_price'] = $priceFormatter->format($price_amount);
                 $return_arr['omni_percent'] = $omniversepricinge_percentage;
                 return $return_arr;
             }
