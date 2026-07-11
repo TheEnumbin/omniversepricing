@@ -1,0 +1,49 @@
+# Composer
+composer.json
+composer.lock
+vendor/
+
+# PHPUnit
+phpunit.xml
+.phpunit.result.cache
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-*
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Cache directories
+cache/
+var/cache/
+
+# Build artifacts
+*.min.js.map
+*.min.css.map
+
+# Environment files
+.env
+.env.local
