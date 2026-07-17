@@ -27,6 +27,13 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+// Get module instance for hook registration
+$module = Module::getInstanceByName('omniversepricing');
+
+if (!$module) {
+    return false;
+}
+
 // This script adds the smart sync columns to support the new sync strategy
 $sql = [];
 
@@ -66,5 +73,11 @@ foreach ($sql as $query) {
         return false;
     }
 }
+
+// Register hooks for smart cron functionality
+$module->registerHook('actionProductAdd');
+$module->registerHook('actionProductDelete');
+// Note: actionProductUpdate should already be registered, but register it to be safe
+$module->registerHook('actionProductUpdate');
 
 return true;

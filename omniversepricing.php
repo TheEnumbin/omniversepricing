@@ -35,7 +35,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.4.0';
+        $this->version = '1.4.1';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
@@ -1232,7 +1232,7 @@ class Omniversepricing extends Module
     private function flagProductForSync($product_id)
     {
         $shop_id = $this->context->shop->id;
-        $languages = Language::getLanguages(false);
+        $languages = Language::getLanguages(true);
 
         // Ensure there are entries to update (create placeholders if needed)
         foreach ($languages as $lang) {

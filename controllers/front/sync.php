@@ -80,7 +80,7 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
         $startTime = time();
         $context = Context::getContext();
         $shop_id = $context->shop->id;
-        $languages = Language::getLanguages(false);
+        $languages = Language::getLanguages(true);
 
         // Keep processing until time limit
         while ((time() - $startTime) < self::MAX_EXECUTION_TIME) {
