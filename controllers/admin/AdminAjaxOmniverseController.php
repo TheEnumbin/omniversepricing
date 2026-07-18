@@ -261,7 +261,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                                     $product,
                                     $lang['id_lang'],
                                     $attr_info['id_product_attribute'],
-                                    $attr_info['price'], // Attribute price impact
+                                    false, // Price impact already included by getPriceStatic() when using attribute ID
                                     $price_type
                                 );
                             }
