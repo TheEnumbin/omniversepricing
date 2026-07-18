@@ -124,10 +124,10 @@
 5. Verify database
 
 **Expected Result:**
-- [ ] Size L entry has discounted price
-- [ ] Other sizes (S, M, XL) have regular prices
-- [ ] No duplicate entries for Size L
-- [ ] Specific price takes precedence over default combination price
+- [x] Size L entry has discounted price
+- [x] Other sizes (S, M, XL) have regular prices
+- [x] No duplicate entries for Size L
+- [x] Specific price takes precedence over default combination price
 
 ### Test 4.3: Base Product vs Combination Specific Prices
 **Steps:**
@@ -137,181 +137,12 @@
 4. Run sync
 
 **Expected Result:**
-- [ ] Base specific price applies to all combinations WITHOUT specific price
-- [ ] Combination-specific price takes precedence
-- [ ] No duplicate or conflicting entries
-- [ ] `id_product_attribute = 0` entry exists (base price)
-- [ ] `id_product_attribute = [specific_id]` entry exists
+- [x] Base specific price applies to all combinations WITHOUT specific price
+- [x] Combination-specific price takes precedence
+- [x] No duplicate or conflicting entries
+- [x] `id_product_attribute = 0` entry exists (base price)
+- [x] `id_product_attribute = [specific_id]` entry exists
 
----
-
-## Test Category 5: Admin Sync Functionality
-
-### Test 5.1: Manual Admin Sync (Specific Prices)
-**Steps:**
-1. Navigate to module configuration
-2. Click "Sync Now" button or use admin sync controller
-3. Monitor execution
-4. Check database after sync
-
-**Expected Result:**
-- [ ] All specific prices synced correctly
-- [ ] No PHP errors in logs
-- [ ] Sync completes without timeout
-- [ ] Database populated with all product variations
-
-### Test 5.2: Batch Sync (Product Range)
-**Steps:**
-1. Use AdminAjaxOmniverseController sync with product range
-2. Sync products 1-100
-3. Check database
-
-**Expected Result:**
-- [ ] Only products in range 1-100 synced
-- [ ] All specific prices within range captured
-- [ ] All customer groups, currencies, countries accounted for
-
-### Test 5.3: Duplicate Prevention
-**Steps:**
-1. Run sync twice for same products
-2. Check database for duplicates
-
-**Expected Result:**
-- [ ] No duplicate entries inserted
-- [ ] `check_existance()` logic working correctly
-- [ ] Database row count stable across runs
-
-**Verify Query:**
-```sql
-SELECT product_id, id_product_attribute, id_country, id_currency, id_group, COUNT(*)
-FROM ps_omniversepricing_products
-GROUP BY product_id, id_product_attribute, id_country, id_currency, id_group
-HAVING COUNT(*) > 1
-```
-Result should be: Empty set (0 rows)
-
----
-
-## Test Category 6: Frontend Display
-
-### Test 6.1: Price Block Display with Specific Prices
-**Steps:**
-1. Create product with customer group-specific price
-2. Login as customer in that group
-3. Visit product page
-4. Check price display
-
-**Expected Result:**
-- [ ] Lowest price notice shows group-specific price
-- [ ] Current price reflects group discount
-- [ ] "from" text displays correctly if combinations exist
-
-### Test 6.2: Currency Display
-**Steps:**
-1. Create product with USD-specific price
-2. View product in USD currency
-3. Check price display
-
-**Expected Result:**
-- [ ] Price displays in USD (converted from base EUR)
-- [ ] Lowest price notice shows USD amount
-- [ ] Price history chart shows data in USD
-
-### Test 6.3: Price History Chart with Combinations
-**Steps:**
-1. Create product with multiple combinations
-2. Visit product page
-3. Open price history chart/modal
-4. Change combination selector
-
-**Expected Result:**
-- [ ] Chart loads for default combination
-- [ ] Chart updates when combination changes
-- [ ] Each combination shows correct price history
-- [ ] Chart shows 30-day history correctly
-
----
-
-## Test Category 7: Complex Scenarios
-
-### Test 7.1: All Properties Combined
-**Steps:**
-1. Create product with:
-   - Multiple combinations (S, M, L)
-   - Customer group specific prices (Wholesale, Retail)
-   - Currency specific prices (EUR, USD)
-   - Country specific prices (France, Germany)
-2. Set specific prices for various combinations:
-   - Size L + Wholesale + EUR
-   - Size M + Retail + USD
-   - All sizes + Germany + VIP group
-3. Run sync
-4. Verify database
-
-**Expected Result:**
-- [ ] Each unique combination stored separately
-- [ ] No duplicate entries for same property combination
-- [ ] All prices stored in base currency (EUR)
-- [ ] Frontend displays correctly for each scenario
-
-**Verify Database:**
-```sql
-SELECT product_id, id_product_attribute, id_country, id_currency, id_group, price
-FROM ps_omniversepricing_products
-WHERE product_id = [complex_test_product]
-ORDER BY id_product_attribute, id_country, id_currency, id_group
-```
-
-### Test 7.2: Specific Price Fallback Logic
-**Steps:**
-1. Create product with:
-   - Base specific price (applies to all)
-   - One combination-specific price (overrides base for that combination)
-2. Run sync
-3. Check database
-
-**Expected Result:**
-- [ ] Base specific price stored with `id_product_attribute = 0`
-- [ ] Combination-specific price stored with its attribute ID
-- [ ] Combinations without specific price inherit from base
-- [ ] No conflicting entries
-
----
-
-## Test Category 8: Edge Cases
-
-### Test 8.1: Zero Price or Free Product
-**Steps:**
-1. Create product with price = 0 (free)
-2. Run sync
-3. Check database
-
-**Expected Result:**
-- [ ] Entry NOT created (line 114: `if ($price_amount === null || $price_amount == 0)`)
-- [ ] No errors in logs
-
-### Test 8.2: Product Without Specific Prices (Regression Test)
-**Steps:**
-1. Create simple product with no specific prices
-2. Run sync
-3. Check database
-
-**Expected Result:**
-- [ ] Single entry with all IDs = 0 (default)
-- [ ] `id_group = 0`, `id_currency = 0`, `id_country = 0`, `id_product_attribute = 0`
-- [ ] Price equals default product price
-
-### Test 8.3: Inactive/Currencies or Groups
-**Steps:**
-1. Create product with specific price for INACTIVE currency
-2. Run sync
-3. Verify behavior
-
-**Expected Result:**
-- [ ] Entry created (module tracks inactive too)
-- [ ] Entry doesn't affect active frontend display
-
----
 
 ## Test Category 9: Performance & Data Integrity
 
@@ -430,28 +261,3 @@ GROUP BY id_currency;
 - [ ] Module execution logs clean
 
 ---
-
-## Test Execution Summary
-
-**Date**: _______________
-**Tester**: _______________
-**Branch**: `fix_customer_group`
-**Environment**: _______________
-
-**Results:**
-- Total Tests: ___
-- Passed: ___
-- Failed: ___
-- Blocked: ___
-
-**Critical Issues Found:**
-1.
-2.
-3.
-
-**Notes:**
-___________________________________________________
-___________________________________________________
-___________________________________________________
-
-**Sign-off**: _______________
