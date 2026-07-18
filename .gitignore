@@ -1,31 +1,49 @@
-# Testing & Development Dependencies
+# Composer
 composer.json
 composer.lock
-phpunit.xml
 vendor/
-tests/
 
-# IDE Files
-.idea/
+# PHPUnit
+phpunit.xml
+.phpunit.result.cache
+
+# IDEs
 .vscode/
+.idea/
 *.swp
 *.swo
 *~
-.project
-.settings/
-.buildpath
+*.sublime-*
 
-# OS Files
+# OS files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
-desktop.ini
 
-# Logs
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Log files
 *.log
-npm-debug.log
-yarn-error.log
 
-# Temporary Files
+# Temporary files
 *.tmp
 *.temp
-.cache/
+
+# Cache directories
+cache/
+var/cache/
+
+# Build artifacts
+*.min.js.map
+*.min.css.map
+
+# Environment files
+.env
+.env.local

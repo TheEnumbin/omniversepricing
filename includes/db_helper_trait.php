@@ -57,7 +57,31 @@ trait DatabaseHelper_Trait
 
     private function create_insert_query($product, $lang_id, $id_attribute = false, $attr_price = false, $price_type = 'current')
     {
+        // Get specific prices for the attribute if specified
         $specific_prices = SpecificPrice::getByProductId($product['id_product'], $id_attribute);
+
+        // Also get specific prices for the base product (id_attribute = 0)
+        // These apply to all combinations unless overridden
+        $base_specific_prices = SpecificPrice::getByProductId($product['id_product']);
+
+        // Merge them, prioritizing attribute-specific prices
+        if (!empty($base_specific_prices)) {
+            // Create a map of existing specific prices by key
+            $price_map = [];
+            foreach ($specific_prices as $price) {
+                $key = $price['id_specific_price'];
+                $price_map[$key] = $price;
+            }
+
+            // Add base prices that aren't overridden by attribute-specific prices
+            foreach ($base_specific_prices as $base_price) {
+                $key = $base_price['id_specific_price'];
+                // Only add if not already present (attribute-specific takes priority)
+                if (!isset($price_map[$key])) {
+                    $specific_prices[] = $base_price;
+                }
+            }
+        }
         $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
         $omni_tax_include_q = 0;
         $q = '';
@@ -94,35 +118,38 @@ trait DatabaseHelper_Trait
                 if (!$specific_price['id_currency'] && !$specific_price['id_group'] && !$specific_price['id_country']) {
                     $need_default = false;
                 }
+                // Calculate price for this specific price's customer group using priceCalculation
+                // This method accepts id_group parameter directly (8th parameter)
+                $specific_price_output = null;
+                $price_amount = Product::priceCalculation(
+                    $shop_id,  // id_shop
+                    (int) $product['id_product'],
+                    $specific_price['id_product_attribute'],
+                    $specific_price['id_country'] ?: 0,  // id_country (0 if not set)
+                    0,  // id_state
+                    '',  // zipcode
+                    $specific_price['id_currency'] ?: 0,  // id_currency (0 if not set)
+                    $specific_price['id_group'] ?: 0,  // id_group (8th parameter) - use the specific price's group
+                    1,  // quantity
+                    $omni_tax_include,  // use_tax
+                    6,  // decimals
+                    false,  // only_reduc
+                    $use_reduct,  // use_reduc
+                    true,  // with_ecotax
+                    $specific_price_output,  // specific_price (by reference)
+                    true  // use_group_reduction
+                );
+                // Add attribute price if needed
+                if ($attr_price !== false) {
+                    $price_amount += $attr_price;
+                }
 
+                // Convert price BACK to base/default currency before saving
+                // Product::priceCalculation() returns price converted to specific currency if id_currency is set
+                // We need to save in base currency so current exchange rates are used when displaying
+                // Tools::convertPrice($price, $currency, false) converts FROM currency TO default (divides by rate)
                 if ($specific_price['id_currency']) {
-                    $price_amount = $product['price'];
-
-                    if ($specific_price['reduction_type'] == 'amount') {
-                        $reduction_amount = $specific_price['reduction'];
-                        $reduction_amount = Tools::convertPrice($reduction_amount, $specific_price['id_currency']);
-                        $attr_price = Tools::convertPrice($attr_price, $specific_price['id_currency']);
-                        $price_amount = Tools::convertPrice($price_amount, $specific_price['id_currency']);
-                        $price_amount += $attr_price;
-                        $specific_price_reduction = $reduction_amount;
-                        $address = new Address();
-                        $use_tax = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
-                        $tax_manager = TaxManagerFactory::getManager($address, Product::getIdTaxRulesGroupByIdProduct((int) $product['id_product'], $context));
-                        $product_tax_calculator = $tax_manager->getTaxCalculator();
-
-                        if (!$use_tax && $specific_price['reduction_tax']) {
-                            $specific_price_reduction = $product_tax_calculator->removeTaxes($specific_price_reduction);
-                        }
-                        if ($use_tax && !$specific_price['reduction_tax']) {
-                            $specific_price_reduction = $product_tax_calculator->addTaxes($specific_price_reduction);
-                        }
-                    } else {
-                        $attr_price = Tools::convertPrice($attr_price, $specific_price['id_currency']);
-                        $price_amount = Tools::convertPrice($price_amount, $specific_price['id_currency']);
-                        $price_amount += $attr_price;
-                        $specific_price_reduction = $price_amount * $specific_price['reduction'];
-                    }
-                    $price_amount -= $specific_price_reduction;
+                    $price_amount = Tools::convertPrice($price_amount, $specific_price['id_currency'], false);
                 }
                 $existing = $this->check_existance($product['id_product'], $lang_id, $price_amount, $specific_price['id_product_attribute'], $specific_price['id_country'], $specific_price['id_currency'], $specific_price['id_group']);
 
@@ -153,6 +180,151 @@ trait DatabaseHelper_Trait
         if ($q != '') {
             $q .= ',' . "\n";
         }
+        return $q;
+    }
+
+    /**
+     * Create insert query for a specific price
+     * Processes a single specific price entry and generates the appropriate INSERT query
+     */
+    private function create_insert_query_for_specific_price($product, $lang_id, $specific_price, $price_type = 'current')
+    {
+        $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
+        $omni_tax_include_q = 0;
+        $context = Context::getContext();
+        $shop_id = $context->shop->id;
+        $use_reduct = true;
+
+        if ($price_type == 'old_price') {
+            $use_reduct = false;
+        }
+        if ($omni_tax_include) {
+            $omni_tax_include = true;
+            $omni_tax_include_q = 1;
+        } else {
+            $omni_tax_include = false;
+            $omni_tax_include_q = 0;
+        }
+
+        // Calculate price for this specific price's customer group using priceCalculation
+        $specific_price_output = null;
+        $price_amount = Product::priceCalculation(
+            $shop_id,
+            (int) $product['id_product'],
+            $specific_price['id_product_attribute'],
+            $specific_price['id_country'] ?: 0,
+            0,
+            '',
+            $specific_price['id_currency'] ?: 0,
+            $specific_price['id_group'] ?: 0,
+            1,
+            $omni_tax_include,
+            6,
+            false,
+            $use_reduct,
+            true,
+            $specific_price_output,
+            true
+        );
+
+        if ($price_amount === null || $price_amount == 0) {
+            return '';
+        }
+
+        // Convert price BACK to base/default currency before saving
+        // Product::priceCalculation() returns price converted to specific currency if id_currency is set
+        // We need to save in base currency so current exchange rates are used when displaying
+        // Tools::convertPrice($price, $currency, false) converts FROM currency TO default (divides by rate)
+        if ($specific_price['id_currency']) {
+            $price_amount = Tools::convertPrice($price_amount, $specific_price['id_currency'], false);
+        }
+
+        // Check if already exists
+        $existing = $this->check_existance(
+            $product['id_product'],
+            $lang_id,
+            $price_amount,
+            $specific_price['id_product_attribute'],
+            $specific_price['id_country'],
+            $specific_price['id_currency'],
+            $specific_price['id_group']
+        );
+
+        if (!empty($existing)) {
+            return '';
+        }
+
+        $q = '(' . $product['id_product'] . ','
+            . $specific_price['id_product_attribute'] . ','
+            . $specific_price['id_country'] . ','
+            . $specific_price['id_currency'] . ','
+            . $specific_price['id_group'] . ','
+            . $price_amount . ',1,"' . date('Y-m-d') . '",'
+            . $shop_id . ',' . $lang_id . ','
+            . $omni_tax_include_q . '),' . "\n";
+
+        return $q;
+    }
+
+    /**
+     * Create insert query for default price
+     * Creates an insert query for the default price of an attribute (no specific price)
+     */
+    private function create_insert_query_for_default_price($product, $lang_id, $id_attribute, $attr_price, $price_type = 'current')
+    {
+        $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
+        $omni_tax_include_q = 0;
+        $context = Context::getContext();
+        $shop_id = $context->shop->id;
+        $use_reduct = true;
+
+        if ($price_type == 'old_price') {
+            $use_reduct = false;
+        }
+        if ($omni_tax_include) {
+            $omni_tax_include = true;
+            $omni_tax_include_q = 1;
+        } else {
+            $omni_tax_include = false;
+            $omni_tax_include_q = 0;
+        }
+
+        if ($id_attribute === false) {
+            $id_attribute = 0;
+        }
+
+        $price_amount = Product::getPriceStatic(
+            (int) $product['id_product'],
+            $omni_tax_include,
+            $id_attribute,
+            6,
+            null,
+            false,
+            $use_reduct
+        );
+
+        if ($price_amount === null || $price_amount == 0) {
+            return '';
+        }
+
+        // Add attribute price if needed
+        if ($attr_price !== false) {
+            $price_amount += $attr_price;
+        }
+
+        // Check if already exists
+        $existing = $this->check_existance($product['id_product'], $lang_id, $price_amount, $id_attribute);
+
+        if (!empty($existing)) {
+            return '';
+        }
+
+        $q = '(' . $product['id_product'] . ','
+            . $id_attribute . ','
+            . '0,0,0,'
+            . $price_amount . ',0,"' . date('Y-m-d') . '",'
+            . $shop_id . ',' . $lang_id . ','
+            . $omni_tax_include_q . '),' . "\n";
 
         return $q;
     }

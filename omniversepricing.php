@@ -1393,7 +1393,7 @@ class Omniversepricing extends Module
             $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT');
             if ($omni_if_current) {
                 $omniversepricinge_percentage = '0%';
-                $return_arr['omni_price'] = $priceFormatter->convertAndFormat($price_amount);
+                $return_arr['omni_price'] = $priceFormatter->format($price_amount);
                 $return_arr['omni_percent'] = $omniversepricinge_percentage;
                 return $return_arr;
             }
@@ -1553,6 +1553,7 @@ class Omniversepricing extends Module
         WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q . ' AND oc.`id_currency` = 0 AND oc.`id_country` = 0';
         $result = Db::getInstance()->executeS($q_1 . ' UNION ' . $q_2);
+
         if (isset($result)) {
             if (isset($result[0][$this->name . '_price']) && $result[0][$this->name . '_price'] != null) {
                 return $result[0][$this->name . '_price'];
