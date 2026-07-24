@@ -51,7 +51,6 @@ if (empty($table_check)) {
         `status` ENUM(\'pending\', \'processing\', \'synced\') DEFAULT \'pending\',
         `date_added` datetime DEFAULT CURRENT_TIMESTAMP,
         `date_synced` datetime DEFAULT NULL,
-        `error_message` TEXT NULL,
         PRIMARY KEY (`id_sync_flag`),
         INDEX `status` (`status`),
         INDEX `product_shop` (`product_id`, `shop_id`),
@@ -69,6 +68,8 @@ foreach ($sql as $query) {
 // Register hooks for smart cron functionality
 $module->registerHook('actionProductAdd');
 $module->registerHook('actionProductDelete');
+$module->registerHook('actionProductAttributeAdd');
+$module->registerHook('actionProductAttributeUpdate');
 // Note: actionProductUpdate should already be registered, but register it to be safe
 $module->registerHook('actionProductUpdate');
 

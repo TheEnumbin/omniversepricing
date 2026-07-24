@@ -156,8 +156,7 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
             Db::getInstance()->execute(
                 'UPDATE `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`
                 SET `status` = "synced",
-                    `date_synced` = NOW(),
-                    `error_message` = NULL
+                    `date_synced` = NOW()
                 WHERE `product_id` IN (' . implode(',', array_map('intval', $productIds)) . ')
                 AND `shop_id` = ' . (int) $shop_id
             );

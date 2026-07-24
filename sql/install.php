@@ -51,7 +51,6 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'omniversepricing_sync_f
     `status` ENUM(\'pending\', \'processing\', \'synced\') DEFAULT \'pending\',
     `date_added` datetime DEFAULT CURRENT_TIMESTAMP,
     `date_synced` datetime DEFAULT NULL,
-    `error_message` TEXT NULL,
     PRIMARY KEY (`id_sync_flag`),
     INDEX `status` (`status`),
     INDEX `product_shop` (`product_id`, `shop_id`),

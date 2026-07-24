@@ -106,6 +106,8 @@ class Omniversepricing extends Module
         && $this->registerHook('actionProductAdd')
         && $this->registerHook('actionProductUpdate')
         && $this->registerHook('actionProductDelete')
+        && $this->registerHook('actionProductAttributeAdd')
+        && $this->registerHook('actionProductAttributeUpdate')
         && $this->registerHook('actionObjectSpecificPriceAddAfter')
         && $this->registerHook('actionObjectSpecificPriceUpdateAfter')
         && $this->registerHook('displayBackOfficeHeader')
@@ -1212,6 +1214,32 @@ class Omniversepricing extends Module
     }
 
     /**
+     * Hook called when a product attribute/combination is added
+     * Flags the product for smart cron sync
+     */
+    public function hookActionProductAttributeAdd($params)
+    {
+        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
+
+        if ($history_func == 'smart_cron') {
+            $this->flagProductForSync($params['id_product']);
+        }
+    }
+
+    /**
+     * Hook called when a product attribute/combination is updated
+     * Flags the product for smart cron sync
+     */
+    public function hookActionProductAttributeUpdate($params)
+    {
+        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
+
+        if ($history_func == 'smart_cron') {
+            $this->flagProductForSync($params['id_product']);
+        }
+    }
+
+    /**
      * Hook called when a product is deleted
      * Removes all price history for this product
      */
@@ -1255,8 +1283,7 @@ class Omniversepricing extends Module
                 VALUES (' . (int) $product_id . ', ' . (int) $shop_id . ', \'pending\', NOW())
                 ON DUPLICATE KEY UPDATE
                 `status` = \'pending\',
-                `date_added` = NOW(),
-                `error_message` = NULL'
+                `date_added` = NOW()'
             );
         }
     }
