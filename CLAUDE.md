@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Working Guidelines
+
+**IMPORTANT**: When working on this codebase:
+
+1. **Only do what is explicitly asked** - Do not refactor, optimize, or improve code beyond the specific task requested
+2. **Suggestions in separate paragraphs** - If you have suggestions, ideas, or recommendations, present them in a separate paragraph after completing the task
+3. **Optimization suggestions separate** - If you see opportunities for optimization or better approaches, mention them separately and clearly as suggestions, not as part of the implementation
+4. **No proactive changes** - Do not fix unrelated issues, add features, or make improvements unless specifically requested
+5. **Report bugs first** - If you find coding issues or bugs while implementing, STOP and report them to the user before making any changes
+6. **Remind about milestones** - Before starting work, remind the user to set a milestone/git commit so they can rollback if needed
+
 ## Module Overview
 
 **OmniversePricing** is a PrestaShop module that implements pricing compliance with the EU Omnibus Directive. It tracks and displays the lowest price of products over the past 30 days, showing price comparison notices on product pages and generating price history charts.
@@ -9,8 +20,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Version**: 1.2.2 | **Author**: TheEnumbin
 
 ## Build/Development Commands
-
-This is a traditional PrestaShop module with no modern build system (no npm/yarn, no composer). Development is straightforward:
 
 - **No build step required** - PHP and JavaScript are used directly
 - **CSS is generated dynamically** via `generateCustomCSS()` method in the main class
@@ -20,8 +29,6 @@ This is a traditional PrestaShop module with no modern build system (no npm/yarn
 ## Architecture
 
 ### Main Class: `Omniversepricing` (omniversepricing.php)
-
-The core module class extending PrestaShop's `Module`. Contains all business logic:
 
 **Key Methods:**
 | Method | Purpose |
@@ -39,36 +46,17 @@ The core module class extending PrestaShop's `Module`. Contains all business log
 
 | File | Purpose |
 |------|---------|
-| `controllers/front/frontajax.php` | AJAX endpoint for chart data (`module-front-ajax`) |
+| `controllers/front/frontajax.php` | AJAX endpoint for chart data |
 | `controllers/front/sync.php` | Manual/batch price synchronization |
 | `controllers/admin/AdminAjaxOmniverseController.php` | Admin tab for ajax operations |
 
-### Database Schema
-
-**Table**: `ps_omniversepricing_products`
-
-| Fields | Description |
-|--------|-------------|
-| `id_omniversepricing` | Primary key |
-| `product_id`, `id_product_attribute` | Product identification (supports combinations) |
-| `id_country`, `id_currency`, `id_group` | Context-aware pricing |
-| `price`, `promo` | Price information |
-| `date`, `shop_id`, `lang_id` | Metadata |
-
-### Frontend Templates
+### Frontend
 
 | File | Purpose |
 |------|---------|
 | `views/templates/front/omni_front.tpl` | Price notice display on product page |
 | `views/templates/front/omni_chart.tpl` | Modal with Chart.js price history |
-
-### Frontend JavaScript
-
-**`views/js/front.js`**: Uses Chart.js for price visualization, listens for PrestaShop events:
-- `prestashop.on('updatedProduct')` - Product variant change
-- `prestashop.on('updatedProductCombination')` - Combination change
-
-Calls `initMyChart()` on load and after changes.
+| `views/js/front.js` | Chart.js visualization, listens for product/combination updates |
 
 ### Configuration Options (stored in `ps_configuration`)
 
@@ -79,9 +67,8 @@ All prefixed with `OMNIVERSEPRICING_`:
 - `NOTICE_STYLE` - Display style: `'mixed'`, `'badge'`, `'text'`
 - `PRICE_WITH_TAX` - Include tax in recorded prices
 - `SHOW_IF_CURRENT` - Show notice even if current price is lowest
-- `AUTO_DELETE_OLD` / `DELETE_DATE` - Automatic data cleanup
 
-## Important Contexts
+## Important Concepts
 
 ### Context-Aware Pricing
 Prices are recorded per: **country + currency + customer group + shop + language**. Always retrieve with matching context.
@@ -96,12 +83,3 @@ The module integrates with PrestaShop's event system through hooks. Key hooks re
 - `displayHeader` - Asset loading
 - `displayAdminProductsExtra` - Admin price history view
 
-### SQL Union Query
-The `omniversepricing_get_price()` method uses a UNION query to find the minimum price across the 30-day history, handling both regular and promotional prices.
-
-## Security Notes
-
-- Database queries use Db::getInstance()->executeS() with proper parameter binding
-- Dynamic CSS output is sanitized through `generateCustomCSS()`
-- Configuration values are properly escaped using `Tools::htmlentitiesUTF8()`
-- AJAX controller validates requests via PrestaShop's controller system

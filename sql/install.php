@@ -41,10 +41,7 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'omniversepricing_produc
     `shop_id` int(11),
     `lang_id` int(11),
     `with_tax` int(11),
-    `sync_status` ENUM(\'pending\', \'synced\') DEFAULT \'synced\',
-    `last_sync_date` DATE NULL DEFAULT NULL,
-    PRIMARY KEY  (`id_omniversepricing`),
-    INDEX `sync_status` (`sync_status`)
+    PRIMARY KEY  (`id_omniversepricing`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
 foreach ($sql as $query) {

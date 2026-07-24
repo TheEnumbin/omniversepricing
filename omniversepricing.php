@@ -1096,9 +1096,6 @@ class Omniversepricing extends Module
                         $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include);
                     }
                 }
-            } elseif ($history_func == 'w_cron') {
-                // Smart sync: flag product for cron processing
-                $this->flagProductForSync($params['id_product']);
             }
         }
     }
@@ -1143,9 +1140,6 @@ class Omniversepricing extends Module
                         $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include, $params['object']);
                     }
                 }
-            } elseif ($history_func == 'w_cron') {
-                // Smart sync: flag product for cron processing
-                $this->flagProductForSync($params['object']->id_product);
             }
         }
     }
@@ -1190,24 +1184,16 @@ class Omniversepricing extends Module
                         $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include, $params['object']);
                     }
                 }
-            } elseif ($history_func == 'w_cron') {
-                // Smart sync: flag product for cron processing
-                $this->flagProductForSync($params['object']->id_product);
             }
         }
     }
 
     /**
      * Hook called when a product is added
-     * Flags the product for sync if using w_cron mode
      */
     public function hookActionProductAdd($params)
     {
-        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
-
-        if ($history_func == 'w_cron') {
-            $this->flagProductForSync($params['id_product']);
-        }
+        // This hook is intentionally empty for now
     }
 
     /**
@@ -1219,55 +1205,6 @@ class Omniversepricing extends Module
         Db::getInstance()->execute(
             'DELETE FROM `' . _DB_PREFIX_ . 'omniversepricing_products`
             WHERE `product_id` = ' . (int) $params['id_product']
-        );
-    }
-
-    /**
-     * Flag a product for sync by setting sync_status to 'pending'
-     * Creates placeholder entries for all shop/language combinations if none exist
-     *
-     * @param int $product_id
-     * @return void
-     */
-    private function flagProductForSync($product_id)
-    {
-        $shop_id = $this->context->shop->id;
-        $languages = Language::getLanguages(true);
-
-        // Ensure there are entries to update (create placeholders if needed)
-        foreach ($languages as $lang) {
-            $check = Db::getInstance()->getValue(
-                'SELECT COUNT(*) FROM `' . _DB_PREFIX_ . 'omniversepricing_products`
-                WHERE `product_id` = ' . (int) $product_id . '
-                AND `shop_id` = ' . (int) $shop_id . '
-                AND `lang_id` = ' . (int) $lang['id_lang']
-            );
-
-            if (!$check) {
-                // Create placeholder entry
-                Db::getInstance()->insert('omniversepricing_products', [
-                    'product_id' => (int) $product_id,
-                    'id_product_attribute' => 0,
-                    'id_country' => 0,
-                    'id_currency' => 0,
-                    'id_group' => 0,
-                    'price' => 0,
-                    'promo' => 0,
-                    'date' => date('Y-m-d'),
-                    'shop_id' => (int) $shop_id,
-                    'lang_id' => (int) $lang['id_lang'],
-                    'with_tax' => 0,
-                    'sync_status' => 'pending',
-                ]);
-            }
-        }
-
-        // Set all entries for this product to pending
-        Db::getInstance()->execute(
-            'UPDATE `' . _DB_PREFIX_ . 'omniversepricing_products`
-            SET `sync_status` = "pending"
-            WHERE `product_id` = ' . (int) $product_id . '
-            AND `shop_id` = ' . (int) $shop_id
         );
     }
 
