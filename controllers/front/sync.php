@@ -47,6 +47,7 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
         }
 
         $today = date('j-n-Y');
+        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
 
         // Get price_type from GET parameter, fallback to config, then default to 'current'
         $price_type = Tools::getValue('price_type', Configuration::get('OMNIVERSEPRICING_SYNC_PRICE_TYPE') ?: 'current');
@@ -56,10 +57,114 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
             $price_type = 'current';
         }
 
-        // Process sync using offset-based method
-        $this->processSync($price_type);
+        // Route based on sync method
+        if ($history_func == 'smart_cron') {
+            // Smart sync: Only process products flagged as pending
+            $this->processSmartSync($price_type);
+        } else {
+            // Offset-based sync: Process all products sequentially
+            $this->processSync($price_type);
+        }
 
         exit;
+    }
+
+    /**
+     * Process Smart Sync: Only sync products flagged as pending
+     * Optimized for worst case scenario where all products might be pending
+     *
+     * @param string $price_type
+     * @return void
+     */
+    private function processSmartSync($price_type)
+    {
+        $startTime = time();
+        $context = Context::getContext();
+        $shop_id = $context->shop->id;
+        $languages = Language::getLanguages(false);
+
+        // Keep processing until time limit
+        while ((time() - $startTime) < self::MAX_EXECUTION_TIME) {
+            // Get batch of pending product IDs for current shop
+            $pendingProducts = Db::getInstance()->executeS(
+                'SELECT DISTINCT product_id
+                FROM `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`
+                WHERE `status` = "pending"
+                AND `shop_id` = ' . (int) $shop_id . '
+                LIMIT ' . (int) self::PRODUCT_BATCH_SIZE
+            );
+
+            if (empty($pendingProducts)) {
+                // No more pending products - sync complete
+                exit;
+            }
+
+            $productIds = array_column($pendingProducts, 'product_id');
+
+            // Process each language
+            foreach ($languages as $lang) {
+                // Fetch full product details for these IDs
+                $sql = 'SELECT p.*, product_shop.*, pl.*
+                        FROM `' . _DB_PREFIX_ . 'product` p
+                        ' . Shop::addSqlAssociation('product', 'p') . '
+                        LEFT JOIN `' . _DB_PREFIX_ . 'product_lang` pl ON (p.`id_product` = pl.`id_product` ' . Shop::addSqlRestrictionOnLang('pl') . ')
+                        WHERE pl.`id_lang` = ' . (int) $lang['id_lang'] . '
+                        AND p.`id_product` IN (' . implode(',', array_map('intval', $productIds)) . ')';
+
+                $products = Db::getInstance()->executeS($sql);
+
+                if (empty($products)) {
+                    continue;
+                }
+
+                // Batch fetch all attributes for these products
+                $allAttributes = $this->getBatchProductAttributes($productIds);
+
+                $insert_q = '';
+                foreach ($products as $product) {
+                    $attributes = $allAttributes[$product['id_product']] ?? [];
+
+                    if (!empty($attributes)) {
+                        foreach ($attributes as $attribute) {
+                            $insert_q .= $this->create_insert_query(
+                                $product,
+                                $lang['id_lang'],
+                                $attribute['id_product_attribute'],
+                                $attribute['price'],
+                                $price_type
+                            );
+                        }
+                    } else {
+                        $insert_q .= $this->create_insert_query(
+                            $product,
+                            $lang['id_lang'],
+                            false,
+                            false,
+                            $price_type
+                        );
+                    }
+                }
+
+                if ($insert_q != '') {
+                    $insert_q = rtrim($insert_q, ',' . "\n");
+                    $fullQuery = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`, `with_tax`) VALUES $insert_q";
+                    Db::getInstance()->execute($fullQuery);
+                }
+            }
+
+            // Mark processed products as synced
+            Db::getInstance()->execute(
+                'UPDATE `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`
+                SET `status` = "synced",
+                    `date_synced` = NOW(),
+                    `error_message` = NULL
+                WHERE `product_id` IN (' . implode(',', array_map('intval', $productIds)) . ')
+                AND `shop_id` = ' . (int) $shop_id
+            );
+
+            // Small sleep to reduce CPU spike
+            usleep(10000); // 0.01 seconds
+        }
     }
 
     /**

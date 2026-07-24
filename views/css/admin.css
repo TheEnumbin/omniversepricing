@@ -68,3 +68,8 @@
     border-radius: 2px;
     font-weight: 600;
   }
+
+.history-func-select-width {
+  width: 100% !important;
+  max-width: 600px !important;
+}

@@ -10,7 +10,7 @@
  * http://opensource.org/licenses/afl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@prestashop.com so we can send you a copy immediately.
+ * to license@prestashop.com so we can send a copy immediately.
  *
  * DISCLAIMER
  *
@@ -34,37 +34,29 @@ if (!$module) {
     return false;
 }
 
-// This script adds the smart sync columns to support the new sync strategy
+// This script adds the sync_flags table for smart cron functionality
 $sql = [];
 
-// Add sync_status column if it doesn't exist
-$column_check = Db::getInstance()->executeS(
-    'SHOW COLUMNS FROM `' . _DB_PREFIX_ . 'omniversepricing_products` LIKE "sync_status"'
+// Check if table exists
+$table_check = Db::getInstance()->executeS(
+    'SHOW TABLES LIKE \'' . _DB_PREFIX_ . 'omniversepricing_sync_flags\''
 );
 
-if (empty($column_check)) {
-    $sql[] = 'ALTER TABLE `' . _DB_PREFIX_ . 'omniversepricing_products`
-    ADD COLUMN `sync_status` ENUM(\'pending\', \'synced\') DEFAULT \'synced\' AFTER `with_tax`';
-}
-
-// Add last_sync_date column if it doesn't exist
-$column_check = Db::getInstance()->executeS(
-    'SHOW COLUMNS FROM `' . _DB_PREFIX_ . 'omniversepricing_products` LIKE "last_sync_date"'
-);
-
-if (empty($column_check)) {
-    $sql[] = 'ALTER TABLE `' . _DB_PREFIX_ . 'omniversepricing_products`
-    ADD COLUMN `last_sync_date` DATE NULL DEFAULT NULL AFTER `sync_status`';
-}
-
-// Add index on sync_status for performance
-$index_check = Db::getInstance()->executeS(
-    'SHOW INDEX FROM `' . _DB_PREFIX_ . 'omniversepricing_products` WHERE Key_name = "sync_status"'
-);
-
-if (empty($index_check)) {
-    $sql[] = 'ALTER TABLE `' . _DB_PREFIX_ . 'omniversepricing_products`
-    ADD INDEX `sync_status` (`sync_status`)';
+if (empty($table_check)) {
+    // Create the sync_flags table
+    $sql[] = 'CREATE TABLE `' . _DB_PREFIX_ . 'omniversepricing_sync_flags` (
+        `id_sync_flag` int(11) NOT NULL AUTO_INCREMENT,
+        `product_id` int(11) NOT NULL,
+        `shop_id` int(11) NOT NULL,
+        `status` ENUM(\'pending\', \'processing\', \'synced\') DEFAULT \'pending\',
+        `date_added` datetime DEFAULT CURRENT_TIMESTAMP,
+        `date_synced` datetime DEFAULT NULL,
+        `error_message` TEXT NULL,
+        PRIMARY KEY (`id_sync_flag`),
+        INDEX `status` (`status`),
+        INDEX `product_shop` (`product_id`, `shop_id`),
+        UNIQUE KEY `unique_product_shop` (`product_id`, `shop_id`)
+    ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8';
 }
 
 // Execute all queries

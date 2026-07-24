@@ -44,6 +44,20 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'omniversepricing_produc
     PRIMARY KEY  (`id_omniversepricing`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'omniversepricing_sync_flags` (
+    `id_sync_flag` int(11) NOT NULL AUTO_INCREMENT,
+    `product_id` int(11) NOT NULL,
+    `shop_id` int(11) NOT NULL,
+    `status` ENUM(\'pending\', \'processing\', \'synced\') DEFAULT \'pending\',
+    `date_added` datetime DEFAULT CURRENT_TIMESTAMP,
+    `date_synced` datetime DEFAULT NULL,
+    `error_message` TEXT NULL,
+    PRIMARY KEY (`id_sync_flag`),
+    INDEX `status` (`status`),
+    INDEX `product_shop` (`product_id`, `shop_id`),
+    UNIQUE KEY `unique_product_shop` (`product_id`, `shop_id`)
+) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
 foreach ($sql as $query) {
     if (Db::getInstance()->execute($query) == false) {
         return false;

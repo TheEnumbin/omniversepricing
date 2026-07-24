@@ -222,6 +222,7 @@ class Omniversepricing extends Module
                 ],
                 'input' => [
                     [
+                        'col' => 6,
                         'type' => 'select',
                         'label' => $this->l('How to Keep Price History?'),
                         'name' => 'OMNIVERSEPRICING_HISTORY_FUNC',
@@ -237,7 +238,11 @@ class Omniversepricing extends Module
                                 ],
                                 [
                                     'id' => 'w_cron',
-                                    'name' => $this->l('Automated with Cron'),
+                                    'name' => $this->l('Automated with Cron (Offset-based batch processing)'),
+                                ],
+                                [
+                                    'id' => 'smart_cron',
+                                    'name' => $this->l('Automated with Cron (Smart - Only sync modified products)'),
                                 ],
                                 [
                                     'id' => 'w_hook',
@@ -247,6 +252,7 @@ class Omniversepricing extends Module
                             'id' => 'id',
                             'name' => 'name',
                         ],
+                        "class" => " history-func-select-width",
                         'tab' => 'general',
                     ],
                     [
@@ -1096,6 +1102,9 @@ class Omniversepricing extends Module
                         $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include);
                     }
                 }
+            } elseif ($history_func == 'smart_cron') {
+                // Smart sync: flag product for cron processing
+                $this->flagProductForSync($params['id_product']);
             }
         }
     }
@@ -1140,6 +1149,9 @@ class Omniversepricing extends Module
                         $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include, $params['object']);
                     }
                 }
+            } elseif ($history_func == 'smart_cron') {
+                // Smart sync: flag product for cron processing
+                $this->flagProductForSync($params['object']->id_product);
             }
         }
     }
@@ -1184,6 +1196,9 @@ class Omniversepricing extends Module
                         $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include, $params['object']);
                     }
                 }
+            } elseif ($history_func == 'smart_cron') {
+                // Smart sync: flag product for cron processing
+                $this->flagProductForSync($params['object']->id_product);
             }
         }
     }
@@ -1206,6 +1221,44 @@ class Omniversepricing extends Module
             'DELETE FROM `' . _DB_PREFIX_ . 'omniversepricing_products`
             WHERE `product_id` = ' . (int) $params['id_product']
         );
+
+        // Also remove from sync flags table
+        Db::getInstance()->execute(
+            'DELETE FROM `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`
+            WHERE `product_id` = ' . (int) $params['id_product']
+        );
+    }
+
+    /**
+     * Flag a product for sync by adding/updating entry in sync_flags table
+     * Only flags products that already exist in omniversepricing_products table
+     *
+     * @param int $product_id
+     * @return void
+     */
+    private function flagProductForSync($product_id)
+    {
+        $shop_id = $this->context->shop->id;
+
+        // Check if product exists in omniversepricing_products table
+        $exists = Db::getInstance()->getValue(
+            'SELECT COUNT(*) FROM `' . _DB_PREFIX_ . 'omniversepricing_products`
+            WHERE `product_id` = ' . (int) $product_id . '
+            AND `shop_id` = ' . (int) $shop_id
+        );
+
+        if ($exists) {
+            // Insert or update sync flag
+            Db::getInstance()->execute(
+                'INSERT INTO `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`
+                (`product_id`, `shop_id`, `status`, `date_added`)
+                VALUES (' . (int) $product_id . ', ' . (int) $shop_id . ', \'pending\', NOW())
+                ON DUPLICATE KEY UPDATE
+                `status` = \'pending\',
+                `date_added` = NOW(),
+                `error_message` = NULL'
+            );
+        }
     }
 
     /**
