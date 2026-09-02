@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -32,9 +33,9 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
 {
     use DatabaseHelper_Trait;
 
-    const MAX_EXECUTION_TIME = 50; // seconds (safe under typical 60s PHP limit)
-    const PRODUCT_BATCH_SIZE = 500; // Products per batch
-    const MAX_SERVER_LOAD = 5.0; // Skip sync if server load exceeds this
+    public const MAX_EXECUTION_TIME = 50; // seconds (safe under typical 60s PHP limit)
+    public const PRODUCT_BATCH_SIZE = 500; // Products per batch
+    public const MAX_SERVER_LOAD = 5.0; // Skip sync if server load exceeds this
 
     public function initContent()
     {
@@ -140,6 +141,7 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
      * This eliminates the N+1 query problem
      *
      * @param array $productIds Array of product IDs
+     *
      * @return array Attributes grouped by product_id
      */
     private function getBatchProductAttributes(array $productIds)
