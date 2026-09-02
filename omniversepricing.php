@@ -542,7 +542,8 @@ class Omniversepricing extends Module
                     ],
                     [
                         'type' => 'switch',
-                        'label' => $this->l('Delete Data Before 30 Days?'),
+                        'label' => $this->l('Delete Data Older Than Days Limit?'),
+                        'desc' => $this->l('Deletes price history older than the configured Days Limit.'),
                         'name' => 'OMNIVERSEPRICING_DELETE_OLD',
                         'values' => [
                             [
@@ -769,7 +770,7 @@ class Omniversepricing extends Module
             } elseif ($key == 'OMNIVERSEPRICING_DELETE_OLD') {
                 if (Tools::getValue($key)) {
                     $date = date('Y-m-d');
-                    $days_limit = (int) Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT', 30);
+                    $days_limit = (int) Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT', null, null, null, 30);
                     $date_range = date('Y-m-d', strtotime('-' . ($days_limit + 1) . ' days'));
                     Db::getInstance()->execute(
                         'DELETE FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
@@ -790,6 +791,13 @@ class Omniversepricing extends Module
                     Configuration::updateValue('OMNIVERSEPRICING_CRON_DATE', $yesterday);
                     Configuration::updateValue('OMNIVERSEPRICING_LAST_SYNC', 0);
                 }
+            } elseif ($key == 'OMNIVERSEPRICING_DAYS_LIMIT') {
+                $days_limit = (int) Tools::getValue($key);
+                if ($days_limit < 1) {
+                    $days_limit = 30;
+                }
+                Configuration::updateValue($key, $days_limit);
+                continue;
             }
 
             Configuration::updateValue($key, Tools::getValue($key));
@@ -886,7 +894,7 @@ class Omniversepricing extends Module
 
         if ($omni_auto_del) {
             $date = date('Y-m-d');
-            $days_limit = (int) Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT', 30);
+            $days_limit = (int) Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT', null, null, null, 30);
             $date_range = date('Y-m-d', strtotime('-' . ($days_limit + 1) . ' days'));
             $omniversepricing_delete_date = Configuration::get('OMNIVERSEPRICING_DELETE_DATE');
             if ($omniversepricing_delete_date == $date_range) {
@@ -1459,7 +1467,7 @@ class Omniversepricing extends Module
                        WHERE ' . $curre_q . $countr_q . $group_q . ')';
         }
         $date = date('Y-m-d');
-        $days_limit = (int) Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT', 30);
+        $days_limit = (int) Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT', null, null, null, 30);
         $date_range = date('Y-m-d', strtotime('-' . ($days_limit + 1) . ' days'));
         $q_1 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
         WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
