@@ -177,7 +177,7 @@ trait DatabaseHelper_Trait
         $order_way = 'ASC',
         $id_category = false,
         $only_active = false,
-        Context $context = null
+        Context|null $context = null
     ) {
         if (!$context) {
             $context = Context::getContext();
