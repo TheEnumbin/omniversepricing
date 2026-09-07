@@ -167,6 +167,7 @@ class Omniversepricing extends Module
     {
         // Fetch and render the template file
         $this->context->smarty->assign('module_dir', $this->_path);
+
         return $this->context->smarty->fetch($this->local_path . 'views/templates/admin/advertise_template.tpl');
     }
 
@@ -797,6 +798,7 @@ class Omniversepricing extends Module
                     $days_limit = 30;
                 }
                 Configuration::updateValue($key, $days_limit);
+
                 continue;
             }
 
@@ -825,7 +827,9 @@ class Omniversepricing extends Module
      * Generate the custom CSS securely using allowlist
      *
      * @param string $css_content The raw CSS content to save
+     *
      * @return bool
+     *
      * @throws Exception
      */
     public function generateCustomCSS($css_content)
@@ -856,6 +860,7 @@ class Omniversepricing extends Module
      * Sanitize the CSS content
      *
      * @param string $css_content
+     *
      * @return string
      */
     private function sanitizeCssContent($css_content)
@@ -963,6 +968,7 @@ class Omniversepricing extends Module
      *
      * @param int $id_product
      * @param int $id_lang
+     *
      * @return array
      */
     private function getProductCombinations($id_product, $id_lang)
@@ -1311,17 +1317,20 @@ class Omniversepricing extends Module
             }
             $return_arr['omni_price'] = $omniversepricinge_formatted_price;
             $return_arr['omni_percent'] = $omniversepricinge_percentage;
+
             return $return_arr;
-        } else {
-            $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT');
-            if ($omni_if_current) {
-                $omniversepricinge_percentage = '0%';
-                $return_arr['omni_price'] = $priceFormatter->convertAndFormat($price_amount);
-                $return_arr['omni_percent'] = $omniversepricinge_percentage;
-                return $return_arr;
-            }
-            return false;
         }
+
+        $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT');
+        if ($omni_if_current) {
+            $omniversepricinge_percentage = '0%';
+            $return_arr['omni_price'] = $priceFormatter->convertAndFormat($price_amount);
+            $return_arr['omni_percent'] = $omniversepricinge_percentage;
+
+            return $return_arr;
+        }
+
+        return false;
     }
 
     /**
@@ -1479,10 +1488,10 @@ class Omniversepricing extends Module
         if (isset($result)) {
             if (isset($result[0][$this->name . '_price']) && $result[0][$this->name . '_price'] != null) {
                 return $result[0][$this->name . '_price'];
-            } else {
-                if (isset($result[1][$this->name . '_price']) && $result[1][$this->name . '_price'] != null) {
-                    return $result[1][$this->name . '_price'];
-                }
+            }
+
+            if (isset($result[1][$this->name . '_price']) && $result[1][$this->name . '_price'] != null) {
+                return $result[1][$this->name . '_price'];
             }
         }
 

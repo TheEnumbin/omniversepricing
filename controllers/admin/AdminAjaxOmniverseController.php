@@ -62,14 +62,14 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             echo json_encode($returnarr);
 
             exit;
-        } else {
-            $returnarr = [
-                'success' => false,
-            ];
-            echo json_encode($returnarr);
-
-            exit;
         }
+
+        $returnarr = [
+            'success' => false,
+        ];
+        echo json_encode($returnarr);
+
+        exit;
     }
 
     /**
@@ -114,14 +114,14 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             echo json_encode($returnarr);
 
             exit;
-        } else {
-            $returnarr = [
-                'success' => false,
-            ];
-            echo json_encode($returnarr);
-
-            exit;
         }
+
+        $returnarr = [
+            'success' => false,
+        ];
+        echo json_encode($returnarr);
+
+        exit;
     }
 
     public function ajaxProcessDeleteCustomPrice()
@@ -140,14 +140,14 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             echo json_encode($returnarr);
 
             exit;
-        } else {
-            $returnarr = [
-                'success' => false,
-            ];
-            echo json_encode($returnarr);
-
-            exit;
         }
+
+        $returnarr = [
+            'success' => false,
+        ];
+        echo json_encode($returnarr);
+
+        exit;
     }
 
     public function ajaxProcessOmniDataSync()
@@ -178,23 +178,23 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                 $response = json_encode($response);
                 echo $response;
                 exit;
-            } else {
-                $response = [
-                    'success' => 1,
-                    'start' => $next_start,
-                    'which' => 5,
-                ];
-                $resp_extra = [];
-                if (isset($synced_ids) && !empty($synced_ids)) {
-                    $resp_extra = [
-                        'synced_ids' => $synced_ids,
-                    ];
-                }
-                $response = array_merge($response, $resp_extra);
-                $response = json_encode($response);
-                echo $response;
-                exit;
             }
+
+            $response = [
+                'success' => 1,
+                'start' => $next_start,
+                'which' => 5,
+            ];
+            $resp_extra = [];
+            if (isset($synced_ids) && !empty($synced_ids)) {
+                $resp_extra = [
+                    'synced_ids' => $synced_ids,
+                ];
+            }
+            $response = array_merge($response, $resp_extra);
+            $response = json_encode($response);
+            echo $response;
+            exit;
         }
 
         if ($final_end != '') {
@@ -207,12 +207,12 @@ class AdminAjaxOmniverseController extends ModuleAdminController
                 $response = json_encode($response);
                 echo $response;
                 exit;
+            }
+
+            if (($final_end - $start) < 5) {
+                $end = $final_end;
             } else {
-                if (($final_end - $start) < 5) {
-                    $end = $final_end;
-                } else {
-                    $end = (int) $start + (int) $end;
-                }
+                $end = (int) $start + (int) $end;
             }
         } else {
             $end = (int) $start + (int) $end;
@@ -267,41 +267,41 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             $response = json_encode($response);
             echo $response;
             exit;
-        } else {
-            $synced_ids = array_values(array_unique($synced_ids));
-            // $next_start = $start + $end;
-            $next_start = $end;
+        }
 
-            if ($final_end != '' && $next_start > $final_end) {
-                $next_start = $final_end;
-            } elseif ($next_start == $final_end) {
-                $response = [
-                    'success' => 1,
-                    'start' => 0,
-                    'which' => 2,
-                ];
-                $resp_extra = [];
-                if (!empty($synced_ids)) {
-                    $resp_extra = [
-                        'synced_ids' => $synced_ids,
-                    ];
-                }
+        $synced_ids = array_values(array_unique($synced_ids));
+        // $next_start = $start + $end;
+        $next_start = $end;
 
-                $response = array_merge($response, $resp_extra);
-                $response = json_encode($response);
-                echo $response;
-                exit;
-            }
-
+        if ($final_end != '' && $next_start > $final_end) {
+            $next_start = $final_end;
+        } elseif ($next_start == $final_end) {
             $response = [
                 'success' => 1,
-                'start' => $next_start,
-                'synced_ids' => $synced_ids,
-                'which' => 1,
+                'start' => 0,
+                'which' => 2,
             ];
+            $resp_extra = [];
+            if (!empty($synced_ids)) {
+                $resp_extra = [
+                    'synced_ids' => $synced_ids,
+                ];
+            }
+
+            $response = array_merge($response, $resp_extra);
             $response = json_encode($response);
             echo $response;
             exit;
         }
+
+        $response = [
+            'success' => 1,
+            'start' => $next_start,
+            'synced_ids' => $synced_ids,
+            'which' => 1,
+        ];
+        $response = json_encode($response);
+        echo $response;
+        exit;
     }
 }

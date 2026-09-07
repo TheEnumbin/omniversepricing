@@ -169,16 +169,8 @@ trait DatabaseHelper_Trait
         WHERE pa.`id_product` = ' . (int) $id_product);
     }
 
-    public function getProductsByIdRange(
-        $id_lang,
-        $id_start = null,
-        $id_end = null,
-        $order_by = 'id_product',
-        $order_way = 'ASC',
-        $id_category = false,
-        $only_active = false,
-        ?Context $context = null)
-        {
+    public function getProductsByIdRange($id_lang, $id_start = null, $id_end = null, $order_by = 'id_product', $order_way = 'ASC', $id_category = false, $only_active = false, ?Context $context = null)
+    {
         if (!$context) {
             $context = Context::getContext();
         }
