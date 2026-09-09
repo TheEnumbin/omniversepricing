@@ -64,65 +64,62 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
 
         $startTime = time();
         $offset = (int) Configuration::get('OMNIVERSEPRICING_SYNC_OFFSET', 0);
-        $context = Context::getContext();
-        $languages = Language::getLanguages(false);
+        // Prices are language-independent: process products ONCE using the default
+        // language (needed only for the product_lang name join, not for price data)
+        $id_lang = (int) Configuration::get('PS_LANG_DEFAULT');
 
         // Keep processing until time limit
         while ((time() - $startTime) < self::MAX_EXECUTION_TIME) {
             $hasMoreData = false;
 
-            foreach ($languages as $lang) {
-                $products = Product::getProducts(
-                    $lang['id_lang'],
-                    $offset,
-                    self::PRODUCT_BATCH_SIZE,
-                    'id_product',
-                    'ASC'
-                );
+            $products = Product::getProducts(
+                $id_lang,
+                $offset,
+                self::PRODUCT_BATCH_SIZE,
+                'id_product',
+                'ASC'
+            );
 
-                if (empty($products)) {
-                    // No more products - sync complete for today
-                    Configuration::updateValue('OMNIVERSEPRICING_SYNC_OFFSET', 0);
-                    Configuration::updateValue('OMNIVERSEPRICING_CRON_DATE', $today);
-                    exit;
-                }
+            if (empty($products)) {
+                // No more products - sync complete for today
+                Configuration::updateValue('OMNIVERSEPRICING_SYNC_OFFSET', 0);
+                Configuration::updateValue('OMNIVERSEPRICING_CRON_DATE', $today);
+                exit;
+            }
 
-                $hasMoreData = true;
+            $hasMoreData = true;
 
-                // Batch fetch all attributes for these products (single query)
-                $productIds = array_column($products, 'id_product');
-                $allAttributes = $this->getBatchProductAttributes($productIds);
+            // Batch fetch all attributes for these products (single query)
+            $productIds = array_column($products, 'id_product');
+            $allAttributes = $this->getBatchProductAttributes($productIds);
 
-                $insert_q = '';
-                foreach ($products as $product) {
-                    $attributes = $allAttributes[$product['id_product']] ?? [];
+            $insert_q = '';
+            foreach ($products as $product) {
+                $attributes = $allAttributes[$product['id_product']] ?? [];
 
-                    if (!empty($attributes)) {
-                        foreach ($attributes as $attribute) {
-                            $insert_q .= $this->create_insert_query(
-                                $product,
-                                $lang['id_lang'],
-                                $attribute['id_product_attribute'],
-                                $attribute['price'],
-                                $price_type
-                            );
-                        }
-                    } else {
+                if (!empty($attributes)) {
+                    foreach ($attributes as $attribute) {
                         $insert_q .= $this->create_insert_query(
                             $product,
-                            $lang['id_lang'],
-                            false,
-                            false,
+                            $attribute['id_product_attribute'],
+                            $attribute['price'],
                             $price_type
                         );
                     }
+                } else {
+                    $insert_q .= $this->create_insert_query(
+                        $product,
+                        false,
+                        false,
+                        $price_type
+                    );
                 }
+            }
 
-                if ($insert_q != '') {
-                    $insert_q = rtrim($insert_q, ',' . "\n");
-                    $fullQuery = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`, `with_tax`) VALUES $insert_q";
-                    Db::getInstance()->execute($fullQuery);
-                }
+            if ($insert_q != '') {
+                $insert_q = rtrim($insert_q, ',' . "\n");
+                $fullQuery = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`, `with_tax`) VALUES $insert_q";
+                Db::getInstance()->execute($fullQuery);
             }
 
             $offset += self::PRODUCT_BATCH_SIZE;

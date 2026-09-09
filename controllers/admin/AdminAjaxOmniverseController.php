@@ -28,15 +28,15 @@ class AdminAjaxOmniverseController extends ModuleAdminController
 
     public function ajaxProcessOmniverseChangeLang()
     {
-        $lang_id = Tools::getValue('langid');
         $shop_id = Tools::getValue('shopid');
         $prd_id = Tools::getValue('prdid');
         $id_product_attribute = Tools::getValue('id_product_attribute', 0);
         $omniverse_prices = [];
+        $seen = [];
         $results = Db::getInstance()->executeS(
             'SELECT *
             FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
-            WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+            WHERE oc.`shop_id` = ' . (int) $shop_id . '
             AND oc.`product_id` = ' . (int) $prd_id . '
             AND oc.`id_product_attribute` = ' . (int) $id_product_attribute . '
             ORDER BY date DESC',
@@ -44,6 +44,13 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         );
 
         foreach ($results as $result) {
+            // Deduplicate legacy per-language rows (same date/price/promo stored once per language)
+            $key = $result['date'] . '|' . $result['price'] . '|' . $result['promo'];
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+
             $omniverse_prices[$result['id_omniversepricing']]['id'] = $result['id_omniversepricing'];
             $omniverse_prices[$result['id_omniversepricing']]['date'] = $result['date'];
             $omniverse_prices[$result['id_omniversepricing']]['price'] = Context::getContext()->getCurrentLocale()->formatPrice($result['price'], Context::getContext()->currency->iso_code);
@@ -81,7 +88,6 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $price = Tools::getValue('price');
         $promodate = Tools::getValue('promodate');
         $pricetype = Tools::getValue('pricetype');
-        $lang_id = Tools::getValue('langid');
         $shop_id = Tools::getValue('shopid');
         $id_product_attribute = Tools::getValue('id_product_attribute', 0);
         $promotext = 'Normal Price';
@@ -98,7 +104,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             'promo' => $promo,
             'date' => $promodate,
             'shop_id' => (int) $shop_id,
-            'lang_id' => (int) $lang_id,
+            'lang_id' => 0,
         ]);
         $insert_id = Db::getInstance()->Insert_ID();
         $price_formatted = Context::getContext()->getCurrentLocale()->formatPrice($price, Context::getContext()->currency->iso_code);
@@ -217,81 +223,78 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         } else {
             $end = (int) $start + (int) $end;
         }
-        $context = Context::getContext();
-        $lang_id = $context->language->id;
-        $shop_id = $context->shop->id;
-        $languages = Language::getLanguages(true);
+        // Prices are language-independent: process products ONCE using the default
+        // language (needed only for the product_lang name join, not for price data)
+        $id_lang = (int) Configuration::get('PS_LANG_DEFAULT');
         $not_found = true;
-        foreach ($languages as $lang) {
-            $products = $this->getProductsByIdRange($lang['id_lang'], $start, $end, 'id_product', 'ASC');
-            $insert_q = '';
 
-            if (!empty($products)) {
-                $not_found = false;
+        $products = $this->getProductsByIdRange($id_lang, $start, $end, 'id_product', 'ASC');
+        $insert_q = '';
 
-                foreach ($products as $product) {
-                    $synced_ids[] = (int) $product['id_product'];
+        if (!empty($products)) {
+            $not_found = false;
 
-                    // STEP 1: Get ALL specific prices for this product ONCE
-                    $all_specific_prices = SpecificPrice::getByProductId($product['id_product']);
+            foreach ($products as $product) {
+                $synced_ids[] = (int) $product['id_product'];
 
-                    // STEP 2: Track which attributes have specific prices
-                    $attributes_with_specific_prices = [];
+                // STEP 1: Get ALL specific prices for this product ONCE
+                $all_specific_prices = SpecificPrice::getByProductId($product['id_product']);
 
-                    // STEP 3: Process all specific prices and create insert queries
-                    if (!empty($all_specific_prices)) {
-                        foreach ($all_specific_prices as $specific_price) {
-                            $attr_id = $specific_price['id_product_attribute'];
-                            if (!isset($attributes_with_specific_prices[$attr_id])) {
-                                $attributes_with_specific_prices[$attr_id] = true;
-                            }
-                            // Create insert query for this specific price
-                            $insert_q .= $this->create_insert_query_for_specific_price($product, $lang['id_lang'], $specific_price, $price_type);
+                // STEP 2: Track which attributes have specific prices
+                $attributes_with_specific_prices = [];
+
+                // STEP 3: Process all specific prices and create insert queries
+                if (!empty($all_specific_prices)) {
+                    foreach ($all_specific_prices as $specific_price) {
+                        $attr_id = $specific_price['id_product_attribute'];
+                        if (!isset($attributes_with_specific_prices[$attr_id])) {
+                            $attributes_with_specific_prices[$attr_id] = true;
                         }
-                    }
-
-                    // STEP 3.5: Get all product attributes and track regular prices for those without specific prices
-                    $all_product_attributes = $this->getProductAttributesInfo($product['id_product']);
-
-                    if (!empty($all_product_attributes)) {
-                        foreach ($all_product_attributes as $attr_info) {
-                            // If this attribute doesn't have a specific price, track its regular price
-                            if (!isset($attributes_with_specific_prices[$attr_info['id_product_attribute']])) {
-                                $insert_q .= $this->create_insert_query_for_default_price(
-                                    $product,
-                                    $lang['id_lang'],
-                                    $attr_info['id_product_attribute'],
-                                    false, // Price impact already included by getPriceStatic() when using attribute ID
-                                    $price_type
-                                );
-                            }
-                        }
-                    }
-
-                    // STEP 4: Add base default price (id_attribute = 0) only if no catch-all specific price exists
-                    $has_catch_all_specific_price = false;
-                    if (!empty($all_specific_prices)) {
-                        foreach ($all_specific_prices as $sp) {
-                            // Check if this specific price applies to ALL groups, ALL currencies, ALL countries
-                            if ($sp['id_currency'] == 0 && $sp['id_group'] == 0 && $sp['id_country'] == 0) {
-                                $has_catch_all_specific_price = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    // Only add default entry if no catch-all specific price exists
-                    // This ensures general customers (id_group=0) get tracked even when group-specific prices exist
-                    if (!$has_catch_all_specific_price) {
-                        $insert_q .= $this->create_insert_query_for_default_price($product, $lang['id_lang'], 0, false, $price_type);
+                        // Create insert query for this specific price
+                        $insert_q .= $this->create_insert_query_for_specific_price($product, $specific_price, $price_type);
                     }
                 }
-                $insert_q = rtrim($insert_q, ',' . "\n");
 
-                if ($insert_q != '') {
-                    $insert_q = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`, `with_tax`) VALUES $insert_q";
-                    $insertion = Db::getInstance()->execute($insert_q);
+                // STEP 3.5: Get all product attributes and track regular prices for those without specific prices
+                $all_product_attributes = $this->getProductAttributesInfo($product['id_product']);
+
+                if (!empty($all_product_attributes)) {
+                    foreach ($all_product_attributes as $attr_info) {
+                        // If this attribute doesn't have a specific price, track its regular price
+                        if (!isset($attributes_with_specific_prices[$attr_info['id_product_attribute']])) {
+                            $insert_q .= $this->create_insert_query_for_default_price(
+                                $product,
+                                $attr_info['id_product_attribute'],
+                                false, // Price impact already included by getPriceStatic() when using attribute ID
+                                $price_type
+                            );
+                        }
+                    }
                 }
+
+                // STEP 4: Add base default price (id_attribute = 0) only if no catch-all specific price exists
+                $has_catch_all_specific_price = false;
+                if (!empty($all_specific_prices)) {
+                    foreach ($all_specific_prices as $sp) {
+                        // Check if this specific price applies to ALL groups, ALL currencies, ALL countries
+                        if ($sp['id_currency'] == 0 && $sp['id_group'] == 0 && $sp['id_country'] == 0) {
+                            $has_catch_all_specific_price = true;
+                            break;
+                        }
+                    }
+                }
+
+                // Only add default entry if no catch-all specific price exists
+                // This ensures general customers (id_group=0) get tracked even when group-specific prices exist
+                if (!$has_catch_all_specific_price) {
+                    $insert_q .= $this->create_insert_query_for_default_price($product, 0, false, $price_type);
+                }
+            }
+            $insert_q = rtrim($insert_q, ',' . "\n");
+
+            if ($insert_q != '') {
+                $insert_q = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`, `with_tax`) VALUES $insert_q";
+                $insertion = Db::getInstance()->execute($insert_q);
             }
         }
 

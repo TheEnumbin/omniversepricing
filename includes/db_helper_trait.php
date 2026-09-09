@@ -29,7 +29,7 @@ if (!defined('_PS_VERSION_')) {
 
 trait DatabaseHelper_Trait
 {
-    private function check_existance($prd_id, $lang_id, $price, $id_attr = 0, $country = 0, $currency = 0, $group = 0)
+    private function check_existance($prd_id, $price, $id_attr = 0, $country = 0, $currency = 0, $group = 0)
     {
         $context = Context::getContext();
         $shop_id = $context->shop->id;
@@ -48,14 +48,14 @@ trait DatabaseHelper_Trait
         $results = Db::getInstance()->executeS(
             'SELECT *
             FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
-            WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+            WHERE oc.`shop_id` = ' . (int) $shop_id . '
             AND oc.`product_id` = ' . (int) $prd_id . ' AND oc.`price` = ' . $price . $attr_q . $curre_q . $countr_q . $group_q
         );
 
         return $results;
     }
 
-    private function create_insert_query($product, $lang_id, $id_attribute = false, $attr_price = false, $price_type = 'current')
+    private function create_insert_query($product, $id_attribute = false, $attr_price = false, $price_type = 'current')
     {
         // Get specific prices for the attribute if specified
         $specific_prices = SpecificPrice::getByProductId($product['id_product'], $id_attribute);
@@ -151,13 +151,13 @@ trait DatabaseHelper_Trait
                 if ($specific_price['id_currency']) {
                     $price_amount = Tools::convertPrice($price_amount, $specific_price['id_currency'], false);
                 }
-                $existing = $this->check_existance($product['id_product'], $lang_id, $price_amount, $specific_price['id_product_attribute'], $specific_price['id_country'], $specific_price['id_currency'], $specific_price['id_group']);
+                $existing = $this->check_existance($product['id_product'], $price_amount, $specific_price['id_product_attribute'], $specific_price['id_country'], $specific_price['id_currency'], $specific_price['id_group']);
 
                 if (empty($existing)) {
                     if ($q != '') {
                         $q .= ',';
                     }
-                    $q .= "\n" . '(' . $product['id_product'] . ',' . $specific_price['id_product_attribute'] . ',' . $specific_price['id_country'] . ',' . $specific_price['id_currency'] . ',' . $specific_price['id_group'] . ',' . $price_amount . ',1,"' . date('Y-m-d') . '",' . $shop_id . ',' . $lang_id . ',' . $omni_tax_include_q . ')';
+                    $q .= "\n" . '(' . $product['id_product'] . ',' . $specific_price['id_product_attribute'] . ',' . $specific_price['id_country'] . ',' . $specific_price['id_currency'] . ',' . $specific_price['id_group'] . ',' . $price_amount . ',1,"' . date('Y-m-d') . '",' . $shop_id . ',0,' . $omni_tax_include_q . ')';
                 }
             }
         }
@@ -165,7 +165,7 @@ trait DatabaseHelper_Trait
             $id_attribute = null;
         }
         if ($need_default) {
-            $existing = $this->check_existance($product['id_product'], $lang_id, $price_amount, $id_attribute);
+            $existing = $this->check_existance($product['id_product'], $price_amount, $id_attribute);
 
             if ($id_attribute === null) {
                 $id_attribute = 0;
@@ -174,7 +174,7 @@ trait DatabaseHelper_Trait
                 if ($q != '') {
                     $q .= ',';
                 }
-                $q .= "\n" . '(' . $product['id_product'] . ',' . $id_attribute . ',0,0,0,' . $price_amount . ',0,"' . date('Y-m-d') . '",' . $shop_id . ',' . $lang_id . ',' . $omni_tax_include_q . ')';
+                $q .= "\n" . '(' . $product['id_product'] . ',' . $id_attribute . ',0,0,0,' . $price_amount . ',0,"' . date('Y-m-d') . '",' . $shop_id . ',0,' . $omni_tax_include_q . ')';
             }
         }
         if ($q != '') {
@@ -187,7 +187,7 @@ trait DatabaseHelper_Trait
      * Create insert query for a specific price
      * Processes a single specific price entry and generates the appropriate INSERT query
      */
-    private function create_insert_query_for_specific_price($product, $lang_id, $specific_price, $price_type = 'current')
+    private function create_insert_query_for_specific_price($product, $specific_price, $price_type = 'current')
     {
         $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
         $omni_tax_include_q = 0;
@@ -242,7 +242,6 @@ trait DatabaseHelper_Trait
         // Check if already exists
         $existing = $this->check_existance(
             $product['id_product'],
-            $lang_id,
             $price_amount,
             $specific_price['id_product_attribute'],
             $specific_price['id_country'],
@@ -260,7 +259,7 @@ trait DatabaseHelper_Trait
             . $specific_price['id_currency'] . ','
             . $specific_price['id_group'] . ','
             . $price_amount . ',1,"' . date('Y-m-d') . '",'
-            . $shop_id . ',' . $lang_id . ','
+            . $shop_id . ',0,'
             . $omni_tax_include_q . '),' . "\n";
 
         return $q;
@@ -270,7 +269,7 @@ trait DatabaseHelper_Trait
      * Create insert query for default price
      * Creates an insert query for the default price of an attribute (no specific price)
      */
-    private function create_insert_query_for_default_price($product, $lang_id, $id_attribute, $attr_price, $price_type = 'current')
+    private function create_insert_query_for_default_price($product, $id_attribute, $attr_price, $price_type = 'current')
     {
         $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
         $omni_tax_include_q = 0;
@@ -313,7 +312,7 @@ trait DatabaseHelper_Trait
         }
 
         // Check if already exists
-        $existing = $this->check_existance($product['id_product'], $lang_id, $price_amount, $id_attribute);
+        $existing = $this->check_existance($product['id_product'], $price_amount, $id_attribute);
 
         if (!empty($existing)) {
             return '';
@@ -323,7 +322,7 @@ trait DatabaseHelper_Trait
             . $id_attribute . ','
             . '0,0,0,'
             . $price_amount . ',0,"' . date('Y-m-d') . '",'
-            . $shop_id . ',' . $lang_id . ','
+            . $shop_id . ',0,'
             . $omni_tax_include_q . '),' . "\n";
 
         return $q;

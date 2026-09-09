@@ -53,7 +53,8 @@ The core module class extending PrestaShop's `Module`. Contains all business log
 | `product_id`, `id_product_attribute` | Product identification (supports combinations) |
 | `id_country`, `id_currency`, `id_group` | Context-aware pricing |
 | `price`, `promo` | Price information |
-| `date`, `shop_id`, `lang_id` | Metadata |
+| `date`, `shop_id` | Metadata |
+| `lang_id` | **Deprecated** — kept for schema compatibility; new rows write `0`. Prices are language-independent: never filter or loop by language |
 
 ### Frontend Templates
 

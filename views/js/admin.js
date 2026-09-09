@@ -29,7 +29,6 @@ $(document).ready(function () {
     // Handle combination selector change
     $(document).on('change', '#omniversepricing_combination_selector', function () {
         var $combVal = $(this).val();
-        var $langVal = $('#omniversepricing_lang_changer').val();
         var $prdid = $('#prd_id').val();
         $.ajax({
             type: 'POST',
@@ -39,7 +38,6 @@ $(document).ready(function () {
                 controller: 'AdminAjaxOmniverse',
                 action: 'OmniverseChangeLang',
                 prdid: $prdid,
-                langid: $langVal,
                 id_product_attribute: $combVal,
                 shopid: omniversepricing_shop_id,
                 ajax: true
@@ -60,44 +58,11 @@ $(document).ready(function () {
         });
     });
 
-    // Handle language selector change
-    $(document).on('change', '#omniversepricing_lang_changer', function () {
-        var $val = $(this).val();
-        var $prdid = $('#prd_id').val();
-        var $combVal = $('#omniversepricing_combination_selector').val();
-        $.ajax({
-            type: 'POST',
-            url: omniversepricing_ajax_url,
-            dataType: 'html',
-            data: {
-                controller: 'AdminAjaxOmniverse',
-                action: 'OmniverseChangeLang',
-                prdid: $prdid,
-                langid: $val,
-                id_product_attribute: $combVal,
-                shopid: omniversepricing_shop_id,
-                ajax: true
-            },
-            success: function (data) {
-                var $data = JSON.parse(data);
-                if (typeof $data.success !== 'undefined' && $data.success) {
-                    $('#omniversepricing_history_table').find(".omniversepricing-history-datam").remove();
-                    $.each($data.omniverse_prices, function (key, value) {
-                        $('#omniversepricing_history_table').append('<tr class="omniversepricing-history-datam" id="omniversepricing_history_' + value.id + '">'
-                            + '<td>' + value.date + '</td><td>' + value.price + '</td><td>' + value.promotext + '</td>'
-                            + '<td><button  class="omniversepricing_history_delete btn btn-danger" type="button" value="' + value.id + '">Delete</button></td>'
-                            + '</tr>');
-                    });
-                }
-            }
-        });
-    });
     $(document).on('click', '#omniversepricing_custom_price_add', function () {
         var $prdid = $('#prd_id').val();
         var $price = $('#price_amount').val();
         var $price_type = $('#price_type').val();
         var $promodate = $('#promodate').val();
-        var $langid = $('#omniversepricing_lang_changer').find(":selected").val();
         var $id_product_attribute = $('#omniversepricing_combination_selector').val();
         $.ajax({
             type: 'POST',
@@ -110,7 +75,6 @@ $(document).ready(function () {
                 price: $price,
                 pricetype: $price_type,
                 promodate: $promodate,
-                langid: $langid,
                 shopid: omniversepricing_shop_id,
                 id_product_attribute: $id_product_attribute,
                 ajax: true
