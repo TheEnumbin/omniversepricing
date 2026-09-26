@@ -897,12 +897,10 @@ class Omniversepricing extends Module
     {
         $this->context->controller->addCSS($this->_path . 'views/css/admin.css');
         $this->context->controller->addJS($this->_path . 'views/js/admin.js');
-        $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
         Media::addJsDef([
             'omniversepricing_ajax_url' => $this->context->link->getAdminLink('AdminAjaxOmniverse'),
             'omniversepricing_shop_id' => $shop_id,
-            'omniversepricing_lang_id' => $lang_id,
             'omniversepricing_total_products' => $this->getProductCount($shop_id),
         ]);
         $omni_auto_del = Configuration::get('OMNIVERSEPRICING_AUTO_DELETE_OLD');
@@ -941,16 +939,24 @@ class Omniversepricing extends Module
         $results = Db::getInstance()->executeS(
             'SELECT *
             FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
-            WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+            WHERE oc.`shop_id` = ' . (int) $shop_id . '
             AND oc.`product_id` = ' . (int) $id_product . '
             AND oc.`id_product_attribute` = ' . (int) $id_product_attribute . '
             ORDER BY date DESC',
             true
         );
         $omniverse_prices = [];
+        $seen = [];
         $priceFormatter = new PriceFormatter();
 
         foreach ($results as $result) {
+            // Deduplicate legacy per-language rows (same date/price/promo stored once per language)
+            $key = $result['date'] . '|' . $result['price'] . '|' . $result['promo'];
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+
             $omniverse_prices[$result['id_omniversepricing']]['id'] = $result['id_omniversepricing'];
             $omniverse_prices[$result['id_omniversepricing']]['date'] = $result['date'];
             $omniverse_prices[$result['id_omniversepricing']]['price'] = $priceFormatter->convertAndFormat($result['price']);
@@ -959,12 +965,9 @@ class Omniversepricing extends Module
                 $omniverse_prices[$result['id_omniversepricing']]['promotext'] = 'Promotional Price';
             }
         }
-        $languages = Language::getLanguages(false);
         $this->context->smarty->assign([
             'omniverse_prices' => $omniverse_prices,
             'omniverse_prd_id' => $id_product,
-            'omniverse_langs' => $languages,
-            'omniverse_curr_lang' => $lang_id,
             'omniverse_combinations' => $combinations,
             'omniverse_selected_combination' => $id_product_attribute,
         ]);
@@ -1441,7 +1444,6 @@ class Omniversepricing extends Module
     private function omniversepricing_check_existance($prd_id, $price, $id_attr = 0)
     {
         $stable_v = Configuration::get('OMNIVERSEPRICING_STABLE_VERSION');
-        $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
         $attr_q = '';
         $curre_q = '';
@@ -1473,7 +1475,7 @@ class Omniversepricing extends Module
         $results = Db::getInstance()->executeS(
             'SELECT *
             FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
-            WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+            WHERE oc.`shop_id` = ' . (int) $shop_id . '
             AND oc.`product_id` = ' . (int) $prd_id . ' AND oc.`price` = ' . $price . $attr_q . $curre_q . $countr_q . $group_q
         );
 
@@ -1489,7 +1491,6 @@ class Omniversepricing extends Module
             return;
         }
         $stable_v = Configuration::get('OMNIVERSEPRICING_STABLE_VERSION');
-        $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
         $date = date('Y-m-d');
         $promo = 0;
@@ -1526,7 +1527,7 @@ class Omniversepricing extends Module
                 'promo' => $promo,
                 'date' => $date,
                 'shop_id' => (int) $shop_id,
-                'lang_id' => (int) $lang_id,
+                'lang_id' => 0,
             ]);
         } else {
             $result = Db::getInstance()->insert('omniversepricing_products', [
@@ -1536,7 +1537,7 @@ class Omniversepricing extends Module
                 'promo' => $promo,
                 'date' => $date,
                 'shop_id' => (int) $shop_id,
-                'lang_id' => (int) $lang_id,
+                'lang_id' => 0,
             ]);
         }
     }
@@ -1547,7 +1548,6 @@ class Omniversepricing extends Module
     private function omniversepricing_get_price($id, $price_amount, $id_attr = 0)
     {
         $stable_v = Configuration::get('OMNIVERSEPRICING_STABLE_VERSION');
-        $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
         $attr_q = '';
         $curre_q = '';
@@ -1580,11 +1580,11 @@ class Omniversepricing extends Module
         $date = date('Y-m-d');
         $days_limit = (int) Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT', null, null, null, 30);
         $date_range = date('Y-m-d', strtotime('-' . ($days_limit + 1) . ' days'));
-        $q_1 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
-        WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+        $q_1 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
+        WHERE oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q . ' AND oc.id_omniversepricing ' . $inner_q;
-        $q_2 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
-        WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+        $q_2 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
+        WHERE oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q . ' AND oc.`id_currency` = 0 AND oc.`id_country` = 0';
         $result = Db::getInstance()->executeS($q_1 . ' UNION ' . $q_2);
 

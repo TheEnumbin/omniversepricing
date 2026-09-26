@@ -50,7 +50,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `controllers/front/sync.php` | Manual/batch price synchronization |
 | `controllers/admin/AdminAjaxOmniverseController.php` | Admin tab for ajax operations |
 
-### Frontend
+### Database Schema
+
+**Table**: `ps_omniversepricing_products`
+
+| Fields | Description |
+|--------|-------------|
+| `id_omniversepricing` | Primary key |
+| `product_id`, `id_product_attribute` | Product identification (supports combinations) |
+| `id_country`, `id_currency`, `id_group` | Context-aware pricing |
+| `price`, `promo` | Price information |
+| `date`, `shop_id` | Metadata |
+| `lang_id` | **Deprecated** — kept for schema compatibility; new rows write `0`. Prices are language-independent: never filter or loop by language |
+
+### Frontend Templates
 
 | File | Purpose |
 |------|---------|
