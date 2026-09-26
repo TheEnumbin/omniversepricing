@@ -798,7 +798,7 @@ class Omniversepricing extends Module
             } elseif ($key == 'OMNIVERSEPRICING_RESET_CRON') {
                 if (Tools::getValue($key)) {
                     $yesterday = date('Y-m-d', strtotime('-1 day'));
-                    Configuration::updateValue('OMNIVERSEPRICING_SYNC_OFFSET', 0);
+                    Configuration::updateValue('OMNIVERSEPRICING_SYNC_LAST_ID', 0);
                     Configuration::updateValue('OMNIVERSEPRICING_CRON_DATE', $yesterday);
                     Configuration::updateValue('OMNIVERSEPRICING_LAST_SYNC', 0);
                 }

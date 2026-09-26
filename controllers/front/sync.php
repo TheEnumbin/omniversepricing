@@ -62,7 +62,7 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
             // Smart sync: Only process products flagged as pending
             $this->processSmartSync($price_type);
         } else {
-            // Offset-based sync: Process all products sequentially
+            // Keyset-based sync: Process all products sequentially via id_product cursor
             $this->processSync($price_type);
         }
 
@@ -162,7 +162,7 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
     }
 
     /**
-     * Process sync: Offset-based processing
+     * Process sync: Keyset-based processing (id_product cursor)
      *
      * @param string $price_type
      * @return void
@@ -172,28 +172,33 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
         $date_cron = Configuration::get('OMNIVERSEPRICING_CRON_DATE');
         $today = date('j-n-Y');
 
-        // Reset offset if new day
+        // Reset cursor if new day
         if ($today != $date_cron) {
-            Configuration::updateValue('OMNIVERSEPRICING_SYNC_OFFSET', 0);
+            Configuration::updateValue('OMNIVERSEPRICING_SYNC_LAST_ID', 0);
         }
 
         $startTime = time();
-        $offset = (int) Configuration::get('OMNIVERSEPRICING_SYNC_OFFSET', 0);
+        $last_id = (int) Configuration::get('OMNIVERSEPRICING_SYNC_LAST_ID', 0);
         $lang_id = (int) Configuration::get('PS_LANG_DEFAULT');
 
         // Keep processing until time limit
         while ((time() - $startTime) < self::MAX_EXECUTION_TIME) {
-            $products = Product::getProducts(
-                $lang_id,
-                $offset,
-                self::PRODUCT_BATCH_SIZE,
-                'id_product',
-                'ASC'
-            );
+            // Keyset fetch: next PRODUCT_BATCH_SIZE product IDs after the cursor.
+            // ID gaps are skipped by the query itself; only id_product is selected
+            // (all create_insert_query() consumes). No product_lang join: prices
+            // are language-independent, so products without a translation in the
+            // default language are synced too.
+            $sql = 'SELECT p.`id_product`
+                FROM `' . _DB_PREFIX_ . 'product` p
+                ' . Shop::addSqlAssociation('product', 'p') . '
+                WHERE p.`id_product` > ' . (int) $last_id . '
+                ORDER BY p.`id_product` ASC
+                LIMIT ' . (int) self::PRODUCT_BATCH_SIZE;
+            $products = Db::getInstance()->executeS($sql);
 
             if (empty($products)) {
                 // No more products - sync complete for today
-                Configuration::updateValue('OMNIVERSEPRICING_SYNC_OFFSET', 0);
+                Configuration::updateValue('OMNIVERSEPRICING_SYNC_LAST_ID', 0);
                 Configuration::updateValue('OMNIVERSEPRICING_CRON_DATE', $today);
                 exit;
             }
@@ -233,8 +238,10 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                 Db::getInstance()->execute($fullQuery);
             }
 
-            $offset += self::PRODUCT_BATCH_SIZE;
-            Configuration::updateValue('OMNIVERSEPRICING_SYNC_OFFSET', $offset);
+            // Cursor = highest ID of this batch (rows are ORDER BY id_product ASC):
+            // gap-proof, next fetch resumes strictly after it
+            $last_id = (int) $products[count($products) - 1]['id_product'];
+            Configuration::updateValue('OMNIVERSEPRICING_SYNC_LAST_ID', $last_id);
 
             // Small sleep to reduce CPU spike (optional - adjust as needed)
             usleep(10000); // 0.01 seconds
