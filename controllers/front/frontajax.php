@@ -36,7 +36,6 @@ class OmniversepricingFrontajaxModuleFrontController extends ModuleFrontControll
         $is_ajax = $_POST['ajax'];
         $id_product = $_POST['id_product'];
         $attr_id = $_POST['attr_id'];
-        $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
         $attr_q = '';
         $curre_q = '';
@@ -49,11 +48,11 @@ class OmniversepricingFrontajaxModuleFrontController extends ModuleFrontControll
         }
         $date = date('Y-m-d');
         $date_range = date('Y-m-d', strtotime('-365 days'));
-        $q_1 = 'SELECT oc.date, oc.price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
-        WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+        $q_1 = 'SELECT oc.date, oc.price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
+        WHERE oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id_product . ' AND oc.date > "' . $date_range . '"' . $attr_q . ' AND oc.id_omniversepricing ' . $inner_q;
         $q_2 = 'SELECT oc.date, oc.price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
-        WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+        WHERE oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id_product . ' AND oc.date > "' . $date_range . '" ' . $attr_q . ' AND oc.`id_currency` = 0 AND oc.`id_country` = 0';
         $result = Db::getInstance()->executeS($q_1 . ' UNION ' . $q_2);
         $returnarr = [];
