@@ -35,7 +35,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.3.0';
+        $this->version = '1.3.2';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
@@ -167,6 +167,7 @@ class Omniversepricing extends Module
     {
         // Fetch and render the template file
         $this->context->smarty->assign('module_dir', $this->_path);
+
         return $this->context->smarty->fetch($this->local_path . 'views/templates/admin/advertise_template.tpl');
     }
 
@@ -542,7 +543,8 @@ class Omniversepricing extends Module
                     ],
                     [
                         'type' => 'switch',
-                        'label' => $this->l('Delete Data Before 30 Days?'),
+                        'label' => $this->l('Delete Data Older Than Days Limit?'),
+                        'desc' => $this->l('Deletes price history older than the configured Days Limit.'),
                         'name' => 'OMNIVERSEPRICING_DELETE_OLD',
                         'values' => [
                             [
@@ -769,7 +771,7 @@ class Omniversepricing extends Module
             } elseif ($key == 'OMNIVERSEPRICING_DELETE_OLD') {
                 if (Tools::getValue($key)) {
                     $date = date('Y-m-d');
-                    $days_limit = (int) Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT', 30);
+                    $days_limit = (int) Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT', null, null, null, 30);
                     $date_range = date('Y-m-d', strtotime('-' . ($days_limit + 1) . ' days'));
                     Db::getInstance()->execute(
                         'DELETE FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
@@ -790,6 +792,14 @@ class Omniversepricing extends Module
                     Configuration::updateValue('OMNIVERSEPRICING_CRON_DATE', $yesterday);
                     Configuration::updateValue('OMNIVERSEPRICING_LAST_SYNC', 0);
                 }
+            } elseif ($key == 'OMNIVERSEPRICING_DAYS_LIMIT') {
+                $days_limit = (int) Tools::getValue($key);
+                if ($days_limit < 1) {
+                    $days_limit = 30;
+                }
+                Configuration::updateValue($key, $days_limit);
+
+                continue;
             }
 
             Configuration::updateValue($key, Tools::getValue($key));
@@ -817,7 +827,9 @@ class Omniversepricing extends Module
      * Generate the custom CSS securely using allowlist
      *
      * @param string $css_content The raw CSS content to save
+     *
      * @return bool
+     *
      * @throws Exception
      */
     public function generateCustomCSS($css_content)
@@ -848,6 +860,7 @@ class Omniversepricing extends Module
      * Sanitize the CSS content
      *
      * @param string $css_content
+     *
      * @return string
      */
     private function sanitizeCssContent($css_content)
@@ -884,7 +897,7 @@ class Omniversepricing extends Module
 
         if ($omni_auto_del) {
             $date = date('Y-m-d');
-            $days_limit = (int) Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT', 30);
+            $days_limit = (int) Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT', null, null, null, 30);
             $date_range = date('Y-m-d', strtotime('-' . ($days_limit + 1) . ' days'));
             $omniversepricing_delete_date = Configuration::get('OMNIVERSEPRICING_DELETE_DATE');
             if ($omniversepricing_delete_date == $date_range) {
@@ -958,6 +971,7 @@ class Omniversepricing extends Module
      *
      * @param int $id_product
      * @param int $id_lang
+     *
      * @return array
      */
     private function getProductCombinations($id_product, $id_lang)
@@ -1306,6 +1320,7 @@ class Omniversepricing extends Module
             }
             $return_arr['omni_price'] = $omniversepricinge_formatted_price;
             $return_arr['omni_percent'] = $omniversepricinge_percentage;
+
             return $return_arr;
         } else {
             $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT');
@@ -1317,6 +1332,17 @@ class Omniversepricing extends Module
             }
             return false;
         }
+
+        $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT');
+        if ($omni_if_current) {
+            $omniversepricinge_percentage = '0%';
+            $return_arr['omni_price'] = $priceFormatter->convertAndFormat($price_amount);
+            $return_arr['omni_percent'] = $omniversepricinge_percentage;
+
+            return $return_arr;
+        }
+
+        return false;
     }
 
     /**
@@ -1459,7 +1485,7 @@ class Omniversepricing extends Module
                        WHERE ' . $curre_q . $countr_q . $group_q . ')';
         }
         $date = date('Y-m-d');
-        $days_limit = (int) Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT', 30);
+        $days_limit = (int) Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT', null, null, null, 30);
         $date_range = date('Y-m-d', strtotime('-' . ($days_limit + 1) . ' days'));
         $q_1 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
         WHERE oc.`shop_id` = ' . (int) $shop_id . '
@@ -1472,10 +1498,10 @@ class Omniversepricing extends Module
         if (isset($result)) {
             if (isset($result[0][$this->name . '_price']) && $result[0][$this->name . '_price'] != null) {
                 return $result[0][$this->name . '_price'];
-            } else {
-                if (isset($result[1][$this->name . '_price']) && $result[1][$this->name . '_price'] != null) {
-                    return $result[1][$this->name . '_price'];
-                }
+            }
+
+            if (isset($result[1][$this->name . '_price']) && $result[1][$this->name . '_price'] != null) {
+                return $result[1][$this->name . '_price'];
             }
         }
 
