@@ -35,7 +35,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.3.2';
+        $this->version = '1.4.1';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
@@ -103,7 +103,11 @@ class Omniversepricing extends Module
         return parent::install()
         && $this->registerHook('displayHeader')
         && $this->registerHook('displayFooter')
+        && $this->registerHook('actionProductAdd')
         && $this->registerHook('actionProductUpdate')
+        && $this->registerHook('actionProductDelete')
+        && $this->registerHook('actionProductAttributeAdd')
+        && $this->registerHook('actionProductAttributeUpdate')
         && $this->registerHook('actionObjectSpecificPriceAddAfter')
         && $this->registerHook('actionObjectSpecificPriceUpdateAfter')
         && $this->registerHook('displayBackOfficeHeader')
@@ -221,6 +225,7 @@ class Omniversepricing extends Module
                 ],
                 'input' => [
                     [
+                        'col' => 6,
                         'type' => 'select',
                         'label' => $this->l('How to Keep Price History?'),
                         'name' => 'OMNIVERSEPRICING_HISTORY_FUNC',
@@ -236,7 +241,11 @@ class Omniversepricing extends Module
                                 ],
                                 [
                                     'id' => 'w_cron',
-                                    'name' => $this->l('Automated with Cron'),
+                                    'name' => $this->l('Automated with Cron (Offset-based batch processing)'),
+                                ],
+                                [
+                                    'id' => 'smart_cron',
+                                    'name' => $this->l('Automated with Cron (Smart - Only sync modified products)'),
                                 ],
                                 [
                                     'id' => 'w_hook',
@@ -246,6 +255,7 @@ class Omniversepricing extends Module
                             'id' => 'id',
                             'name' => 'name',
                         ],
+                        "class" => " history-func-select-width",
                         'tab' => 'general',
                     ],
                     [
@@ -1111,6 +1121,9 @@ class Omniversepricing extends Module
                         $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include);
                     }
                 }
+            } elseif ($history_func == 'smart_cron') {
+                // Smart sync: flag product for cron processing
+                $this->flagProductForSync($params['id_product']);
             }
         }
     }
@@ -1155,6 +1168,9 @@ class Omniversepricing extends Module
                         $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include, $params['object']);
                     }
                 }
+            } elseif ($history_func == 'smart_cron') {
+                // Smart sync: flag product for cron processing
+                $this->flagProductForSync($params['object']->id_product);
             }
         }
     }
@@ -1199,7 +1215,93 @@ class Omniversepricing extends Module
                         $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include, $params['object']);
                     }
                 }
+            } elseif ($history_func == 'smart_cron') {
+                // Smart sync: flag product for cron processing
+                $this->flagProductForSync($params['object']->id_product);
             }
+        }
+    }
+
+    /**
+     * Hook called when a product is added
+     */
+    public function hookActionProductAdd($params)
+    {
+        // This hook is intentionally empty for now
+    }
+
+    /**
+     * Hook called when a product attribute/combination is added
+     * Flags the product for smart cron sync
+     */
+    public function hookActionProductAttributeAdd($params)
+    {
+        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
+
+        if ($history_func == 'smart_cron') {
+            $this->flagProductForSync($params['id_product']);
+        }
+    }
+
+    /**
+     * Hook called when a product attribute/combination is updated
+     * Flags the product for smart cron sync
+     */
+    public function hookActionProductAttributeUpdate($params)
+    {
+        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
+
+        if ($history_func == 'smart_cron') {
+            $this->flagProductForSync($params['id_product']);
+        }
+    }
+
+    /**
+     * Hook called when a product is deleted
+     * Removes all price history for this product
+     */
+    public function hookActionProductDelete($params)
+    {
+        Db::getInstance()->execute(
+            'DELETE FROM `' . _DB_PREFIX_ . 'omniversepricing_products`
+            WHERE `product_id` = ' . (int) $params['id_product']
+        );
+
+        // Also remove from sync flags table
+        Db::getInstance()->execute(
+            'DELETE FROM `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`
+            WHERE `product_id` = ' . (int) $params['id_product']
+        );
+    }
+
+    /**
+     * Flag a product for sync by adding/updating entry in sync_flags table
+     * Only flags products that already exist in omniversepricing_products table
+     *
+     * @param int $product_id
+     * @return void
+     */
+    private function flagProductForSync($product_id)
+    {
+        $shop_id = $this->context->shop->id;
+
+        // Check if product exists in omniversepricing_products table
+        $exists = Db::getInstance()->getValue(
+            'SELECT COUNT(*) FROM `' . _DB_PREFIX_ . 'omniversepricing_products`
+            WHERE `product_id` = ' . (int) $product_id . '
+            AND `shop_id` = ' . (int) $shop_id
+        );
+
+        if ($exists) {
+            // Insert or update sync flag
+            Db::getInstance()->execute(
+                'INSERT INTO `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`
+                (`product_id`, `shop_id`, `status`, `date_added`)
+                VALUES (' . (int) $product_id . ', ' . (int) $shop_id . ', \'pending\', NOW())
+                ON DUPLICATE KEY UPDATE
+                `status` = \'pending\',
+                `date_added` = NOW()'
+            );
         }
     }
 
@@ -1322,15 +1424,6 @@ class Omniversepricing extends Module
             $return_arr['omni_percent'] = $omniversepricinge_percentage;
 
             return $return_arr;
-        } else {
-            $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT');
-            if ($omni_if_current) {
-                $omniversepricinge_percentage = '0%';
-                $return_arr['omni_price'] = $priceFormatter->format($price_amount);
-                $return_arr['omni_percent'] = $omniversepricinge_percentage;
-                return $return_arr;
-            }
-            return false;
         }
 
         $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT');
