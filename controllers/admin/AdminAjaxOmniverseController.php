@@ -165,8 +165,8 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         // Called repeatedly (one AJAX call per batch) by call_sync_ajax() in
         // views/js/admin.js until a completion response (start = 0) is sent.
         // Each call records prices of the next PRODUCT_BATCH_SIZE products
-        // after the cursor into ps_omniversepricing_products, for every shop
-        // language.
+        // after the cursor into ps_omniversepricing_products (prices are
+        // language-independent, so products are processed once).
         // -------------------------------------------------------------------
 
         // --- 1. Read request parameters (POSTed by admin.js) ---
@@ -187,24 +187,24 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         // Prices are language-independent: process products ONCE using the default
         // language (needed only for the product_lang name join, not for price data)
         $id_lang = (int) Configuration::get('PS_LANG_DEFAULT');
-        $not_found = true;
 
         // Optional inclusive upper bound (the 'end' field). Pure ceiling: it
         // never takes part in batch arithmetic - PRODUCT_BATCH_SIZE defines
         // the batch, ID gaps are skipped by the query itself.
         $max_id = ($final_end !== '' && $final_end !== null) ? (int) $final_end : null;
 
-        // --- 2. Fetch the next batch for EVERY shop language and record prices ---
-        $languages = Language::getLanguages(false); // One pass per shop language
-        $not_found = true; // Stays true only if NO language returns products after the cursor
-        $batch_last_id = 0; // Highest product ID returned across languages -> next cursor
+        // --- 2. Fetch the next batch and record prices ---
+        $not_found = true; // Stays true if no products exist after the cursor
+        $batch_last_id = 0; // Highest product ID of this batch -> next cursor
 
         // Next PRODUCT_BATCH_SIZE existing products after $after_id, bounded by $max_id when set
-        $products = $this->getProductsByIdKeyset($lang['id_lang'], $after_id, self::PRODUCT_BATCH_SIZE, $max_id);
+        $products = $this->getProductsByIdKeyset($id_lang, $after_id, self::PRODUCT_BATCH_SIZE, $max_id);
         $insert_q = '';
 
         if (!empty($products)) {
             $not_found = false;
+            // Rows come ORDER BY id_product ASC: the last row holds the batch's highest ID
+            $batch_last_id = (int) $products[count($products) - 1]['id_product'];
 
             foreach ($products as $product) {
                 $synced_ids[] = (int) $product['id_product'];
@@ -270,10 +270,10 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             }
         }
 
-        // --- 3. Dedupe the accumulated ID list (a product can appear once per language) ---
+        // --- 3. Normalize the accumulated ID list (defensive dedupe) ---
         $synced_ids = array_values(array_unique((array) $synced_ids));
 
-        // --- Response D: no products after the cursor in any language -> range exhausted ---
+        // --- Response D: no products after the cursor -> range exhausted ---
         if ($not_found) {
             $response = [
                 'success' => 1,

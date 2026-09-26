@@ -123,7 +123,6 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                         foreach ($attributes as $attribute) {
                             $insert_q .= $this->create_insert_query(
                                 $product,
-                                $lang_id,
                                 $attribute['id_product_attribute'],
                                 $attribute['price'],
                                 $price_type
@@ -132,7 +131,6 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                     } else {
                         $insert_q .= $this->create_insert_query(
                             $product,
-                            $lang_id,
                             false,
                             false,
                             $price_type
@@ -179,7 +177,6 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
 
         $startTime = time();
         $last_id = (int) Configuration::get('OMNIVERSEPRICING_SYNC_LAST_ID', 0);
-        $lang_id = (int) Configuration::get('PS_LANG_DEFAULT');
 
         // Keep processing until time limit
         while ((time() - $startTime) < self::MAX_EXECUTION_TIME) {
@@ -215,7 +212,6 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                     foreach ($attributes as $attribute) {
                         $insert_q .= $this->create_insert_query(
                             $product,
-                            $lang_id,
                             $attribute['id_product_attribute'],
                             $attribute['price'],
                             $price_type
@@ -224,7 +220,6 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                 } else {
                     $insert_q .= $this->create_insert_query(
                         $product,
-                        $lang_id,
                         false,
                         false,
                         $price_type
