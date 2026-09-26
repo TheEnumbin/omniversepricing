@@ -341,7 +341,14 @@ trait DatabaseHelper_Trait
         WHERE pa.`id_product` = ' . (int) $id_product);
     }
 
-    public function getProductsByIdRange($id_lang, $id_start = null, $id_end = null, $order_by = 'id_product', $order_way = 'ASC', $id_category = false, $only_active = false, ?Context $context = null)
+    /**
+     * Keyset-paginated product fetch.
+     * Returns the next $limit products with an id_product strictly greater
+     * than $after_id (optionally bounded by $max_id), ordered ascending.
+     * Unlike offset/BETWEEN pagination, cost per page is constant and ID
+     * gaps are skipped inside the query itself.
+     */
+    public function getProductsByIdKeyset($id_lang, $after_id, $limit, $max_id = null, ?Context $context = null)
     {
         if (!$context) {
             $context = Context::getContext();
@@ -352,60 +359,20 @@ trait DatabaseHelper_Trait
             $front = false;
         }
 
-        if (!Validate::isOrderBy($order_by) || !Validate::isOrderWay($order_way)) {
-            return;
-        }
-
-        if ($order_by == 'id_product' || $order_by == 'price' || $order_by == 'date_add' || $order_by == 'date_upd') {
-            $order_by_prefix = 'p';
-        } elseif ($order_by == 'name') {
-            $order_by_prefix = 'pl';
-        } elseif ($order_by == 'position') {
-            $order_by_prefix = 'c';
-        }
-
-        if (strpos($order_by, '.') > 0) {
-            $order_by = explode('.', $order_by);
-            $order_by_prefix = $order_by[0];
-            $order_by = $order_by[1];
-        }
-
         $sql = 'SELECT p.*, product_shop.*, pl.*, m.`name` AS manufacturer_name, s.`name` AS supplier_name
                 FROM `' . _DB_PREFIX_ . 'product` p
                 ' . Shop::addSqlAssociation('product', 'p') . '
                 LEFT JOIN `' . _DB_PREFIX_ . 'product_lang` pl ON (p.`id_product` = pl.`id_product` ' . Shop::addSqlRestrictionOnLang('pl') . ')
                 LEFT JOIN `' . _DB_PREFIX_ . 'manufacturer` m ON (m.`id_manufacturer` = p.`id_manufacturer`)
-                LEFT JOIN `' . _DB_PREFIX_ . 'supplier` s ON (s.`id_supplier` = p.`id_supplier`)' .
-                ($id_category ? ' LEFT JOIN `' . _DB_PREFIX_ . 'category_product` c ON (c.`id_product` = p.`id_product`)' : '') . '
+                LEFT JOIN `' . _DB_PREFIX_ . 'supplier` s ON (s.`id_supplier` = p.`id_supplier`)
                 WHERE pl.`id_lang` = ' . (int) $id_lang .
-                    ($id_category ? ' AND c.`id_category` = ' . (int) $id_category : '') .
-                    ($front ? ' AND product_shop.`visibility` IN ("both", "catalog")' : '') .
-                    ($only_active ? ' AND product_shop.`active` = 1' : '') .
-                    (($id_start !== null && $id_end !== null)
-                        ? ' AND p.`id_product` BETWEEN ' . (int) $id_start . ' AND ' . (int) $id_end
-                        : '') . '
-                ORDER BY ' . (isset($order_by_prefix) ? pSQL($order_by_prefix) . '.' : '') . '`' . pSQL($order_by) . '` ' . pSQL($order_way);
+                    ($front ? ' AND product_shop.`visibility` IN ("both", "catalog")' : '') . '
+                AND p.`id_product` > ' . (int) $after_id .
+                    ($max_id !== null ? ' AND p.`id_product` <= ' . (int) $max_id : '') . '
+                ORDER BY p.`id_product` ASC
+                LIMIT ' . (int) $limit;
         $rq = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
 
         return $rq;
-    }
-
-    public function getNextAvailableProductId($start, $final_end)
-    {
-        $lesser_q = '';
-
-        if ($final_end != '') {
-            $lesser_q = ' AND p.id_product <= ' . (int) $final_end;
-        }
-
-        $sql = '
-            SELECT MIN(p.id_product) AS next_id
-            FROM `' . _DB_PREFIX_ . 'product` p
-            ' . Shop::addSqlAssociation('product', 'p') . '
-            WHERE 1 AND product_shop.`active` = 1' . '
-            AND p.id_product > ' . (int) $start . $lesser_q;
-        $next_id = Db::getInstance()->getValue($sql);
-
-        return $next_id;
     }
 }
