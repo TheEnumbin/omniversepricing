@@ -35,6 +35,7 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
     public const MAX_EXECUTION_TIME = 50; // seconds (safe under typical 60s PHP limit)
     public const PRODUCT_BATCH_SIZE = 500; // Products per batch
     public const MAX_SERVER_LOAD = 5.0; // Skip sync if server load exceeds this
+    public const INSERT_CHUNK_BYTES = 262144; // Flush INSERT buffer at ~256 KB (≈4k tuples) per statement
 
     public function initContent()
     {
@@ -124,13 +125,16 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                         $allAttributes[$product['id_product']] ?? [],
                         $price_type
                     );
+
+                    // Flush in constant-size chunks so combo-heavy products
+                    // cannot grow a single INSERT beyond max_allowed_packet
+                    if (strlen($insert_q) >= self::INSERT_CHUNK_BYTES) {
+                        $this->flushInsertBuffer($insert_q);
+                    }
                 }
 
-                if ($insert_q != '') {
-                    $insert_q = rtrim($insert_q, ',' . "\n");
-                    $fullQuery = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`, `with_tax`) VALUES $insert_q";
-                    Db::getInstance()->execute($fullQuery);
-                }
+                // Flush the remainder of the batch
+                $this->flushInsertBuffer($insert_q);
             }
 
             // Mark processed products as synced
@@ -193,7 +197,16 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
             $allAttributes = $this->getBatchProductAttributes($productIds);
 
             $insert_q = '';
+            $last_processed_id = $last_id; // highest fully committed product of this batch
             foreach ($products as $product) {
+                // In-loop time guard: stop mid-batch gracefully when the run's
+                // time budget is exhausted, instead of being killed by the PHP
+                // time limit. The batch remainder replays on the next cron hit
+                // (dedup makes the overlap a no-op).
+                if ((time() - $startTime) >= self::MAX_EXECUTION_TIME) {
+                    break;
+                }
+
                 // Record every price of this product (specific prices per
                 // attribute/country/currency/group + regular prices) as history rows
                 $insert_q .= $this->create_insert_queries_for_product(
@@ -201,18 +214,26 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                     $allAttributes[$product['id_product']] ?? [],
                     $price_type
                 );
+                $last_processed_id = (int) $product['id_product'];
+
+                // Flush in constant-size chunks so combo-heavy products
+                // cannot grow a single INSERT beyond max_allowed_packet.
+                // Persisting the cursor right after a successful flush caps
+                // replay after a hard kill at one chunk (dedup heals it).
+                if (strlen($insert_q) >= self::INSERT_CHUNK_BYTES) {
+                    $this->flushInsertBuffer($insert_q);
+                    Configuration::updateValue('OMNIVERSEPRICING_SYNC_LAST_ID', $last_processed_id);
+                }
             }
 
-            if ($insert_q != '') {
-                $insert_q = rtrim($insert_q, ',' . "\n");
-                $fullQuery = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`, `with_tax`) VALUES $insert_q";
-                Db::getInstance()->execute($fullQuery);
-            }
+            // Flush the remainder of the batch
+            $this->flushInsertBuffer($insert_q);
 
-            // Cursor = highest ID of this batch (rows are ORDER BY id_product ASC):
-            // gap-proof, next fetch resumes strictly after it
-            $last_id = (int) $products[count($products) - 1]['id_product'];
-            Configuration::updateValue('OMNIVERSEPRICING_SYNC_LAST_ID', $last_id);
+            // Cursor = highest fully processed product of this batch (rows are
+            // ORDER BY id_product ASC): gap-proof, next fetch resumes strictly
+            // after it. On a time-guard break this is the last processed
+            // product, not the batch ceiling.
+            Configuration::updateValue('OMNIVERSEPRICING_SYNC_LAST_ID', $last_processed_id);
 
             // Small sleep to reduce CPU spike (optional - adjust as needed)
             usleep(10000); // 0.01 seconds
@@ -250,5 +271,23 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
         }
 
         return $grouped;
+    }
+
+    /**
+     * Execute the buffered INSERT tuples and reset the buffer.
+     * Keeps every statement at a constant size (INSERT_CHUNK_BYTES) so a
+     * combo-heavy batch cannot exceed max_allowed_packet. Safe to call with
+     * an empty buffer.
+     *
+     * @param string $insert_q Buffered VALUES tuples (passed by reference, reset on flush)
+     * @return void
+     */
+    private function flushInsertBuffer(&$insert_q)
+    {
+        $chunk = rtrim($insert_q, ',' . "\n");
+        if ($chunk != '') {
+            Db::getInstance()->execute('INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`, `with_tax`) VALUES $chunk");
+        }
+        $insert_q = '';
     }
 }
