@@ -71,6 +71,8 @@ class Omniversepricing extends Module
         Configuration::updateValue('OMNIVERSEPRICING_DAYS_LIMIT', 30);
         Configuration::updateValue('OMNIVERSEPRICING_NOTICE_STYLE', 'mixed');
         Configuration::updateValue('OMNIVERSEPRICING_HISTORY_FUNC', 'manual');
+        // 0 = first cron sync must run the full catalog sweep before smart sync takes over
+        Configuration::updateValue('OMNIVERSEPRICING_INITIAL_SYNC_DONE', 0);
         Configuration::updateValue('OMNIVERSEPRICING_POSITION', 'after_price');
         Configuration::updateValue('OMNIVERSEPRICING_CHART_BG_COLOR', '#ffffff');
         Configuration::updateValue('OMNIVERSEPRICING_CHART_LINK_COLOR', '#4bc0c0');

@@ -60,8 +60,13 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
 
         // Route based on sync method
         if ($history_func == 'smart_cron') {
-            // Smart sync: Only process products flagged as pending
-            $this->processSmartSync($price_type);
+            if (!Configuration::get('OMNIVERSEPRICING_INITIAL_SYNC_DONE')) {
+                // First sync: full catalog sweep (resumes across hits via SYNC_LAST_ID)
+                $this->processSync($price_type);
+            } else {
+                // Smart sync: Only process products flagged as pending
+                $this->processSmartSync($price_type);
+            }
         } else {
             // Keyset-based sync: Process all products sequentially via id_product cursor
             $this->processSync($price_type);
@@ -210,6 +215,9 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                 // No more products - sync complete for today
                 Configuration::updateValue('OMNIVERSEPRICING_SYNC_LAST_ID', 0);
                 Configuration::updateValue('OMNIVERSEPRICING_CRON_DATE', $today);
+                // A full sweep has completed, so the catalog is seeded:
+                // smart_cron can switch from first-sync sweep to pending-flags mode
+                Configuration::updateValue('OMNIVERSEPRICING_INITIAL_SYNC_DONE', 1);
                 exit;
             }
 
@@ -255,6 +263,10 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
             // after it. On a time-guard break this is the last processed
             // product, not the batch ceiling.
             Configuration::updateValue('OMNIVERSEPRICING_SYNC_LAST_ID', $last_processed_id);
+
+            // Advance the local cursor so the next iteration of this run's
+            // loop fetches the NEXT batch instead of refetching this one
+            $last_id = $last_processed_id;
 
             // Small sleep to reduce CPU spike (optional - adjust as needed)
             usleep(10000); // 0.01 seconds
