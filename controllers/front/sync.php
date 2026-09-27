@@ -82,7 +82,6 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
         $startTime = time();
         $context = Context::getContext();
         $shop_id = $context->shop->id;
-        $lang_id = (int) Configuration::get('PS_LANG_DEFAULT');
 
         // Keep processing until time limit
         while ((time() - $startTime) < self::MAX_EXECUTION_TIME) {
@@ -102,22 +101,32 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
 
             $productIds = array_column($pendingProducts, 'product_id');
 
-            // Fetch full product details for these IDs (default language)
-            $sql = 'SELECT p.*, product_shop.*, pl.*
+            // Fetch products by ID. Only id_product is consumed by the
+            // create_insert_query_for_*() helpers, so there is no product_lang
+            // join: pending products without a translation in the default
+            // language are synced too (the old join silently skipped them
+            // while their flags were still marked synced).
+            $sql = 'SELECT p.`id_product`
                     FROM `' . _DB_PREFIX_ . 'product` p
                     ' . Shop::addSqlAssociation('product', 'p') . '
-                    LEFT JOIN `' . _DB_PREFIX_ . 'product_lang` pl ON (p.`id_product` = pl.`id_product` ' . Shop::addSqlRestrictionOnLang('pl') . ')
-                    WHERE pl.`id_lang` = ' . $lang_id . '
-                    AND p.`id_product` IN (' . implode(',', array_map('intval', $productIds)) . ')';
+                    WHERE p.`id_product` IN (' . implode(',', array_map('intval', $productIds)) . ')';
 
             $products = Db::getInstance()->executeS($sql);
 
+            $processed_ids = [];
             if (!empty($products)) {
                 // Batch fetch all attributes for these products
                 $allAttributes = $this->getBatchProductAttributes($productIds);
 
                 $insert_q = '';
                 foreach ($products as $product) {
+                    // In-loop time guard: stop mid-batch gracefully when the
+                    // run's time budget is exhausted. Unprocessed products keep
+                    // their pending flag and replay on the next cron hit.
+                    if ((time() - $startTime) >= self::MAX_EXECUTION_TIME) {
+                        break;
+                    }
+
                     // Record every price of this product (specific prices per
                     // attribute/country/currency/group + regular prices) as history rows
                     $insert_q .= $this->create_insert_queries_for_product(
@@ -125,6 +134,7 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
                         $allAttributes[$product['id_product']] ?? [],
                         $price_type
                     );
+                    $processed_ids[] = (int) $product['id_product'];
 
                     // Flush in constant-size chunks so combo-heavy products
                     // cannot grow a single INSERT beyond max_allowed_packet
@@ -135,16 +145,27 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
 
                 // Flush the remainder of the batch
                 $this->flushInsertBuffer($insert_q);
+
+                // Mark only the products actually processed as synced; the rest
+                // stay pending and replay on the next cron hit
+                $ids_to_mark = $processed_ids;
+            } else {
+                // No product rows matched (e.g. deleted products with lingering
+                // flags): mark the whole batch synced so this loop cannot spin
+                // on the same pending IDs
+                $ids_to_mark = $productIds;
             }
 
-            // Mark processed products as synced
-            Db::getInstance()->execute(
-                'UPDATE `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`
-                SET `status` = "synced",
-                    `date_synced` = NOW()
-                WHERE `product_id` IN (' . implode(',', array_map('intval', $productIds)) . ')
-                AND `shop_id` = ' . (int) $shop_id
-            );
+            if (!empty($ids_to_mark)) {
+                // Mark processed products as synced
+                Db::getInstance()->execute(
+                    'UPDATE `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`
+                    SET `status` = "synced",
+                        `date_synced` = NOW()
+                    WHERE `product_id` IN (' . implode(',', array_map('intval', $ids_to_mark)) . ')
+                    AND `shop_id` = ' . (int) $shop_id
+                );
+            }
 
             // Small sleep to reduce CPU spike
             usleep(10000); // 0.01 seconds
