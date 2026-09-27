@@ -117,25 +117,13 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
 
                 $insert_q = '';
                 foreach ($products as $product) {
-                    $attributes = $allAttributes[$product['id_product']] ?? [];
-
-                    if (!empty($attributes)) {
-                        foreach ($attributes as $attribute) {
-                            $insert_q .= $this->create_insert_query(
-                                $product,
-                                $attribute['id_product_attribute'],
-                                $attribute['price'],
-                                $price_type
-                            );
-                        }
-                    } else {
-                        $insert_q .= $this->create_insert_query(
-                            $product,
-                            false,
-                            false,
-                            $price_type
-                        );
-                    }
+                    // Record every price of this product (specific prices per
+                    // attribute/country/currency/group + regular prices) as history rows
+                    $insert_q .= $this->create_insert_queries_for_product(
+                        $product,
+                        $allAttributes[$product['id_product']] ?? [],
+                        $price_type
+                    );
                 }
 
                 if ($insert_q != '') {
@@ -182,9 +170,9 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
         while ((time() - $startTime) < self::MAX_EXECUTION_TIME) {
             // Keyset fetch: next PRODUCT_BATCH_SIZE product IDs after the cursor.
             // ID gaps are skipped by the query itself; only id_product is selected
-            // (all create_insert_query() consumes). No product_lang join: prices
-            // are language-independent, so products without a translation in the
-            // default language are synced too.
+            // (all the create_insert_query_for_*() helpers consume). No
+            // product_lang join: prices are language-independent, so products
+            // without a translation in the default language are synced too.
             $sql = 'SELECT p.`id_product`
                 FROM `' . _DB_PREFIX_ . 'product` p
                 ' . Shop::addSqlAssociation('product', 'p') . '
@@ -206,25 +194,13 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
 
             $insert_q = '';
             foreach ($products as $product) {
-                $attributes = $allAttributes[$product['id_product']] ?? [];
-
-                if (!empty($attributes)) {
-                    foreach ($attributes as $attribute) {
-                        $insert_q .= $this->create_insert_query(
-                            $product,
-                            $attribute['id_product_attribute'],
-                            $attribute['price'],
-                            $price_type
-                        );
-                    }
-                } else {
-                    $insert_q .= $this->create_insert_query(
-                        $product,
-                        false,
-                        false,
-                        $price_type
-                    );
-                }
+                // Record every price of this product (specific prices per
+                // attribute/country/currency/group + regular prices) as history rows
+                $insert_q .= $this->create_insert_queries_for_product(
+                    $product,
+                    $allAttributes[$product['id_product']] ?? [],
+                    $price_type
+                );
             }
 
             if ($insert_q != '') {

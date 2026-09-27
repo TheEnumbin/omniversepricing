@@ -329,6 +329,81 @@ trait DatabaseHelper_Trait
     }
 
     /**
+     * Build all INSERT tuples for one product, mirroring the manual sync
+     * semantics:
+     *  - one row (promo = 1) per specific price, computed for that rule's own
+     *    attribute/country/currency/group context
+     *  - regular price rows (promo = 0) for attributes without any specific price
+     *  - base row (id_product_attribute = 0) unless a catch-all rule
+     *    (all-zero context) exists
+     *
+     * @param array $product At least ['id_product' => ..]
+     * @param array $allAttributes Attributes of the product,
+     *                             e.g. [['id_product_attribute' => ..], ...] ([] when none)
+     * @param string $price_type 'current' (with reductions) | 'old_price' (without)
+     *
+     * @return string Comma-separated VALUES tuples ('' when nothing to insert)
+     */
+    private function create_insert_queries_for_product($product, array $allAttributes, $price_type = 'current')
+    {
+        $insert_q = '';
+
+        // STEP 1: Get ALL specific prices for this product ONCE
+        $all_specific_prices = SpecificPrice::getByProductId($product['id_product']);
+
+        // STEP 2: Track which attributes have specific prices
+        $attributes_with_specific_prices = [];
+
+        // STEP 3: Process all specific prices and create insert queries
+        if (!empty($all_specific_prices)) {
+            foreach ($all_specific_prices as $specific_price) {
+                $attr_id = $specific_price['id_product_attribute'];
+                if (!isset($attributes_with_specific_prices[$attr_id])) {
+                    $attributes_with_specific_prices[$attr_id] = true;
+                }
+                // Create insert query for this specific price
+                $insert_q .= $this->create_insert_query_for_specific_price($product, $specific_price, $price_type);
+            }
+        }
+
+        // STEP 3.5: Regular prices for attributes without specific prices
+        if (!empty($allAttributes)) {
+            foreach ($allAttributes as $attribute) {
+                // If this attribute doesn't have a specific price, track its regular price
+                if (!isset($attributes_with_specific_prices[$attribute['id_product_attribute']])) {
+                    // Price impact already included by getPriceStatic() when using attribute ID
+                    $insert_q .= $this->create_insert_query_for_default_price(
+                        $product,
+                        $attribute['id_product_attribute'],
+                        false,
+                        $price_type
+                    );
+                }
+            }
+        }
+
+        // STEP 4: Add base default price (id_attribute = 0) only if no catch-all specific price exists
+        $has_catch_all_specific_price = false;
+        if (!empty($all_specific_prices)) {
+            foreach ($all_specific_prices as $sp) {
+                // Check if this specific price applies to ALL groups, ALL currencies, ALL countries
+                if ($sp['id_currency'] == 0 && $sp['id_group'] == 0 && $sp['id_country'] == 0) {
+                    $has_catch_all_specific_price = true;
+                    break;
+                }
+            }
+        }
+
+        // Only add default entry if no catch-all specific price exists
+        // This ensures general customers (id_group=0) get tracked even when group-specific prices exist
+        if (!$has_catch_all_specific_price) {
+            $insert_q .= $this->create_insert_query_for_default_price($product, 0, false, $price_type);
+        }
+
+        return $insert_q;
+    }
+
+    /**
      * Check if price is alredy available for the product
      */
     private function getProductAttributesInfo($id_product, $shop_only = false)
