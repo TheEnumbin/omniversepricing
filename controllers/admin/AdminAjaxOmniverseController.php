@@ -26,7 +26,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
 {
     use DatabaseHelper_Trait;
 
-    public const PRODUCT_BATCH_SIZE = 3; // Products per AJAX batch (keyset fetch)
+    public const PRODUCT_BATCH_SIZE = 5; // Products per AJAX batch (keyset fetch)
 
     public function ajaxProcessOmniverseChangeLang()
     {
@@ -165,7 +165,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         // Called repeatedly (one AJAX call per batch) by call_sync_ajax() in
         // views/js/admin.js until a completion response (start = 0) is sent.
         // Each call records prices of the next PRODUCT_BATCH_SIZE products
-        // after the cursor into ps_omniversepricing_products (prices are
+        // after the cursor into omniversepricing_products (prices are
         // language-independent, so products are processed once).
         // -------------------------------------------------------------------
 
@@ -194,7 +194,6 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $max_id = ($final_end !== '' && $final_end !== null) ? (int) $final_end : null;
 
         // First call of the loop: detect whether this run covers the whole
-        // catalog (Start <= 1, and no upper bound or one at/after the highest
         // product ID). Remembered in config so the completion responses can
         // mark the catalog as seeded - smart cron then skips its redundant
         // initial full sweep. Partial/stopped runs never consume the marker.
