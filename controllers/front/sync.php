@@ -47,6 +47,14 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
             }
         }
 
+        // Master "stop recording" switch: the product/specific-price hooks
+        // honor it, so the cron sync paths must too - otherwise toggling it
+        // would pause only part of the price recording. Pending sync flags
+        // stay pending while stopped and replay once recording resumes.
+        if (Configuration::get('OMNIVERSEPRICING_STOP_RECORD')) {
+            exit;
+        }
+
         $today = date('j-n-Y');
         $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
 
