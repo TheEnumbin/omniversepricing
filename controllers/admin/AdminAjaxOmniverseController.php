@@ -193,6 +193,19 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         // the batch, ID gaps are skipped by the query itself.
         $max_id = ($final_end !== '' && $final_end !== null) ? (int) $final_end : null;
 
+        // First call of the loop: detect whether this run covers the whole
+        // catalog (Start <= 1, and no upper bound or one at/after the highest
+        // product ID). Remembered in config so the completion responses can
+        // mark the catalog as seeded - smart cron then skips its redundant
+        // initial full sweep. Partial/stopped runs never consume the marker.
+        if ($synced_ids === null) {
+            $max_product_id = (int) Db::getInstance()->getValue(
+                'SELECT MAX(`id_product`) FROM `' . _DB_PREFIX_ . 'product`'
+            );
+            $is_full_range = ((int) $start <= 1) && ($max_id === null || $max_id >= $max_product_id);
+            Configuration::updateValue('OMNIVERSEPRICING_MANUAL_FULL_SYNC', $is_full_range ? 1 : 0);
+        }
+
         // --- 2. Fetch the next batch and record prices ---
         $not_found = true; // Stays true if no products exist after the cursor
         $batch_last_id = 0; // Highest product ID of this batch -> next cursor
@@ -227,6 +240,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
 
         // --- Response D: no products after the cursor -> range exhausted ---
         if ($not_found) {
+            $this->markFullManualSyncCompleted();
             $response = [
                 'success' => 1,
                 'start' => 0, // start = 0 tells the JS client to stop calling
@@ -239,6 +253,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
 
         // --- Response E: batch reached $final_end -> sync completed ---
         if ($max_id !== null && $batch_last_id >= $max_id) {
+            $this->markFullManualSyncCompleted();
             $response = [
                 'success' => 1,
                 'start' => 0, // start = 0 tells the JS client to stop calling
@@ -258,5 +273,21 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         ];
         echo json_encode($response);
         exit;
+    }
+
+    /**
+     * Called when a manual sync run reaches completion (range exhausted or
+     * end bound reached). If the first call of this run marked it as a
+     * full-catalog sync, record the catalog as seeded so smart cron skips
+     * its initial full sweep, and clear the transient marker.
+     *
+     * @return void
+     */
+    private function markFullManualSyncCompleted()
+    {
+        if (Configuration::get('OMNIVERSEPRICING_MANUAL_FULL_SYNC')) {
+            Configuration::updateValue('OMNIVERSEPRICING_INITIAL_SYNC_DONE', 1);
+            Configuration::updateValue('OMNIVERSEPRICING_MANUAL_FULL_SYNC', 0);
+        }
     }
 }

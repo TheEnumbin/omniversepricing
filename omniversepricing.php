@@ -1226,10 +1226,15 @@ class Omniversepricing extends Module
 
     /**
      * Hook called when a product is added
+     * Flags the product for smart cron sync
      */
     public function hookActionProductAdd($params)
     {
-        // This hook is intentionally empty for now
+        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
+
+        if ($history_func == 'smart_cron') {
+            $this->flagProductForSync($params['id_product']);
+        }
     }
 
     /**
@@ -1278,7 +1283,6 @@ class Omniversepricing extends Module
 
     /**
      * Flag a product for sync by adding/updating entry in sync_flags table
-     * Only flags products that already exist in omniversepricing_products table
      *
      * @param int $product_id
      * @return void
@@ -1287,24 +1291,16 @@ class Omniversepricing extends Module
     {
         $shop_id = $this->context->shop->id;
 
-        // Check if product exists in omniversepricing_products table
-        $exists = Db::getInstance()->getValue(
-            'SELECT COUNT(*) FROM `' . _DB_PREFIX_ . 'omniversepricing_products`
-            WHERE `product_id` = ' . (int) $product_id . '
-            AND `shop_id` = ' . (int) $shop_id
+        // Insert or update sync flag (unique on product_id + shop_id makes
+        // this an idempotent upsert; no history-table lookup needed)
+        Db::getInstance()->execute(
+            'INSERT INTO `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`
+            (`product_id`, `shop_id`, `status`, `date_added`)
+            VALUES (' . (int) $product_id . ', ' . (int) $shop_id . ', \'pending\', NOW())
+            ON DUPLICATE KEY UPDATE
+            `status` = \'pending\',
+            `date_added` = NOW()'
         );
-
-        if ($exists) {
-            // Insert or update sync flag
-            Db::getInstance()->execute(
-                'INSERT INTO `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`
-                (`product_id`, `shop_id`, `status`, `date_added`)
-                VALUES (' . (int) $product_id . ', ' . (int) $shop_id . ', \'pending\', NOW())
-                ON DUPLICATE KEY UPDATE
-                `status` = \'pending\',
-                `date_added` = NOW()'
-            );
-        }
     }
 
     /**
