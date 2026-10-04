@@ -188,9 +188,21 @@ class OmniversepricingSyncModuleFrontController extends ModuleFrontController
         $date_cron = Configuration::get('OMNIVERSEPRICING_CRON_DATE');
         $today = date('j-n-Y');
 
-        // Reset cursor if new day
         if ($today != $date_cron) {
+            // New day (or RESET_CRON wrote an older date): start a fresh
+            // sweep. Stamping CRON_DATE here is what makes subsequent
+            // same-day hits resume from the persisted cursor instead of
+            // re-resetting it to 0 - previously the cursor only became
+            // resumable after the first completion, so a sweep that
+            // outlived one request kept re-crawling its first segment.
             Configuration::updateValue('OMNIVERSEPRICING_SYNC_LAST_ID', 0);
+            Configuration::updateValue('OMNIVERSEPRICING_CRON_DATE', $today);
+        } elseif ((int) Configuration::get('OMNIVERSEPRICING_SYNC_LAST_ID') == 0) {
+            // Same day with the cursor already at 0: only the completion
+            // branch below produces this state, so today's sweep is done.
+            // Exit at zero cost instead of re-crawling the whole catalog
+            // on every hit until midnight.
+            exit;
         }
 
         $startTime = time();
