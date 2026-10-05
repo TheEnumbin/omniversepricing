@@ -1230,9 +1230,10 @@ class Omniversepricing extends Module
      */
     public function hookActionProductAdd($params)
     {
+        $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD');
         $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
 
-        if ($history_func == 'smart_cron') {
+        if (!$omni_stop && $history_func == 'smart_cron') {
             $this->flagProductForSync($params['id_product']);
         }
     }
@@ -1243,9 +1244,10 @@ class Omniversepricing extends Module
      */
     public function hookActionProductAttributeAdd($params)
     {
+        $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD');
         $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
 
-        if ($history_func == 'smart_cron') {
+        if (!$omni_stop && $history_func == 'smart_cron') {
             $this->flagProductForSync($params['id_product']);
         }
     }
@@ -1256,9 +1258,10 @@ class Omniversepricing extends Module
      */
     public function hookActionProductAttributeUpdate($params)
     {
+        $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD');
         $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
 
-        if ($history_func == 'smart_cron') {
+        if (!$omni_stop && $history_func == 'smart_cron') {
             $this->flagProductForSync($params['id_product']);
         }
     }
