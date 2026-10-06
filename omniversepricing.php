@@ -796,6 +796,17 @@ class Omniversepricing extends Module
                     Db::getInstance()->execute(
                         'TRUNCATE `' . _DB_PREFIX_ . 'omniversepricing_products`'
                     );
+
+                    // History is gone: clear the smart-cron queue and force a
+                    // full catalog sweep on the next cron run
+                    Db::getInstance()->execute(
+                        'TRUNCATE `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`'
+                    );
+                    $yesterday = date('Y-m-d', strtotime('-1 day'));
+                    Configuration::updateValue('OMNIVERSEPRICING_INITIAL_SYNC_DONE', 0);
+                    Configuration::updateValue('OMNIVERSEPRICING_SYNC_LAST_ID', 0);
+                    Configuration::updateValue('OMNIVERSEPRICING_CRON_DATE', $yesterday);
+                    Configuration::updateValue('OMNIVERSEPRICING_LAST_SYNC', 0);
                 }
             } elseif ($key == 'OMNIVERSEPRICING_RESET_CRON') {
                 if (Tools::getValue($key)) {
@@ -803,6 +814,15 @@ class Omniversepricing extends Module
                     Configuration::updateValue('OMNIVERSEPRICING_SYNC_LAST_ID', 0);
                     Configuration::updateValue('OMNIVERSEPRICING_CRON_DATE', $yesterday);
                     Configuration::updateValue('OMNIVERSEPRICING_LAST_SYNC', 0);
+
+                    // Clear the smart-cron queue and force a full catalog
+                    // sweep on the next cron run (smart sync only reads the
+                    // flags table, so without INITIAL_SYNC_DONE = 0 this
+                    // reset would be a no-op in smart_cron mode)
+                    Configuration::updateValue('OMNIVERSEPRICING_INITIAL_SYNC_DONE', 0);
+                    Db::getInstance()->execute(
+                        'TRUNCATE `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`'
+                    );
                 }
             } elseif ($key == 'OMNIVERSEPRICING_DAYS_LIMIT') {
                 $days_limit = (int) Tools::getValue($key);
