@@ -34,6 +34,7 @@ if (!defined('_PS_VERSION_')) {
 }
 $sql = [];
 $sql[] = 'DROP TABLE `' . _DB_PREFIX_ . 'omniversepricing_products`;';
+$sql[] = 'DROP TABLE `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`;';
 foreach ($sql as $query) {
     if (Db::getInstance()->execute($query) == false) {
         return false;
