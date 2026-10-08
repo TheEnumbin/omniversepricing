@@ -35,7 +35,7 @@ class Omniversepricing extends Module
     public function __construct()
     {
         $this->name = 'omniversepricing';
-        $this->version = '1.3.2';
+        $this->version = '1.4.1';
         $this->tab = 'pricing_promotion';
         $this->author = 'TheEnumbin';
         $this->need_instance = 0;
@@ -71,6 +71,8 @@ class Omniversepricing extends Module
         Configuration::updateValue('OMNIVERSEPRICING_DAYS_LIMIT', 30);
         Configuration::updateValue('OMNIVERSEPRICING_NOTICE_STYLE', 'mixed');
         Configuration::updateValue('OMNIVERSEPRICING_HISTORY_FUNC', 'manual');
+        // 0 = first cron sync must run the full catalog sweep before smart sync takes over
+        Configuration::updateValue('OMNIVERSEPRICING_INITIAL_SYNC_DONE', 0);
         Configuration::updateValue('OMNIVERSEPRICING_POSITION', 'after_price');
         Configuration::updateValue('OMNIVERSEPRICING_CHART_BG_COLOR', '#ffffff');
         Configuration::updateValue('OMNIVERSEPRICING_CHART_LINK_COLOR', '#4bc0c0');
@@ -103,7 +105,11 @@ class Omniversepricing extends Module
         return parent::install()
         && $this->registerHook('displayHeader')
         && $this->registerHook('displayFooter')
+        && $this->registerHook('actionProductAdd')
         && $this->registerHook('actionProductUpdate')
+        && $this->registerHook('actionProductDelete')
+        && $this->registerHook('actionProductAttributeAdd')
+        && $this->registerHook('actionProductAttributeUpdate')
         && $this->registerHook('actionObjectSpecificPriceAddAfter')
         && $this->registerHook('actionObjectSpecificPriceUpdateAfter')
         && $this->registerHook('displayBackOfficeHeader')
@@ -221,6 +227,7 @@ class Omniversepricing extends Module
                 ],
                 'input' => [
                     [
+                        'col' => 6,
                         'type' => 'select',
                         'label' => $this->l('How to Keep Price History?'),
                         'name' => 'OMNIVERSEPRICING_HISTORY_FUNC',
@@ -236,7 +243,11 @@ class Omniversepricing extends Module
                                 ],
                                 [
                                     'id' => 'w_cron',
-                                    'name' => $this->l('Automated with Cron'),
+                                    'name' => $this->l('Automated with Cron (Offset-based batch processing)'),
+                                ],
+                                [
+                                    'id' => 'smart_cron',
+                                    'name' => $this->l('Automated with Cron (Smart - Only sync modified products)'),
                                 ],
                                 [
                                     'id' => 'w_hook',
@@ -246,6 +257,7 @@ class Omniversepricing extends Module
                             'id' => 'id',
                             'name' => 'name',
                         ],
+                        "class" => " history-func-select-width",
                         'tab' => 'general',
                     ],
                     [
@@ -784,13 +796,33 @@ class Omniversepricing extends Module
                     Db::getInstance()->execute(
                         'TRUNCATE `' . _DB_PREFIX_ . 'omniversepricing_products`'
                     );
+
+                    // History is gone: clear the smart-cron queue and force a
+                    // full catalog sweep on the next cron run
+                    Db::getInstance()->execute(
+                        'TRUNCATE `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`'
+                    );
+                    $yesterday = date('Y-m-d', strtotime('-1 day'));
+                    Configuration::updateValue('OMNIVERSEPRICING_INITIAL_SYNC_DONE', 0);
+                    Configuration::updateValue('OMNIVERSEPRICING_SYNC_LAST_ID', 0);
+                    Configuration::updateValue('OMNIVERSEPRICING_CRON_DATE', $yesterday);
+                    Configuration::updateValue('OMNIVERSEPRICING_LAST_SYNC', 0);
                 }
             } elseif ($key == 'OMNIVERSEPRICING_RESET_CRON') {
                 if (Tools::getValue($key)) {
                     $yesterday = date('Y-m-d', strtotime('-1 day'));
-                    Configuration::updateValue('OMNIVERSEPRICING_SYNC_OFFSET', 0);
+                    Configuration::updateValue('OMNIVERSEPRICING_SYNC_LAST_ID', 0);
                     Configuration::updateValue('OMNIVERSEPRICING_CRON_DATE', $yesterday);
                     Configuration::updateValue('OMNIVERSEPRICING_LAST_SYNC', 0);
+
+                    // Clear the smart-cron queue and force a full catalog
+                    // sweep on the next cron run (smart sync only reads the
+                    // flags table, so without INITIAL_SYNC_DONE = 0 this
+                    // reset would be a no-op in smart_cron mode)
+                    Configuration::updateValue('OMNIVERSEPRICING_INITIAL_SYNC_DONE', 0);
+                    Db::getInstance()->execute(
+                        'TRUNCATE `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`'
+                    );
                 }
             } elseif ($key == 'OMNIVERSEPRICING_DAYS_LIMIT') {
                 $days_limit = (int) Tools::getValue($key);
@@ -887,12 +919,10 @@ class Omniversepricing extends Module
     {
         $this->context->controller->addCSS($this->_path . 'views/css/admin.css');
         $this->context->controller->addJS($this->_path . 'views/js/admin.js');
-        $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
         Media::addJsDef([
             'omniversepricing_ajax_url' => $this->context->link->getAdminLink('AdminAjaxOmniverse'),
             'omniversepricing_shop_id' => $shop_id,
-            'omniversepricing_lang_id' => $lang_id,
             'omniversepricing_total_products' => $this->getProductCount($shop_id),
         ]);
         $omni_auto_del = Configuration::get('OMNIVERSEPRICING_AUTO_DELETE_OLD');
@@ -931,16 +961,24 @@ class Omniversepricing extends Module
         $results = Db::getInstance()->executeS(
             'SELECT *
             FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
-            WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+            WHERE oc.`shop_id` = ' . (int) $shop_id . '
             AND oc.`product_id` = ' . (int) $id_product . '
             AND oc.`id_product_attribute` = ' . (int) $id_product_attribute . '
             ORDER BY date DESC',
             true
         );
         $omniverse_prices = [];
+        $seen = [];
         $priceFormatter = new PriceFormatter();
 
         foreach ($results as $result) {
+            // Deduplicate legacy per-language rows (same date/price/promo stored once per language)
+            $key = $result['date'] . '|' . $result['price'] . '|' . $result['promo'];
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+
             $omniverse_prices[$result['id_omniversepricing']]['id'] = $result['id_omniversepricing'];
             $omniverse_prices[$result['id_omniversepricing']]['date'] = $result['date'];
             $omniverse_prices[$result['id_omniversepricing']]['price'] = $priceFormatter->convertAndFormat($result['price']);
@@ -949,12 +987,9 @@ class Omniversepricing extends Module
                 $omniverse_prices[$result['id_omniversepricing']]['promotext'] = 'Promotional Price';
             }
         }
-        $languages = Language::getLanguages(false);
         $this->context->smarty->assign([
             'omniverse_prices' => $omniverse_prices,
             'omniverse_prd_id' => $id_product,
-            'omniverse_langs' => $languages,
-            'omniverse_curr_lang' => $lang_id,
             'omniverse_combinations' => $combinations,
             'omniverse_selected_combination' => $id_product_attribute,
         ]);
@@ -1108,6 +1143,9 @@ class Omniversepricing extends Module
                         $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include);
                     }
                 }
+            } elseif ($history_func == 'smart_cron') {
+                // Smart sync: flag product for cron processing
+                $this->flagProductForSync($params['id_product']);
             }
         }
     }
@@ -1152,6 +1190,9 @@ class Omniversepricing extends Module
                         $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include, $params['object']);
                     }
                 }
+            } elseif ($history_func == 'smart_cron') {
+                // Smart sync: flag product for cron processing
+                $this->flagProductForSync($params['object']->id_product);
             }
         }
     }
@@ -1196,8 +1237,93 @@ class Omniversepricing extends Module
                         $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include, $params['object']);
                     }
                 }
+            } elseif ($history_func == 'smart_cron') {
+                // Smart sync: flag product for cron processing
+                $this->flagProductForSync($params['object']->id_product);
             }
         }
+    }
+
+    /**
+     * Hook called when a product is added
+     * Flags the product for smart cron sync
+     */
+    public function hookActionProductAdd($params)
+    {
+        $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD');
+        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
+
+        if (!$omni_stop && $history_func == 'smart_cron') {
+            $this->flagProductForSync($params['id_product']);
+        }
+    }
+
+    /**
+     * Hook called when a product attribute/combination is added
+     * Flags the product for smart cron sync
+     */
+    public function hookActionProductAttributeAdd($params)
+    {
+        $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD');
+        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
+
+        if (!$omni_stop && $history_func == 'smart_cron') {
+            $this->flagProductForSync($params['id_product']);
+        }
+    }
+
+    /**
+     * Hook called when a product attribute/combination is updated
+     * Flags the product for smart cron sync
+     */
+    public function hookActionProductAttributeUpdate($params)
+    {
+        $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD');
+        $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
+
+        if (!$omni_stop && $history_func == 'smart_cron') {
+            $this->flagProductForSync($params['id_product']);
+        }
+    }
+
+    /**
+     * Hook called when a product is deleted
+     * Removes all price history for this product
+     */
+    public function hookActionProductDelete($params)
+    {
+        Db::getInstance()->execute(
+            'DELETE FROM `' . _DB_PREFIX_ . 'omniversepricing_products`
+            WHERE `product_id` = ' . (int) $params['id_product']
+        );
+
+        // Also remove from sync flags table
+        Db::getInstance()->execute(
+            'DELETE FROM `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`
+            WHERE `product_id` = ' . (int) $params['id_product']
+        );
+    }
+
+    /**
+     * Flag a product for sync by adding/updating entry in sync_flags table
+     *
+     * @param int $product_id
+     * @return void
+     */
+    private function flagProductForSync($product_id)
+    {
+        $shop_id = $this->context->shop->id;
+
+        // Insert or update sync flag (unique on product_id + shop_id makes
+        // this an idempotent upsert; no history-table lookup needed)
+        Db::getInstance()->execute(
+            'INSERT INTO `' . _DB_PREFIX_ . 'omniversepricing_sync_flags`
+            (`product_id`, `shop_id`, `status`, `date_added`)
+            VALUES (' . (int) $product_id . ', ' . (int) $shop_id . ', \'pending\', NOW())
+            ON DUPLICATE KEY UPDATE
+            `status` = \'pending\',
+            `date_added` = NOW()'
+        );
     }
 
     /**
@@ -1339,7 +1465,6 @@ class Omniversepricing extends Module
     private function omniversepricing_check_existance($prd_id, $price, $id_attr = 0)
     {
         $stable_v = Configuration::get('OMNIVERSEPRICING_STABLE_VERSION');
-        $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
         $attr_q = '';
         $curre_q = '';
@@ -1371,7 +1496,7 @@ class Omniversepricing extends Module
         $results = Db::getInstance()->executeS(
             'SELECT *
             FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
-            WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+            WHERE oc.`shop_id` = ' . (int) $shop_id . '
             AND oc.`product_id` = ' . (int) $prd_id . ' AND oc.`price` = ' . $price . $attr_q . $curre_q . $countr_q . $group_q
         );
 
@@ -1387,7 +1512,6 @@ class Omniversepricing extends Module
             return;
         }
         $stable_v = Configuration::get('OMNIVERSEPRICING_STABLE_VERSION');
-        $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
         $date = date('Y-m-d');
         $promo = 0;
@@ -1424,7 +1548,7 @@ class Omniversepricing extends Module
                 'promo' => $promo,
                 'date' => $date,
                 'shop_id' => (int) $shop_id,
-                'lang_id' => (int) $lang_id,
+                'lang_id' => 0,
             ]);
         } else {
             $result = Db::getInstance()->insert('omniversepricing_products', [
@@ -1434,7 +1558,7 @@ class Omniversepricing extends Module
                 'promo' => $promo,
                 'date' => $date,
                 'shop_id' => (int) $shop_id,
-                'lang_id' => (int) $lang_id,
+                'lang_id' => 0,
             ]);
         }
     }
@@ -1445,7 +1569,6 @@ class Omniversepricing extends Module
     private function omniversepricing_get_price($id, $price_amount, $id_attr = 0)
     {
         $stable_v = Configuration::get('OMNIVERSEPRICING_STABLE_VERSION');
-        $lang_id = $this->context->language->id;
         $shop_id = $this->context->shop->id;
         $attr_q = '';
         $curre_q = '';
@@ -1478,13 +1601,14 @@ class Omniversepricing extends Module
         $date = date('Y-m-d');
         $days_limit = (int) Configuration::get('OMNIVERSEPRICING_DAYS_LIMIT', null, null, null, 30);
         $date_range = date('Y-m-d', strtotime('-' . ($days_limit + 1) . ' days'));
-        $q_1 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
-        WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+        $q_1 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
+        WHERE oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q . ' AND oc.id_omniversepricing ' . $inner_q;
-        $q_2 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc 
-        WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+        $q_2 = 'SELECT MIN(price) as ' . $this->name . '_price FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
+        WHERE oc.`shop_id` = ' . (int) $shop_id . '
         AND oc.`product_id` = ' . (int) $id . ' AND oc.date > "' . $date_range . '" AND oc.price != "' . $price_amount . '"' . $attr_q . ' AND oc.`id_currency` = 0 AND oc.`id_country` = 0';
         $result = Db::getInstance()->executeS($q_1 . ' UNION ' . $q_2);
+
         if (isset($result)) {
             if (isset($result[0][$this->name . '_price']) && $result[0][$this->name . '_price'] != null) {
                 return $result[0][$this->name . '_price'];

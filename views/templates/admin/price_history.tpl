@@ -42,19 +42,6 @@
         {else}
             <input type="hidden" id="omniversepricing_combination_selector" name="omniversepricing_combination_selector" value="0">
         {/if}
-        <div class="form-group" style="margin-bottom: 10px;">
-            <label for="omniversepricing_lang_changer" style="font-weight: bold;">Language:</label>
-            <select class="omniversepricing-lang-changer" name="omniversepricing_lang_changer"
-                id="omniversepricing_lang_changer" style="max-width: 400px;">
-                {foreach from=$omniverse_langs item=omniverse_lang}
-                    {if $omniverse_lang.id_lang == $omniverse_curr_lang}
-                        <option selected="selected" value="{$omniverse_lang.id_lang|intval}">{$omniverse_lang.name|escape:'htmlall':'UTF-8'}</option>
-                    {else}
-                        <option value="{$omniverse_lang.id_lang|intval}">{$omniverse_lang.name|escape:'htmlall':'UTF-8'}</option>
-                    {/if}
-                {/foreach}
-            </select>
-        </div>
     </div>
     <div class="omniversepricing-sec omniversepricing-price-history">
         <div>

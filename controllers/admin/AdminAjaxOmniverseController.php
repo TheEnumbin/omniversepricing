@@ -26,17 +26,19 @@ class AdminAjaxOmniverseController extends ModuleAdminController
 {
     use DatabaseHelper_Trait;
 
+    public const PRODUCT_BATCH_SIZE = 5; // Products per AJAX batch (keyset fetch)
+
     public function ajaxProcessOmniverseChangeLang()
     {
-        $lang_id = Tools::getValue('langid');
         $shop_id = Tools::getValue('shopid');
         $prd_id = Tools::getValue('prdid');
         $id_product_attribute = Tools::getValue('id_product_attribute', 0);
         $omniverse_prices = [];
+        $seen = [];
         $results = Db::getInstance()->executeS(
             'SELECT *
             FROM `' . _DB_PREFIX_ . 'omniversepricing_products` oc
-            WHERE oc.`lang_id` = ' . (int) $lang_id . ' AND oc.`shop_id` = ' . (int) $shop_id . '
+            WHERE oc.`shop_id` = ' . (int) $shop_id . '
             AND oc.`product_id` = ' . (int) $prd_id . '
             AND oc.`id_product_attribute` = ' . (int) $id_product_attribute . '
             ORDER BY date DESC',
@@ -44,6 +46,13 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         );
 
         foreach ($results as $result) {
+            // Deduplicate legacy per-language rows (same date/price/promo stored once per language)
+            $key = $result['date'] . '|' . $result['price'] . '|' . $result['promo'];
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+
             $omniverse_prices[$result['id_omniversepricing']]['id'] = $result['id_omniversepricing'];
             $omniverse_prices[$result['id_omniversepricing']]['date'] = $result['date'];
             $omniverse_prices[$result['id_omniversepricing']]['price'] = Context::getContext()->getCurrentLocale()->formatPrice($result['price'], Context::getContext()->currency->iso_code);
@@ -81,7 +90,6 @@ class AdminAjaxOmniverseController extends ModuleAdminController
         $price = Tools::getValue('price');
         $promodate = Tools::getValue('promodate');
         $pricetype = Tools::getValue('pricetype');
-        $lang_id = Tools::getValue('langid');
         $shop_id = Tools::getValue('shopid');
         $id_product_attribute = Tools::getValue('id_product_attribute', 0);
         $promotext = 'Normal Price';
@@ -98,7 +106,7 @@ class AdminAjaxOmniverseController extends ModuleAdminController
             'promo' => $promo,
             'date' => $promodate,
             'shop_id' => (int) $shop_id,
-            'lang_id' => (int) $lang_id,
+            'lang_id' => 0,
         ]);
         $insert_id = Db::getInstance()->Insert_ID();
         $price_formatted = Context::getContext()->getCurrentLocale()->formatPrice($price, Context::getContext()->currency->iso_code);
@@ -153,190 +161,132 @@ class AdminAjaxOmniverseController extends ModuleAdminController
     public function ajaxProcessOmniDataSync()
     {
         // -------------------------------------------------------------------
-        // Batch price-history synchronizer.
+        // Batch price-history synchronizer (keyset pagination).
         // Called repeatedly (one AJAX call per batch) by call_sync_ajax() in
         // views/js/admin.js until a completion response (start = 0) is sent.
-        // Each call records prices of a small product-ID range into
-        // ps_omniversepricing_products, for every shop language.
+        // Each call records prices of the next PRODUCT_BATCH_SIZE products
+        // after the cursor into omniversepricing_products (prices are
+        // language-independent, so products are processed once).
         // -------------------------------------------------------------------
 
         // --- 1. Read request parameters (POSTed by admin.js) ---
-        $start = Tools::getValue('start'); // Cursor: first product ID of the current batch
+        $start = Tools::getValue('start'); // Cursor: highest product ID synced so far (exclusive)
         $final_end = Tools::getValue('end'); // Upper product-ID limit ('' = no limit)
         $price_type = Tools::getValue('price_type'); // 'current' = price with reductions | 'old_price' = price without reductions
-        $call_type = Tools::getValue('call_type'); // 1 = normal batch sync | 2 = jump to next active product (gap skipping)
         $synced_ids = Tools::getValue('synced_ids'); // JSON array of product IDs already synced (accumulated client-side)
-        $synced_ids = json_decode($synced_ids, true);
-        $end =  2; // Batch size: at most 5 product IDs per call (keeps each request short, avoids PHP timeout)
+        $synced_ids = json_decode((string) $synced_ids, true);
 
-        // ================= BRANCH 1: gap-skipping mode (call_type = 2) =================
-        // Entered after a "which = 3" response (empty range). Instead of
-        // crawling through empty ID ranges 5 IDs at a time, look up the
-        // next ACTIVE product directly.
-        if ($call_type == '2') {
-            // Smallest ACTIVE product ID > $start (and <= $final_end when set); null if none exists
-            $next_start = $this->getNextAvailableProductId($start, $final_end);
-
-            // --- Response A: no active product left in the range -> sync finished ---
-            if ($next_start == null) {
-                $response = [
-                    'success' => 1,
-                    'start' => 0, // start = 0 tells the JS client to stop calling
-                    'which' => 6, // which = 6 means finish sync because no product to sync before the end range given
-                ];
-                // synced_ids only echoed back when non-empty (client uses it for the progress label)
-                $resp_extra = [];
-                if (isset($synced_ids) && !empty($synced_ids)) {
-                    $resp_extra = [
-                        'synced_ids' => $synced_ids,
-                    ];
-                }
-                $response = array_merge($response, $resp_extra);
-                $response = json_encode($response);
-                echo $response;
-                exit;
-            }
-
-            // --- Response B: next active product found -> resume normal batch sync there ---
-            $response = [
-                'success' => 1, // success = 1 makes the JS client re-call with call_type = 1 (normal mode)
-                'start' => $next_start, // Next batch starts exactly at the product found
-                'which' => 5, // which = 5 means next active product found: jump here and continue normally
-            ];
-            $resp_extra = [];
-            if (isset($synced_ids) && !empty($synced_ids)) {
-                $resp_extra = [
-                    'synced_ids' => $synced_ids,
-                ];
-            }
-            $response = array_merge($response, $resp_extra);
-            $response = json_encode($response);
-            echo $response;
-            exit;
-        }
-
-        // ================= BRANCH 2: normal batch sync (call_type = 1) =================
-
-        // --- Response C: cursor already beyond the requested end -> sync completed ---
-        if ($final_end != '') {
-            if ($final_end < $start) { // Requested range fully covered
-                $response = [
-                    'success' => 1,
-                    'start' => 0, // start = 0 tells the JS client to stop calling
-                    'which' => 4, // which = 4 means sync completed
-                ];
-                $response = json_encode($response);
-                echo $response;
-                exit;
-            }
-
-            // Compute this batch's end cursor; never step past $final_end
-            if (($final_end - $start) < 5) {
-                $end = $final_end; // Less than one full batch remains -> final partial batch
-            } else {
-                $end = (int) $start + (int) $end; // Full batch: start + 5
-            }
+        // First call (no synced history yet): the user-entered Start ID itself
+        // must be included -> fetch after (Start - 1). Later calls resume
+        // strictly after the cursor, so no product is processed twice.
+        if ($synced_ids === null) {
+            $after_id = (int) $start - 1;
         } else {
-            $end = (int) $start + (int) $end; // No end limit -> always a full batch: start + 5
+            $after_id = (int) $start;
+        }
+        // Prices are language-independent: process products ONCE using the default
+        // language (needed only for the product_lang name join, not for price data)
+        $id_lang = (int) Configuration::get('PS_LANG_DEFAULT');
+
+        // Optional inclusive upper bound (the 'end' field). Pure ceiling: it
+        // never takes part in batch arithmetic - PRODUCT_BATCH_SIZE defines
+        // the batch, ID gaps are skipped by the query itself.
+        $max_id = ($final_end !== '' && $final_end !== null) ? (int) $final_end : null;
+
+        // First call of the loop: detect whether this run covers the whole
+        // product ID). Remembered in config so the completion responses can
+        // mark the catalog as seeded - smart cron then skips its redundant
+        // initial full sweep. Partial/stopped runs never consume the marker.
+        if ($synced_ids === null) {
+            $max_product_id = (int) Db::getInstance()->getValue(
+                'SELECT MAX(`id_product`) FROM `' . _DB_PREFIX_ . 'product`'
+            );
+            $is_full_range = ((int) $start <= 1) && ($max_id === null || $max_id >= $max_product_id);
+            Configuration::updateValue('OMNIVERSEPRICING_MANUAL_FULL_SYNC', $is_full_range ? 1 : 0);
         }
 
-        // --- 2. Fetch products in [start, end] for EVERY shop language and record prices ---
-        $context = Context::getContext();
-        $lang_id = $context->language->id; // (kept for context; the trait helpers read Context themselves)
-        $shop_id = $context->shop->id; // (same: used inside create_insert_query/check_existance via Context)
-        $languages = Language::getLanguages(false); // One pass per shop language
-        $not_found = true; // Stays true only if NO language returns products in this range
+        // --- 2. Fetch the next batch and record prices ---
+        $not_found = true; // Stays true if no products exist after the cursor
+        $batch_last_id = 0; // Highest product ID of this batch -> next cursor
 
-        foreach ($languages as $lang) {
-            // Products whose id_product is BETWEEN $start AND $end (inclusive on both ends)
-            $products = $this->getProductsByIdRange($lang['id_lang'], $start, $end, 'id_product', 'ASC');
-            $insert_q = ''; // Accumulates VALUES tuples for one bulk INSERT
+        // Next PRODUCT_BATCH_SIZE existing products after $after_id, bounded by $max_id when set
+        $products = $this->getProductsByIdKeyset($id_lang, $after_id, self::PRODUCT_BATCH_SIZE, $max_id);
+        $insert_q = '';
 
-            if (!empty($products)) {
-                $not_found = false; // At least one product exists in this range
+        if (!empty($products)) {
+            $not_found = false;
+            // Rows come ORDER BY id_product ASC: the last row holds the batch's highest ID
+            $batch_last_id = (int) $products[count($products) - 1]['id_product'];
 
-                foreach ($products as $product) {
-                    // Register this product as processed (client accumulates for the progress display)
-                    $synced_ids[] = (int) $product['id_product'];
-                    // Every product combination must get its own history row
-                    $attributes = $this->getProductAttributesInfo($product['id_product']);
-                    if (isset($attributes) && !empty($attributes)) {
-                        // Product with combinations: one row per attribute
-                        foreach ($attributes as $attribute) {
-                            $insert_q .= $this->create_insert_query($product, $lang['id_lang'], $attribute['id_product_attribute'], $attribute['price'], $price_type);
-                        }
-                    } else {
-                        // Simple product without combinations
-                        $insert_q .= $this->create_insert_query($product, $lang['id_lang'], false, false, $price_type);
-                    }
-                }
-                // Strip the trailing ",\n" left by create_insert_query() after the last tuple
-                $insert_q = rtrim($insert_q, ',' . "\n");
+            foreach ($products as $product) {
+                $synced_ids[] = (int) $product['id_product'];
 
-                if ($insert_q != '') { // Empty when every row was a duplicate (check_existance() de-duplication)
-                    // Single multi-row INSERT for the whole batch (fast bulk write)
-                    $insert_q = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`, `with_tax`) VALUES $insert_q";
-                    $insertion = Db::getInstance()->execute($insert_q);
-                }
+                // Record every price of this product (specific prices per
+                // attribute/country/currency/group + regular prices) as history rows
+                $all_product_attributes = $this->getProductAttributesInfo($product['id_product']);
+                $insert_q .= $this->create_insert_queries_for_product($product, $all_product_attributes, $price_type);
+            }
+            $insert_q = rtrim($insert_q, ',' . "\n");
+
+            if ($insert_q != '') {
+                $insert_q = 'INSERT INTO `' . _DB_PREFIX_ . "omniversepricing_products` (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`, `price`, `promo`, `date`, `shop_id`, `lang_id`, `with_tax`) VALUES $insert_q";
+                $insertion = Db::getInstance()->execute($insert_q);
             }
         }
 
-        // --- Response D: range [start, end] contained no products in any language (ID gap) ---
+        // --- 3. Normalize the accumulated ID list (defensive dedupe) ---
+        $synced_ids = array_values(array_unique((array) $synced_ids));
+
+        // --- Response D: no products after the cursor -> range exhausted ---
         if ($not_found) {
+            $this->markFullManualSyncCompleted();
             $response = [
-                'success' => 2, // success = 2 makes the JS client re-call with call_type = 2 (gap-skipping mode)
-                'start' => $start, // Same cursor: the server will locate the next active ID itself
-                'which' => 3, // which = 3 means no product found on the current range. Find next availabe product between the given range
+                'success' => 1,
+                'start' => 0, // start = 0 tells the JS client to stop calling
+                'which' => 4, // which = 4 means sync completed (range exhausted)
+                'synced_ids' => $synced_ids, // Always included: JS reads synced_ids.length on completion
             ];
-            $resp_extra = [];
-
-            if (isset($synced_ids) && !empty($synced_ids)) {
-                $resp_extra = [
-                    'synced_ids' => $synced_ids,
-                ];
-            }
-
-            $response = array_merge($response, $resp_extra);
-            $response = json_encode($response);
-            echo $response;
+            echo json_encode($response);
             exit;
         }
 
-        // --- 3. Compute the next batch cursor ---
-        $synced_ids = array_values(array_unique($synced_ids)); // Batch boundaries overlap (BETWEEN is inclusive), IDs can repeat: dedupe
-        $next_start = $end; // Next batch starts where this one ended
-
-        if ($final_end != '' && $next_start > $final_end) {
-            $next_start = $final_end; // Clamp: final batch must not run past $final_end
-        } elseif ($next_start == $final_end) {
-            // --- Response E: batch ended exactly at $final_end -> sync completed ---
+        // --- Response E: batch reached $final_end -> sync completed ---
+        if ($max_id !== null && $batch_last_id >= $max_id) {
+            $this->markFullManualSyncCompleted();
             $response = [
                 'success' => 1,
                 'start' => 0, // start = 0 tells the JS client to stop calling
                 'which' => 2, // which = 2 means sync completed
+                'synced_ids' => $synced_ids,
             ];
-            $resp_extra = [];
-            if (!empty($synced_ids)) {
-                $resp_extra = [
-                    'synced_ids' => $synced_ids,
-                ];
-            }
-
-            $response = array_merge($response, $resp_extra);
-            $response = json_encode($response);
-            echo $response;
+            echo json_encode($response);
             exit;
         }
 
         // --- Response F (default): batch synced OK -> continue with the next batch ---
         $response = [
             'success' => 1,
-            'start' => $next_start, // Next AJAX call resumes from here
+            'start' => $batch_last_id, // Next AJAX call resumes strictly after this ID
             'synced_ids' => $synced_ids, // Accumulated product IDs (client echoes them back on the next call)
             'which' => 1, // which = 1 means continue sync with the next batch
         ];
-        $response = json_encode($response);
-        echo $response;
+        echo json_encode($response);
         exit;
+    }
+
+    /**
+     * Called when a manual sync run reaches completion (range exhausted or
+     * end bound reached). If the first call of this run marked it as a
+     * full-catalog sync, record the catalog as seeded so smart cron skips
+     * its initial full sweep, and clear the transient marker.
+     *
+     * @return void
+     */
+    private function markFullManualSyncCompleted()
+    {
+        if (Configuration::get('OMNIVERSEPRICING_MANUAL_FULL_SYNC')) {
+            Configuration::updateValue('OMNIVERSEPRICING_INITIAL_SYNC_DONE', 1);
+            Configuration::updateValue('OMNIVERSEPRICING_MANUAL_FULL_SYNC', 0);
+        }
     }
 }
