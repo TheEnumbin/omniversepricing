@@ -84,7 +84,7 @@ function upgrade_module_1_4_1($module)
     // - history table empty -> never synced (e.g. smart cron never worked on fresh installs),
     //   the first cron run must sweep the full catalog
     $has_history = Db::getInstance()->getValue(
-        'SELECT 1 FROM `' . _DB_PREFIX_ . 'omniversepricing_products` LIMIT 1'
+        'SELECT 1 FROM `' . _DB_PREFIX_ . 'omniversepricing_products`'
     );
     Configuration::updateValue('OMNIVERSEPRICING_INITIAL_SYNC_DONE', $has_history ? 1 : 0);
 
