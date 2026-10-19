@@ -189,7 +189,7 @@ trait DatabaseHelper_Trait
      */
     private function create_insert_query_for_specific_price($product, $specific_price, $price_type = 'current')
     {
-        $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
+        // Prices are always stored tax-exclusive; tax is applied at display time
         $omni_tax_include_q = 0;
         $context = Context::getContext();
         $shop_id = $context->shop->id;
@@ -197,13 +197,6 @@ trait DatabaseHelper_Trait
 
         if ($price_type == 'old_price') {
             $use_reduct = false;
-        }
-        if ($omni_tax_include) {
-            $omni_tax_include = true;
-            $omni_tax_include_q = 1;
-        } else {
-            $omni_tax_include = false;
-            $omni_tax_include_q = 0;
         }
 
         // Calculate price for this specific price's customer group using priceCalculation
@@ -218,7 +211,7 @@ trait DatabaseHelper_Trait
             $specific_price['id_currency'] ?: 0,
             $specific_price['id_group'] ?: 0,
             1,
-            $omni_tax_include,
+            false,
             6,
             false,
             $use_reduct,
@@ -271,7 +264,7 @@ trait DatabaseHelper_Trait
      */
     private function create_insert_query_for_default_price($product, $id_attribute, $attr_price, $price_type = 'current')
     {
-        $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
+        // Prices are always stored tax-exclusive; tax is applied at display time
         $omni_tax_include_q = 0;
         $context = Context::getContext();
         $shop_id = $context->shop->id;
@@ -280,13 +273,6 @@ trait DatabaseHelper_Trait
         if ($price_type == 'old_price') {
             $use_reduct = false;
         }
-        if ($omni_tax_include) {
-            $omni_tax_include = true;
-            $omni_tax_include_q = 1;
-        } else {
-            $omni_tax_include = false;
-            $omni_tax_include_q = 0;
-        }
 
         if ($id_attribute === false) {
             $id_attribute = 0;
@@ -294,7 +280,7 @@ trait DatabaseHelper_Trait
 
         $price_amount = Product::getPriceStatic(
             (int) $product['id_product'],
-            $omni_tax_include,
+            false,
             $id_attribute,
             6,
             null,
