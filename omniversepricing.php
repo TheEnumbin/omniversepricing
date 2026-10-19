@@ -1112,23 +1112,17 @@ class Omniversepricing extends Module
             if ($history_func == 'w_change') {
                 $product = new Product($params['id_product']);
                 $attributes = $this->omniGetProductAttributesInfo($product->id);
-                $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
-                if ($omni_tax_include) {
-                    $omni_tax_include = true;
-                } else {
-                    $omni_tax_include = false;
-                }
                 if (isset($attributes) && !empty($attributes)) {
                     foreach ($attributes as $attribute) {
                         $id_attr = $attribute['id_product_attribute'];
                         $prd_arr['id_product_attribute'] = $id_attr;
                         $price_amount = Product::getPriceStatic(
                             (int) $product->id,
-                            $omni_tax_include
+                            false
                         );
                         $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
                         if (empty($existing)) {
-                            $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include);
+                            $this->omniversepricing_insert_data($prd_arr, $product, $price_amount);
                         }
                     }
                 } else {
@@ -1136,11 +1130,11 @@ class Omniversepricing extends Module
                     $prd_arr['id_product_attribute'] = $id_attr;
                     $price_amount = Product::getPriceStatic(
                         (int) $product->id,
-                        $omni_tax_include
+                        false
                     );
                     $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
                     if (empty($existing)) {
-                        $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include);
+                        $this->omniversepricing_insert_data($prd_arr, $product, $price_amount);
                     }
                 }
             } elseif ($history_func == 'smart_cron') {
@@ -1159,23 +1153,17 @@ class Omniversepricing extends Module
             if ($history_func == 'w_change') {
                 $product = new Product($params['object']->id_product);
                 $attributes = $this->omniGetProductAttributesInfo($product->id);
-                $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
-                if ($omni_tax_include) {
-                    $omni_tax_include = true;
-                } else {
-                    $omni_tax_include = false;
-                }
                 if (isset($attributes) && !empty($attributes)) {
                     foreach ($attributes as $attribute) {
                         $id_attr = $attribute['id_product_attribute'];
                         $prd_arr['id_product_attribute'] = $id_attr;
                         $price_amount = Product::getPriceStatic(
                             (int) $product->id,
-                            $omni_tax_include
+                            false
                         );
                         $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
                         if (empty($existing)) {
-                            $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include, $params['object']);
+                            $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, false, $params['object']);
                         }
                     }
                 } else {
@@ -1183,11 +1171,11 @@ class Omniversepricing extends Module
                     $prd_arr['id_product_attribute'] = $id_attr;
                     $price_amount = Product::getPriceStatic(
                         (int) $product->id,
-                        $omni_tax_include
+                        false
                     );
                     $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
                     if (empty($existing)) {
-                        $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include, $params['object']);
+                        $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, false, $params['object']);
                     }
                 }
             } elseif ($history_func == 'smart_cron') {
@@ -1206,23 +1194,17 @@ class Omniversepricing extends Module
             if ($history_func == 'w_change') {
                 $product = new Product($params['object']->id_product);
                 $attributes = $this->omniGetProductAttributesInfo($product->id);
-                $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
-                if ($omni_tax_include) {
-                    $omni_tax_include = true;
-                } else {
-                    $omni_tax_include = false;
-                }
                 if (isset($attributes) && !empty($attributes)) {
                     foreach ($attributes as $attribute) {
                         $id_attr = $attribute['id_product_attribute'];
                         $prd_arr['id_product_attribute'] = $id_attr;
                         $price_amount = Product::getPriceStatic(
                             (int) $product->id,
-                            $omni_tax_include
+                            false
                         );
                         $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
                         if (empty($existing)) {
-                            $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include, $params['object']);
+                            $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, false, $params['object']);
                         }
                     }
                 } else {
@@ -1230,11 +1212,11 @@ class Omniversepricing extends Module
                     $prd_arr['id_product_attribute'] = $id_attr;
                     $price_amount = Product::getPriceStatic(
                         (int) $product->id,
-                        $omni_tax_include
+                        false
                     );
                     $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
                     if (empty($existing)) {
-                        $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, $omni_tax_include, $params['object']);
+                        $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, false, $params['object']);
                     }
                 }
             } elseif ($history_func == 'smart_cron') {
@@ -1390,21 +1372,16 @@ class Omniversepricing extends Module
         $controller = Tools::getValue('controller');
         $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
         $notice_page = Configuration::get('OMNIVERSEPRICING_NOTICE_PAGE');
-        $omni_tax_include = Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
         $percent_indicator = Configuration::get('OMNIVERSEPRICING_PRECENT_INDICATOR');
         $product_obj = new Product($product['id_product'], true, $this->context->language->id);
 
         if ($notice_page == 'single' && $controller != 'product') {
             return;
         }
-        if ($omni_tax_include) {
-            $omni_tax_include = true;
-        } else {
-            $omni_tax_include = false;
-        }
+        // Prices are always stored tax-exclusive; tax is applied at display time
         $price_amount = Product::getPriceStatic(
             (int) $product_obj->id,
-            $omni_tax_include,
+            false,
             $product['id_product_attribute']
         );
 
@@ -1413,7 +1390,7 @@ class Omniversepricing extends Module
             $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD');
             if (!$omni_stop) {
                 if (empty($existing)) {
-                    $this->omniversepricing_insert_data($product, $product_obj, $price_amount, $omni_tax_include);
+                    $this->omniversepricing_insert_data($product, $product_obj, $price_amount);
                 }
             }
         }
@@ -1421,7 +1398,7 @@ class Omniversepricing extends Module
         $omniverse_price = $this->omniversepricing_get_price($product_obj->id, $price_amount, $product['id_product_attribute']);
         $priceFormatter = new PriceFormatter();
         if ($omniverse_price) {
-            $omniversepricinge_formatted_price = $priceFormatter->convertAndFormat($omniverse_price);
+            $omniversepricinge_formatted_price = $priceFormatter->convertAndFormat($this->omniApplyTax($product_obj->id, $omniverse_price));
             if ($omniverse_price > $price_amount) {
                 $omniversepricinge_percentage_amount = ceil((($omniverse_price - $price_amount) / $omniverse_price) * 100);
 
@@ -1450,7 +1427,7 @@ class Omniversepricing extends Module
         $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT');
         if ($omni_if_current) {
             $omniversepricinge_percentage = '0%';
-            $return_arr['omni_price'] = $priceFormatter->convertAndFormat($price_amount);
+            $return_arr['omni_price'] = $priceFormatter->convertAndFormat($this->omniApplyTax($product_obj->id, $price_amount));
             $return_arr['omni_percent'] = $omniversepricinge_percentage;
 
             return $return_arr;
@@ -1620,6 +1597,31 @@ class Omniversepricing extends Module
         }
 
         return false;
+    }
+
+    /**
+     * Apply the product's tax to a stored (tax-exclusive) price using the
+     * current display context.
+     *
+     * @param int $id_product
+     * @param float $price Tax-exclusive price
+     *
+     * @return float Tax-inclusive price (unchanged when tax display is disabled)
+     */
+    public function omniApplyTax($id_product, $price)
+    {
+        if (!$price || !Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX') || Tax::excludeTaxeOption()) {
+            return $price;
+        }
+
+        $context = $this->context;
+        $address = Address::initialize(null, true);
+        $tax_manager = TaxManagerFactory::getManager(
+            $address,
+            Product::getIdTaxRulesGroupByIdProduct((int) $id_product, $context)
+        );
+
+        return $tax_manager->getTaxCalculator()->addTaxes($price);
     }
 
     /**

@@ -61,7 +61,8 @@ class OmniversepricingFrontajaxModuleFrontController extends ModuleFrontControll
             $returnarr[$index]['date'] = date_format(date_create($row['date']), 'Y/m/d');
             // Convert price from default currency to current currency
             // Prices are now stored in default currency, so we convert them for display
-            $returnarr[$index]['price'] = Tools::convertPrice($row['price']);
+            // Prices are stored tax-exclusive; tax is applied at display time
+            $returnarr[$index]['price'] = $this->module->omniApplyTax($id_product, Tools::convertPrice($row['price']));
             $index = $index + 1;
         }
 
