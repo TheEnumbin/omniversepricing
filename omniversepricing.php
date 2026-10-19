@@ -26,10 +26,13 @@
 if (!defined('_PS_VERSION_')) {
     exit;
 }
+require_once __DIR__ . '/includes/db_helper_trait.php';
 use PrestaShop\PrestaShop\Adapter\Product\PriceFormatter;
 
 class Omniversepricing extends Module
 {
+    use DatabaseHelper_Trait;
+
     protected $config_form = false;
 
     public function __construct()
@@ -1104,39 +1107,37 @@ class Omniversepricing extends Module
         }
     }
 
+    /**
+     * Record the full price history of one product (specific-price rows per
+     * attribute/country/currency/group + regular price rows) using the same
+     * builders as the manual sync, so every sync mode stores identical rows.
+     *
+     * @param int $id_product
+     * @param string $price_type 'current' (with reductions) | 'old_price' (without)
+     * @return void
+     */
+    private function recordProductHistory($id_product, $price_type = 'current')
+    {
+        $product = ['id_product' => (int) $id_product];
+        $allAttributes = $this->getProductAttributesInfo($product['id_product']);
+        $insert_q = $this->create_insert_queries_for_product($product, $allAttributes, $price_type);
+        if ($insert_q != '') {
+            $insert_q = rtrim($insert_q, ',' . "\n");
+            Db::getInstance()->execute(
+                'INSERT INTO `' . _DB_PREFIX_ . 'omniversepricing_products`
+                (`product_id`, `id_product_attribute`, `id_country`, `id_currency`, `id_group`,
+                `price`, `promo`, `date`, `shop_id`, `lang_id`, `with_tax`) VALUES ' . $insert_q
+            );
+        }
+    }
+
     public function hookActionProductUpdate($params)
     {
         $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD');
         $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
         if (!$omni_stop) {
             if ($history_func == 'w_change') {
-                $product = new Product($params['id_product']);
-                $attributes = $this->omniGetProductAttributesInfo($product->id);
-                if (isset($attributes) && !empty($attributes)) {
-                    foreach ($attributes as $attribute) {
-                        $id_attr = $attribute['id_product_attribute'];
-                        $prd_arr['id_product_attribute'] = $id_attr;
-                        $price_amount = Product::getPriceStatic(
-                            (int) $product->id,
-                            false
-                        );
-                        $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
-                        if (empty($existing)) {
-                            $this->omniversepricing_insert_data($prd_arr, $product, $price_amount);
-                        }
-                    }
-                } else {
-                    $id_attr = 0;
-                    $prd_arr['id_product_attribute'] = $id_attr;
-                    $price_amount = Product::getPriceStatic(
-                        (int) $product->id,
-                        false
-                    );
-                    $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
-                    if (empty($existing)) {
-                        $this->omniversepricing_insert_data($prd_arr, $product, $price_amount);
-                    }
-                }
+                $this->recordProductHistory($params['id_product']);
             } elseif ($history_func == 'smart_cron') {
                 // Smart sync: flag product for cron processing
                 $this->flagProductForSync($params['id_product']);
@@ -1151,33 +1152,7 @@ class Omniversepricing extends Module
 
         if (!$omni_stop) {
             if ($history_func == 'w_change') {
-                $product = new Product($params['object']->id_product);
-                $attributes = $this->omniGetProductAttributesInfo($product->id);
-                if (isset($attributes) && !empty($attributes)) {
-                    foreach ($attributes as $attribute) {
-                        $id_attr = $attribute['id_product_attribute'];
-                        $prd_arr['id_product_attribute'] = $id_attr;
-                        $price_amount = Product::getPriceStatic(
-                            (int) $product->id,
-                            false
-                        );
-                        $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
-                        if (empty($existing)) {
-                            $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, false, $params['object']);
-                        }
-                    }
-                } else {
-                    $id_attr = 0;
-                    $prd_arr['id_product_attribute'] = $id_attr;
-                    $price_amount = Product::getPriceStatic(
-                        (int) $product->id,
-                        false
-                    );
-                    $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
-                    if (empty($existing)) {
-                        $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, false, $params['object']);
-                    }
-                }
+                $this->recordProductHistory($params['object']->id_product);
             } elseif ($history_func == 'smart_cron') {
                 // Smart sync: flag product for cron processing
                 $this->flagProductForSync($params['object']->id_product);
@@ -1192,33 +1167,7 @@ class Omniversepricing extends Module
 
         if (!$omni_stop) {
             if ($history_func == 'w_change') {
-                $product = new Product($params['object']->id_product);
-                $attributes = $this->omniGetProductAttributesInfo($product->id);
-                if (isset($attributes) && !empty($attributes)) {
-                    foreach ($attributes as $attribute) {
-                        $id_attr = $attribute['id_product_attribute'];
-                        $prd_arr['id_product_attribute'] = $id_attr;
-                        $price_amount = Product::getPriceStatic(
-                            (int) $product->id,
-                            false
-                        );
-                        $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
-                        if (empty($existing)) {
-                            $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, false, $params['object']);
-                        }
-                    }
-                } else {
-                    $id_attr = 0;
-                    $prd_arr['id_product_attribute'] = $id_attr;
-                    $price_amount = Product::getPriceStatic(
-                        (int) $product->id,
-                        false
-                    );
-                    $existing = $this->omniversepricing_check_existance($product->id, $price_amount, $id_attr);
-                    if (empty($existing)) {
-                        $this->omniversepricing_insert_data($prd_arr, $product, $price_amount, false, $params['object']);
-                    }
-                }
+                $this->recordProductHistory($params['object']->id_product);
             } elseif ($history_func == 'smart_cron') {
                 // Smart sync: flag product for cron processing
                 $this->flagProductForSync($params['object']->id_product);
@@ -1228,43 +1177,55 @@ class Omniversepricing extends Module
 
     /**
      * Hook called when a product is added
-     * Flags the product for smart cron sync
+     * Records price history (w_change) or flags the product for smart cron sync
      */
     public function hookActionProductAdd($params)
     {
         $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD');
         $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
 
-        if (!$omni_stop && $history_func == 'smart_cron') {
-            $this->flagProductForSync($params['id_product']);
+        if (!$omni_stop) {
+            if ($history_func == 'w_change') {
+                $this->recordProductHistory($params['id_product']);
+            } elseif ($history_func == 'smart_cron') {
+                $this->flagProductForSync($params['id_product']);
+            }
         }
     }
 
     /**
      * Hook called when a product attribute/combination is added
-     * Flags the product for smart cron sync
+     * Records price history (w_change) or flags the product for smart cron sync
      */
     public function hookActionProductAttributeAdd($params)
     {
         $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD');
         $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
 
-        if (!$omni_stop && $history_func == 'smart_cron') {
-            $this->flagProductForSync($params['id_product']);
+        if (!$omni_stop) {
+            if ($history_func == 'w_change') {
+                $this->recordProductHistory($params['id_product']);
+            } elseif ($history_func == 'smart_cron') {
+                $this->flagProductForSync($params['id_product']);
+            }
         }
     }
 
     /**
      * Hook called when a product attribute/combination is updated
-     * Flags the product for smart cron sync
+     * Records price history (w_change) or flags the product for smart cron sync
      */
     public function hookActionProductAttributeUpdate($params)
     {
         $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD');
         $history_func = Configuration::get('OMNIVERSEPRICING_HISTORY_FUNC');
 
-        if (!$omni_stop && $history_func == 'smart_cron') {
-            $this->flagProductForSync($params['id_product']);
+        if (!$omni_stop) {
+            if ($history_func == 'w_change') {
+                $this->recordProductHistory($params['id_product']);
+            } elseif ($history_func == 'smart_cron') {
+                $this->flagProductForSync($params['id_product']);
+            }
         }
     }
 
@@ -1653,14 +1614,5 @@ class Omniversepricing extends Module
         ]);
         $output = $this->context->smarty->fetch($this->local_path . 'views/templates/front/omni_front.tpl');
         echo $output;
-    }
-
-    private function omniGetProductAttributesInfo($id_product, $shop_only = false)
-    {
-        return Db::getInstance()->executeS('
-        SELECT pa.id_product_attribute, pa.price
-        FROM `' . _DB_PREFIX_ . 'product_attribute` pa' .
-        ($shop_only ? Shop::addSqlAssociation('product_attribute', 'pa') : '') . '
-        WHERE pa.`id_product` = ' . (int) $id_product);
     }
 }
