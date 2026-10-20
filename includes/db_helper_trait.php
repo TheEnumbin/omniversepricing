@@ -340,9 +340,20 @@ trait DatabaseHelper_Trait
         // STEP 2: Track which attributes have specific prices
         $attributes_with_specific_prices = [];
 
+        // Sync time used for specific-price validity (from/to) checks below
+        $now = date('Y-m-d H:i:s');
+
         // STEP 3: Process all specific prices and create insert queries
         if (!empty($all_specific_prices)) {
             foreach ($all_specific_prices as $specific_price) {
+                // Skip rules that are not currently valid (sync time outside
+                // the from/to window). '0000-00-00 00:00:00' means no limit.
+                if ($specific_price['from'] !== '0000-00-00 00:00:00' && $specific_price['from'] > $now) {
+                    continue;
+                }
+                if ($specific_price['to'] !== '0000-00-00 00:00:00' && $specific_price['to'] < $now) {
+                    continue;
+                }
                 $attr_id = $specific_price['id_product_attribute'];
                 if (!isset($attributes_with_specific_prices[$attr_id])) {
                     $attributes_with_specific_prices[$attr_id] = true;
@@ -372,6 +383,14 @@ trait DatabaseHelper_Trait
         $has_catch_all_specific_price = false;
         if (!empty($all_specific_prices)) {
             foreach ($all_specific_prices as $sp) {
+                // Skip rules that are not currently valid (from/to window);
+                // an expired/future catch-all rule must not suppress the base row
+                if ($sp['from'] !== '0000-00-00 00:00:00' && $sp['from'] > $now) {
+                    continue;
+                }
+                if ($sp['to'] !== '0000-00-00 00:00:00' && $sp['to'] < $now) {
+                    continue;
+                }
                 // Check if this specific price applies to ALL groups, ALL currencies, ALL countries
                 if ($sp['id_currency'] == 0 && $sp['id_group'] == 0 && $sp['id_country'] == 0) {
                     $has_catch_all_specific_price = true;
