@@ -35,12 +35,12 @@ Created in `sql/install.php`, dropped in `sql/uninstall.php`.
 | `id_omniversepricing` | PK |
 | `product_id`, `id_product_attribute` | Product / combination (0 = base product) |
 | `id_country`, `id_currency`, `id_group` | Pricing context of the row (0 = "all") |
-| `price` | decimal(20,6). **Always stored tax-exclusive and in the shop's default currency** - tax/currency conversion happens at display time |
+| `price` | decimal(20,6). Stored in the shop's default currency. Tax-inclusive or tax-exclusive depending on the **Price With/Without Tax** switch (`OMNIVERSEPRICING_PRICE_WITH_TAX`) at sync time - **tax is never applied at display time** |
 | `promo` | 1 = promotional/specific-price row, 0 = regular price row |
 | `date` | Row date |
 | `shop_id` | Shop context |
 | `lang_id` | **Deprecated** - kept for schema compatibility; new rows write `0`. Prices are language-independent: never filter or loop by language |
-| `with_tax` | Legacy tax flag of the recording path |
+| `with_tax` | 1 = row was recorded tax-inclusive (Price With/Without Tax switch on). Informational - display code never reads it |
 
 No unique key on business columns - deduplication is done in code via `DatabaseHelper_Trait::check_existance()` before inserting.
 
@@ -61,8 +61,9 @@ All sync paths build identical history rows through `DatabaseHelper_Trait::creat
 
 - Fetches **all** specific prices once (`SpecificPrice::getByProductId()` - **not date-filtered by core**)
 - Skips rules whose `from`/`to` window does not contain the sync time (`0000-00-00 00:00:00` = no limit) - expired/future rules must never be recorded as active promos
-- Creates one `promo = 1` row per valid specific price, recomputed in **that rule's own** attribute/country/currency/group context via `Product::priceCalculation()`, converted back to default currency when the rule is currency-bound
-- Creates regular `promo = 0` rows (via `Product::getPriceStatic()`) for attributes without any valid specific price
+- Creates one `promo = 1` row per valid specific price, recomputed in **that rule's own** attribute/country/currency/group context via `Product::priceCalculation()`, converted back to default currency when the rule is currency-bound. Tax per the Price With/Without Tax switch; for tax resolution the country falls back to `PS_COUNTRY_DEFAULT` when the rule is not country-bound
+- Creates regular `promo = 0` rows (via `Product::getPriceStatic()`, fetched tax-exclusive) for attributes without any valid specific price, then applies tax manually via the trait's `omniApplyTax()` when the switch is on
+- All tax handling happens **at sync time only** - the switch decides tax-inclusive vs tax-exclusive storage; the frontend never applies tax
 - Creates the base row (`id_product_attribute = 0`) unless a **valid** catch-all rule (country=currency=group=0) exists
 - `$price_type` switch: `'current'` = price with reductions, `'old_price'` = price without
 
@@ -82,9 +83,9 @@ After the initial full sweep (`OMNIVERSEPRICING_INITIAL_SYNC_DONE = 1`), the sam
 
 Product add/update, attribute add/update, specific price add/update hooks call `recordProductHistory()` -> `create_insert_queries_for_product()` and insert immediately (unless `OMNIVERSEPRICING_STOP_RECORD`).
 
-### 5. Hook Recording - `w_hook` (omniversepricing.php)
+### 5. Hook Recording - `w_hook` (omniversepricing.php) - **DEPRECATED**
 
-Records lazily on front-office page view inside `omniversepricing_init()`: dedupe via `omniversepricing_check_existance()`, then `omniversepricing_insert_data()` with the **visitor-context** current price (`getPriceStatic` with reductions; `promo` derived from `has_discount`). Does not enumerate specific prices - date validity is implicit because only the currently active rule can drive the displayed price.
+**This path is deprecated** (comment-marked in code; kept only for backward compatibility - do not build on it). Records lazily on front-office page view inside `omniversepricing_init()`: dedupe via `omniversepricing_check_existance()`, then `omniversepricing_insert_data()` with the **visitor-context** current price (`getPriceStatic` with reductions; `promo` derived from `has_discount`). Does not enumerate specific prices - date validity is implicit because only the currently active rule can drive the displayed price.
 
 ### Shared switches
 
@@ -99,7 +100,7 @@ Records lazily on front-office page view inside `omniversepricing_init()`: dedup
    - `after_price` / `old_price` / `price` -> `hookDisplayProductPriceBlock()`
    - `footer_product` -> `hookDisplayFooterProduct()`
    - `with_custom_hook` -> theme calls `hookDisplayOmniverseNotice()`
-3. `omniversepricing_init()` computes the current tax-exclusive price, optionally records history (`w_hook`), fetches the minimum price via `omniversepricing_get_price()` (MIN within the Days Limit window, excluding the current price; context-matched rows UNION default-context fallback rows), and computes the +/- percentage against the current price.
+3. `omniversepricing_init()` computes the current price (same tax basis as stored rows, per the Price With/Without Tax switch), optionally records history (deprecated `w_hook`), fetches the minimum price via `omniversepricing_get_price()` (MIN within the Days Limit window, excluding the current price; context-matched rows UNION default-context fallback rows), and computes the +/- percentage against the current price. No tax is applied at display time - rows are shown as stored.
 4. `omniversepricing_show_notice()` renders `views/templates/front/omni_front.tpl`. Text styles (`OMNIVERSEPRICING_NOTICE_STYLE`): `before_after` = "text price", `after_before` = "price text", `mixed` = placeholders `{{omni_price}}` / `{{omni_percent}}` replaced inside the configured text. A chart link (`#openPriceChart` with `data-prd_id` / `data-attr_id`) is appended on the product page when the chart is enabled.
 5. Visibility: `OMNIVERSEPRICING_NOTICE_PAGE` (all pages vs product page only) and `OMNIVERSEPRICING_SHOW_ON` (all products vs discounted only, based on `has_discount`). `OMNIVERSEPRICING_SHOW_IF_CURRENT` shows the notice even when the current price is the lowest.
 6. Back office: `hookDisplayAdminProductsExtra()` renders a per-product price-history table (combination selector, add/delete custom price rows) in `views/templates/admin/price_history.tpl`, driven by `admin.js` + the admin AJAX controller.
@@ -108,14 +109,14 @@ Records lazily on front-office page view inside `omniversepricing_init()`: dedup
 
 1. When `OMNIVERSEPRICING_SHOW_CHART` is enabled, `hookDisplayFooter()` echoes `views/templates/front/omni_chart.tpl` on product pages - a modal (`#priceChartModal`) containing `<canvas id="priceHistoryChart">`.
 2. `views/js/front.js` runs `initMyChart()` on page load and re-runs it on the PrestaShop events `updatedProduct` / `updatedProductCombination`, so switching combinations re-binds the chart link to the new attribute ID.
-3. Clicking `#openPriceChart` POSTs `id_product` + `attr_id` to the front AJAX controller (`controllers/front/frontajax.php`), which returns JSON `[{date: 'Y/m/d', price}]` for the last **365 days** of that product/attribute (context-matched rows UNION default-context rows), with prices converted to the display currency and tax applied via `omniApplyTax()`.
+3. Clicking `#openPriceChart` POSTs `id_product` + `attr_id` to the front AJAX controller (`controllers/front/frontajax.php`), which returns JSON `[{date: 'Y/m/d', price}]` for the last **365 days** of that product/attribute (context-matched rows UNION default-context rows), with prices converted to the display currency only - rows already carry tax (or not) per the Price With/Without Tax switch.
 4. `front.js` renders a Chart.js line chart in the modal (labels/colors come from the Chart settings tab), destroying the previous chart instance on re-open; the modal closes on backdrop or close-button click.
 
 ## Settings Tabs (module configure form, `getConfigForm()`)
 
 ### General
 
-How history is kept (`OMNIVERSEPRICING_HISTORY_FUNC`: `manual` / `w_change` / `w_cron` / `smart_cron` / `w_hook`), where the notice shows (`all_pages` / `single`), which products show it (`all_prds` / `discounted`), price with/without tax, show notice if current price is lowest, notice text style (`before_after` / `after_before` / `mixed`), percent increase/decrease indicator, auto-delete old data + days limit (default 30).
+How history is kept (`OMNIVERSEPRICING_HISTORY_FUNC`: `manual` / `w_change` / `w_cron` / `smart_cron` / `w_hook`), where the notice shows (`all_pages` / `single`), which products show it (`all_prds` / `discounted`), price with/without tax (controls the tax basis of recorded rows; tax is never applied at display), show notice if current price is lowest, notice text style (`before_after` / `after_before` / `mixed`), percent increase/decrease indicator, auto-delete old data + days limit (default 30).
 
 ### Content
 

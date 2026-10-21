@@ -1339,13 +1339,17 @@ class Omniversepricing extends Module
         if ($notice_page == 'single' && $controller != 'product') {
             return;
         }
-        // Prices are always stored tax-exclusive; tax is applied at display time
+        // Baseline current price must match the recorded storage format
+        // (tax-inclusive when the Price With/Without Tax switch is on), so
+        // min-price exclusion and percentage math stay consistent
         $price_amount = Product::getPriceStatic(
             (int) $product_obj->id,
-            false,
+            (bool) Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX'),
             $product['id_product_attribute']
         );
 
+        // DEPRECATED: the w_hook recording path is deprecated and kept only
+        // for backward compatibility; do not build new functionality on it
         if ($history_func == 'w_hook') {
             $existing = $this->omniversepricing_check_existance($product_obj->id, $price_amount, $product['id_product_attribute']);
             $omni_stop = Configuration::get('OMNIVERSEPRICING_STOP_RECORD');
@@ -1359,7 +1363,7 @@ class Omniversepricing extends Module
         $omniverse_price = $this->omniversepricing_get_price($product_obj->id, $price_amount, $product['id_product_attribute']);
         $priceFormatter = new PriceFormatter();
         if ($omniverse_price) {
-            $omniversepricinge_formatted_price = $priceFormatter->convertAndFormat($this->omniApplyTax($product_obj->id, $omniverse_price));
+            $omniversepricinge_formatted_price = $priceFormatter->convertAndFormat($omniverse_price);
             if ($omniverse_price > $price_amount) {
                 $omniversepricinge_percentage_amount = ceil((($omniverse_price - $price_amount) / $omniverse_price) * 100);
 
@@ -1388,7 +1392,7 @@ class Omniversepricing extends Module
         $omni_if_current = Configuration::get('OMNIVERSEPRICING_SHOW_IF_CURRENT');
         if ($omni_if_current) {
             $omniversepricinge_percentage = '0%';
-            $return_arr['omni_price'] = $priceFormatter->convertAndFormat($this->omniApplyTax($product_obj->id, $price_amount));
+            $return_arr['omni_price'] = $priceFormatter->convertAndFormat($price_amount);
             $return_arr['omni_percent'] = $omniversepricinge_percentage;
 
             return $return_arr;
@@ -1399,6 +1403,8 @@ class Omniversepricing extends Module
 
     /**
      * Check if price is alredy available for the product
+     *
+     * @deprecated Only used by the deprecated w_hook recording path
      */
     private function omniversepricing_check_existance($prd_id, $price, $id_attr = 0)
     {
@@ -1443,6 +1449,8 @@ class Omniversepricing extends Module
 
     /**
      * Insert the minimum price to the table
+     *
+     * @deprecated Only used by the deprecated w_hook recording path
      */
     private function omniversepricing_insert_data($prd, $prd_obj, $price, $with_tax = false, $specific_price = null)
     {
@@ -1558,31 +1566,6 @@ class Omniversepricing extends Module
         }
 
         return false;
-    }
-
-    /**
-     * Apply the product's tax to a stored (tax-exclusive) price using the
-     * current display context.
-     *
-     * @param int $id_product
-     * @param float $price Tax-exclusive price
-     *
-     * @return float Tax-inclusive price (unchanged when tax display is disabled)
-     */
-    public function omniApplyTax($id_product, $price)
-    {
-        if (!$price || !Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX') || Tax::excludeTaxeOption()) {
-            return $price;
-        }
-
-        $context = $this->context;
-        $address = Address::initialize(null, true);
-        $tax_manager = TaxManagerFactory::getManager(
-            $address,
-            Product::getIdTaxRulesGroupByIdProduct((int) $id_product, $context)
-        );
-
-        return $tax_manager->getTaxCalculator()->addTaxes($price);
     }
 
     /**

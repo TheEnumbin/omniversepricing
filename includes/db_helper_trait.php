@@ -189,8 +189,10 @@ trait DatabaseHelper_Trait
      */
     private function create_insert_query_for_specific_price($product, $specific_price, $price_type = 'current')
     {
-        // Prices are always stored tax-exclusive; tax is applied at display time
-        $omni_tax_include_q = 0;
+        // Tax is decided by the Price With/Without Tax switch at sync time;
+        // tax is never re-applied at display time
+        $with_tax = (bool) Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX');
+        $omni_tax_include_q = $with_tax ? 1 : 0;
         $context = Context::getContext();
         $shop_id = $context->shop->id;
         $use_reduct = true;
@@ -205,13 +207,16 @@ trait DatabaseHelper_Trait
             $shop_id,
             (int) $product['id_product'],
             $specific_price['id_product_attribute'],
-            $specific_price['id_country'] ?: 0,
+            // Tax resolution needs a real country: fall back to the shop's
+            // default country when the rule is not country-bound (id_country
+            // = 0 would match no tax rules and silently skip tax)
+            $specific_price['id_country'] ?: (int) Configuration::get('PS_COUNTRY_DEFAULT'),
             0,
             '',
             $specific_price['id_currency'] ?: 0,
             $specific_price['id_group'] ?: 0,
             1,
-            false,
+            $with_tax, // use_tax - switch-driven
             6,
             false,
             $use_reduct,
@@ -264,8 +269,10 @@ trait DatabaseHelper_Trait
      */
     private function create_insert_query_for_default_price($product, $id_attribute, $attr_price, $price_type = 'current')
     {
-        // Prices are always stored tax-exclusive; tax is applied at display time
-        $omni_tax_include_q = 0;
+        // Price is fetched tax-exclusive, then tax is applied manually via
+        // omniApplyTax() when the Price With/Without Tax switch is on;
+        // tax is never re-applied at display time
+        $omni_tax_include_q = (Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX') && !Tax::excludeTaxeOption()) ? 1 : 0;
         $context = Context::getContext();
         $shop_id = $context->shop->id;
         $use_reduct = true;
@@ -296,6 +303,10 @@ trait DatabaseHelper_Trait
         if ($attr_price !== false) {
             $price_amount += $attr_price;
         }
+
+        // Apply the product's tax rule manually (no-op unless the
+        // Price With/Without Tax switch is on and taxes are enabled)
+        $price_amount = $this->omniApplyTax((int) $product['id_product'], $price_amount);
 
         // Check if already exists
         $existing = $this->check_existance($product['id_product'], $price_amount, $id_attribute);
@@ -342,7 +353,6 @@ trait DatabaseHelper_Trait
 
         // Sync time used for specific-price validity (from/to) checks below
         $now = date('Y-m-d H:i:s');
-
         // STEP 3: Process all specific prices and create insert queries
         if (!empty($all_specific_prices)) {
             foreach ($all_specific_prices as $specific_price) {
@@ -453,5 +463,32 @@ trait DatabaseHelper_Trait
         $rq = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
 
         return $rq;
+    }
+
+    /**
+     * Apply the product's tax rules to a tax-exclusive price. Resolves the
+     * product's tax rules group and applies the rates matching the shop's
+     * default country. No-op unless the Price With/Without Tax switch is on
+     * and taxes are enabled store-wide.
+     *
+     * @param int $id_product
+     * @param float $price Tax-exclusive price
+     *
+     * @return float Price with tax applied (unchanged when tax must not apply)
+     */
+    public function omniApplyTax($id_product, $price)
+    {
+        if (!$price || !Configuration::get('OMNIVERSEPRICING_PRICE_WITH_TAX') || Tax::excludeTaxeOption()) {
+            return $price;
+        }
+
+        $context = $this->context;
+        $address = Address::initialize(null, true);
+        $tax_manager = TaxManagerFactory::getManager(
+            $address,
+            Product::getIdTaxRulesGroupByIdProduct((int) $id_product, $context)
+        );
+
+        return $tax_manager->getTaxCalculator()->addTaxes($price);
     }
 }
